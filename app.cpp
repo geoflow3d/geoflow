@@ -1,4 +1,3 @@
-#include <GLFW/glfw3.h>
 #include "app.h"
 
 app::app(int width, int height, std::string title)
@@ -21,6 +20,9 @@ app::app(int width, int height, std::string title)
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
 	on_initialize();
 }
@@ -53,6 +55,36 @@ void app::key_callback(
     app *a = static_cast<app *>(data);
 
     a->on_key_press(key, action, mods);
+}
+
+void app::cursor_pos_callback(
+    GLFWwindow* window, double xpos, double ypos
+    ){
+
+    void *data = glfwGetWindowUserPointer(window);  
+    app *a = static_cast<app *>(data);
+
+    a->on_mouse_move(xpos, ypos);
+}
+
+void app::mouse_button_callback(
+    GLFWwindow* window, int button, int action, int mods
+    ){
+
+    void *data = glfwGetWindowUserPointer(window);  
+    app *a = static_cast<app *>(data);
+
+    a->on_mouse_press(button, action, mods);
+}
+
+void app::scroll_callback(
+    GLFWwindow* window, double xoffset, double yoffset
+    ){
+
+    void *data = glfwGetWindowUserPointer(window);  
+    app *a = static_cast<app *>(data);
+
+    a->on_mouse_move(xoffset, yoffset);
 }
 
 void app::window_size_callback(
