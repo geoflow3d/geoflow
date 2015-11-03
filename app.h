@@ -2,10 +2,10 @@
 #include <iostream>
 #include <string>
 
-class app
+class App
 {
 public:
-  app  (int width, int height, std::string title);
+  App  (int width, int height, std::string title);
   // ~app ();
 
   virtual void on_initialize() {};

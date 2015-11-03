@@ -1,6 +1,6 @@
 #include "app.h"
 
-app::app(int width, int height, std::string title)
+App::App(int width, int height, std::string title)
 	:width(width), height(height) {
 
     glfwSetErrorCallback(error_callback);
@@ -27,7 +27,7 @@ app::app(int width, int height, std::string title)
 	on_initialize();
 }
 
-void app::run(){
+void App::run(){
     while (!glfwWindowShouldClose(window))
     { 
         glViewport(0, 0, width, height);
@@ -44,7 +44,7 @@ void app::run(){
 
 }
 
-void app::key_callback(
+void App::key_callback(
     GLFWwindow* window, int key, int scancode, int action, int mods
     ){
 
@@ -52,51 +52,51 @@ void app::key_callback(
         glfwSetWindowShouldClose(window, GL_TRUE);
 
     void *data = glfwGetWindowUserPointer(window);  
-    app *a = static_cast<app *>(data);
+    App *a = static_cast<App *>(data);
 
     a->on_key_press(key, action, mods);
 }
 
-void app::cursor_pos_callback(
+void App::cursor_pos_callback(
     GLFWwindow* window, double xpos, double ypos
     ){
 
     void *data = glfwGetWindowUserPointer(window);  
-    app *a = static_cast<app *>(data);
+    App *a = static_cast<App *>(data);
 
     a->on_mouse_move(xpos, ypos);
 }
 
-void app::mouse_button_callback(
+void App::mouse_button_callback(
     GLFWwindow* window, int button, int action, int mods
     ){
 
     void *data = glfwGetWindowUserPointer(window);  
-    app *a = static_cast<app *>(data);
+    App *a = static_cast<App *>(data);
 
     a->on_mouse_press(button, action, mods);
 }
 
-void app::scroll_callback(
+void App::scroll_callback(
     GLFWwindow* window, double xoffset, double yoffset
     ){
 
     void *data = glfwGetWindowUserPointer(window);  
-    app *a = static_cast<app *>(data);
+    App *a = static_cast<App *>(data);
 
     a->on_mouse_move(xoffset, yoffset);
 }
 
-void app::window_size_callback(
+void App::window_size_callback(
 	GLFWwindow* window, int width, int height
 	){
 
     void *data = glfwGetWindowUserPointer(window);  
-    app *a = static_cast<app *>(data);
+    App *a = static_cast<App *>(data);
 
     a->on_resize(width, height);
 }
 
-void app::error_callback(int error, const char* description) {
+void App::error_callback(int error, const char* description) {
 	std::cerr << error << " " << description;
 }
