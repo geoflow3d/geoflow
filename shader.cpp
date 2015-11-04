@@ -26,7 +26,7 @@ void Shader::bind(unsigned int location, glm::mat4 const & matrix)
 Shader & Shader::attach(std::string const & filename)
 {
     // Load GLSL Shader Source from File
-    std::string path = "../";
+    std::string path = PROJECT_SOURCE_DIR "/shaders/";
     std::ifstream fd(path + filename);
     auto src = std::string(std::istreambuf_iterator<char>(fd),
                           (std::istreambuf_iterator<char>()));
