@@ -10,12 +10,14 @@ else()
   message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-add_definitions(-DGLFW_INCLUDE_NONE)
-add_executable(povi main.cpp app.cpp src/glad.c shader.cpp)
-
 # find system-installed glfw3 and link dynamically
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
-include_directories(${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} include)
+include_directories(${GLFW_INCLUDE_DIRS} include /usr/local/include)
+link_directories(${GLFW_LIBRARY_DIRS})
+
+add_definitions(-DGLFW_INCLUDE_NONE)
+
+add_executable(povi main.cpp app.cpp src/glad.c shader.cpp)
 target_link_libraries(povi ${GLFW_LIBRARIES})

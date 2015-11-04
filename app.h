@@ -1,9 +1,10 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <cassert>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include "shader.h"
 
@@ -13,15 +14,15 @@ public:
   App  (int width, int height, std::string title);
   // ~app ();
 
-   void on_initialise() ;
+   virtual void on_initialise()=0;
    void run();
-   void on_draw();
+   virtual void on_draw()=0;
   
-   void on_resize(int new_width, int new_height);  
-   void on_key_press(int key, int action, int mods){};
-   void on_mouse_wheel(double xoffset, double yoffset){};
-   void on_mouse_press(int button, int action, int mods){};
-   void on_mouse_move(double xpos, double ypos){};
+   virtual void on_resize(int new_width, int new_height){};  
+   virtual void on_key_press(int key, int action, int mods){};
+   virtual void on_mouse_wheel(double xoffset, double yoffset){};
+   virtual void on_mouse_press(int button, int action, int mods){};
+   virtual void on_mouse_move(double xpos, double ypos){};
 
   int width;
   int height;
@@ -39,6 +40,4 @@ protected:
   static void error_callback(int error, const char* description);
 
   GLFWwindow* window;
-  Shader shader;
-
 };

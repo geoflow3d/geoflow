@@ -5,6 +5,7 @@
 #include <cassert>
 #include <fstream>
 #include <memory>
+#include <iostream>
 
 // Define Namespace
 
