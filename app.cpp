@@ -7,6 +7,7 @@ App::App(int width, int height, std::string title)
     
     if (!glfwInit())
         exit(EXIT_FAILURE);    // Set all the required options for GLFW
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -21,6 +22,7 @@ App::App(int width, int height, std::string title)
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
@@ -46,7 +48,6 @@ void App::run(){
     glfwDestroyWindow(window);
     glfwTerminate();
     exit(EXIT_SUCCESS);
-
 }
 
 void App::key_callback(
@@ -89,7 +90,7 @@ void App::scroll_callback(
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
 
-    a->on_mouse_move(xoffset, yoffset);
+    a->on_mouse_wheel(xoffset, yoffset);
 }
 
 void App::window_size_callback(

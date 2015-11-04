@@ -19,5 +19,5 @@ link_directories(${GLFW_LIBRARY_DIRS})
 
 add_definitions(-DGLFW_INCLUDE_NONE -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
 
-add_executable(povi main.cpp app.cpp src/glad.c shader.cpp)
+add_executable(povi main.cpp app.cpp app_povi.cpp src/glad.c shader.cpp)
 target_link_libraries(povi ${GLFW_LIBRARIES})

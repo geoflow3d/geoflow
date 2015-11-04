@@ -14,9 +14,9 @@ public:
   App  (int width, int height, std::string title);
   // ~app ();
 
-   virtual void on_initialise()=0;
+   virtual void on_initialise(){};
    void run();
-   virtual void on_draw()=0;
+   virtual void on_draw(){};
   
    virtual void on_resize(int new_width, int new_height){};  
    virtual void on_key_press(int key, int action, int mods){};
