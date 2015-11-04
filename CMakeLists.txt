@@ -10,7 +10,7 @@ else()
   message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-add_executable(povi main.cpp app.cpp shader.cpp src/glad.c)
+add_executable(povi main.cpp app.cpp src/glad.c)
 
 # find system-installed glfw3 and link dynamically
 find_package(PkgConfig REQUIRED)
