@@ -1,4 +1,3 @@
-// #include "shader.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -6,7 +5,7 @@
 #include <fstream>
 #include <cassert>
 
-
+#include "shader.h"
 
 class App
 {
@@ -15,7 +14,7 @@ public:
   // ~app ();
 
    void on_initialise() ;
-  void run();
+   void run();
    void on_draw();
   
    void on_resize(int new_width, int new_height);  
@@ -30,7 +29,6 @@ public:
   GLuint mProgram;
   GLint  mStatus;
   GLint  mLength;
-  // Shader shader;
 
 protected:
   static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -41,5 +39,6 @@ protected:
   static void error_callback(int error, const char* description);
 
   GLFWwindow* window;
+  Shader shader;
 
 };

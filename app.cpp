@@ -21,7 +21,6 @@ App::App(int width, int height, std::string title)
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
-
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
@@ -64,73 +63,13 @@ void App::on_initialise(){
 
     glBindVertexArray(0); // Unbind VAO
 
+    // Shader shader;
+    shader.init();
+    shader.attach("basic.vert");
+    shader.attach("basic.frag");
+    shader.link();
 
-    mProgram = glCreateProgram();
-
-    std::ifstream fd("/Users/ravi/git/povi/basic.vert");
-    auto src = std::string(std::istreambuf_iterator<char>(fd),
-                          (std::istreambuf_iterator<char>()));
-    const char * source = src.c_str();
-    auto shader = glCreateShader(GL_VERTEX_SHADER);
-
-    glShaderSource(shader, 1, & source, nullptr);
-    glCompileShader(shader);
-
-    glGetShaderiv(shader, GL_COMPILE_STATUS, & mStatus);
-
-    // Display the Build Log on Error
-    if (mStatus == false)
-    {
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, & mLength);
-        std::unique_ptr<char[]> buffer(new char[mLength]);
-        glGetShaderInfoLog(shader, mLength, nullptr, buffer.get());
-        fprintf(stderr, "%s\n%s", source, buffer.get());
-    }
-
-    // Attach the Shader and Free Allocated Memory
-    glAttachShader(mProgram, shader);
-    glDeleteShader(shader);
-
-    std::ifstream fd2("/Users/ravi/git/povi/basic.frag");
-    src = std::string(std::istreambuf_iterator<char>(fd2),
-                          (std::istreambuf_iterator<char>()));
-    source = src.c_str();
-    shader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(shader, 1, & source, nullptr);
-    glCompileShader(shader);
-
-    glGetShaderiv(shader, GL_COMPILE_STATUS, & mStatus);
-
-    // Display the Build Log on Error
-    if (mStatus == false)
-    {
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, & mLength);
-        std::unique_ptr<char[]> buffer(new char[mLength]);
-        glGetShaderInfoLog(shader, mLength, nullptr, buffer.get());
-        fprintf(stderr, "%s\n%s", source, buffer.get());
-    }
-
-    // Attach the Shader and Free Allocated Memory
-    glAttachShader(mProgram, shader);
-    glDeleteShader(shader);
-
-    glLinkProgram(mProgram);
-    glGetProgramiv(mProgram, GL_LINK_STATUS, & mStatus);
-    if(mStatus == false)
-    {
-        glGetProgramiv(mProgram, GL_INFO_LOG_LENGTH, & mLength);
-        std::unique_ptr<char[]> buffer(new char[mLength]);
-        glGetProgramInfoLog(mProgram, mLength, nullptr, buffer.get());
-        fprintf(stderr, "%s", buffer.get());
-    }
-    assert(mStatus == true);
-
-    // shader = Shader();
-    // shader.attach("basic.vert");
-    // shader.attach("basic.frag");
-    // shader.link();
-    std::cout << "prog." << mProgram << std::endl;
+    std::cout << "prog." << shader.get() << std::endl;
 }
 
 void App::on_resize(int new_width, int new_height) {
@@ -142,8 +81,7 @@ void App::on_draw(){
     // Render
     
     // Draw the triangle
-    // shader.activate();
-    glUseProgram(mProgram);
+    shader.activate();
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
