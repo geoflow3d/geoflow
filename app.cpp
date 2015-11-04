@@ -6,8 +6,11 @@ App::App(int width, int height, std::string title)
     glfwSetErrorCallback(error_callback);
     
     if (!glfwInit())
-        exit(EXIT_FAILURE);
-
+        exit(EXIT_FAILURE);    // Set all the required options for GLFW
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
     if (!window)
     {
@@ -17,6 +20,8 @@ App::App(int width, int height, std::string title)
     glfwSetWindowUserPointer(window, this);
 
     glfwMakeContextCurrent(window);
+    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, key_callback);
@@ -24,7 +29,124 @@ App::App(int width, int height, std::string title)
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
-	on_initialize();
+
+	on_initialise();
+}
+
+void App::on_initialise(){
+
+    
+    // shader.attach("basic.vert").attach("basic.frag");
+    // shader.link();
+
+    // Set up vertex data (and buffer(s)) and attribute pointers
+    GLfloat vertices[] = {
+        // Positions         // Colors
+        0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // Bottom Right
+       -0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // Bottom Left
+        0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // Top 
+    };
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    // // Color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0); // Unbind VAO
+
+
+    mProgram = glCreateProgram();
+
+    std::ifstream fd("/Users/ravi/git/povi/basic.vert");
+    auto src = std::string(std::istreambuf_iterator<char>(fd),
+                          (std::istreambuf_iterator<char>()));
+    const char * source = src.c_str();
+    auto shader = glCreateShader(GL_VERTEX_SHADER);
+
+    glShaderSource(shader, 1, & source, nullptr);
+    glCompileShader(shader);
+
+    glGetShaderiv(shader, GL_COMPILE_STATUS, & mStatus);
+
+    // Display the Build Log on Error
+    if (mStatus == false)
+    {
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, & mLength);
+        std::unique_ptr<char[]> buffer(new char[mLength]);
+        glGetShaderInfoLog(shader, mLength, nullptr, buffer.get());
+        fprintf(stderr, "%s\n%s", source, buffer.get());
+    }
+
+    // Attach the Shader and Free Allocated Memory
+    glAttachShader(mProgram, shader);
+    glDeleteShader(shader);
+
+    std::ifstream fd2("/Users/ravi/git/povi/basic.frag");
+    src = std::string(std::istreambuf_iterator<char>(fd2),
+                          (std::istreambuf_iterator<char>()));
+    source = src.c_str();
+    shader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    glShaderSource(shader, 1, & source, nullptr);
+    glCompileShader(shader);
+
+    glGetShaderiv(shader, GL_COMPILE_STATUS, & mStatus);
+
+    // Display the Build Log on Error
+    if (mStatus == false)
+    {
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, & mLength);
+        std::unique_ptr<char[]> buffer(new char[mLength]);
+        glGetShaderInfoLog(shader, mLength, nullptr, buffer.get());
+        fprintf(stderr, "%s\n%s", source, buffer.get());
+    }
+
+    // Attach the Shader and Free Allocated Memory
+    glAttachShader(mProgram, shader);
+    glDeleteShader(shader);
+
+    glLinkProgram(mProgram);
+    glGetProgramiv(mProgram, GL_LINK_STATUS, & mStatus);
+    if(mStatus == false)
+    {
+        glGetProgramiv(mProgram, GL_INFO_LOG_LENGTH, & mLength);
+        std::unique_ptr<char[]> buffer(new char[mLength]);
+        glGetProgramInfoLog(mProgram, mLength, nullptr, buffer.get());
+        fprintf(stderr, "%s", buffer.get());
+    }
+    assert(mStatus == true);
+
+    // shader = Shader();
+    // shader.attach("basic.vert");
+    // shader.attach("basic.frag");
+    // shader.link();
+    std::cout << "prog." << mProgram << std::endl;
+}
+
+void App::on_resize(int new_width, int new_height) {
+    width = new_width;
+    height = new_height;
+}
+
+void App::on_draw(){
+    // Render
+    
+    // Draw the triangle
+    // shader.activate();
+    glUseProgram(mProgram);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
 }
 
 void App::run(){

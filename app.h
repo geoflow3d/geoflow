@@ -1,6 +1,12 @@
+// #include "shader.h"
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <cassert>
+
+
 
 class App
 {
@@ -8,18 +14,23 @@ public:
   App  (int width, int height, std::string title);
   // ~app ();
 
-  virtual void on_initialize() {};
+   void on_initialise() ;
   void run();
-  virtual void on_draw() {};
+   void on_draw();
   
-  virtual void on_resize(int new_width, int new_height) {};  
-  virtual void on_key_press(int key, int action, int mods) {};
-  virtual void on_mouse_wheel(double xoffset, double yoffset) {};
-  virtual void on_mouse_press(int button, int action, int mods) {};
-  virtual void on_mouse_move(double xpos, double ypos) {};
+   void on_resize(int new_width, int new_height);  
+   void on_key_press(int key, int action, int mods){};
+   void on_mouse_wheel(double xoffset, double yoffset){};
+   void on_mouse_press(int button, int action, int mods){};
+   void on_mouse_move(double xpos, double ypos){};
 
   int width;
   int height;
+  GLuint VBO, VAO;
+  GLuint mProgram;
+  GLint  mStatus;
+  GLint  mLength;
+  // Shader shader;
 
 protected:
   static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
