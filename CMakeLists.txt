@@ -14,10 +14,26 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
-include_directories(${GLFW_INCLUDE_DIRS} glad/include /usr/local/include)
+include_directories(
+  ${GLFW_INCLUDE_DIRS} 
+  glad/include 
+  imgui
+  /usr/local/include)
 link_directories(${GLFW_LIBRARY_DIRS})
 
 add_definitions(-DGLFW_INCLUDE_NONE -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
 
-add_executable(povi src/main.cpp src/app.cpp src/app_povi.cpp glad/src/glad.c src/shader.cpp)
+add_executable(
+  povi 
+  src/main.cpp 
+  src/app.cpp 
+  src/app_povi.cpp 
+  glad/src/glad.c 
+  src/shader.cpp
+  imgui/imgui.cpp
+  imgui/imgui_demo.cpp
+  imgui/imgui_draw.cpp
+  imgui/imgui_impl_glfw.cpp
+  imgui/imgui_impl_opengl3.cpp
+)
 target_link_libraries(povi ${GLFW_LIBRARIES})

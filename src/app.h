@@ -6,6 +6,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include "shader.h"
 
 class App
@@ -38,6 +42,7 @@ protected:
   static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
   static void window_size_callback(GLFWwindow* window, int new_width, int new_height);
   static void error_callback(int error, const char* description);
+  static void char_callback(GLFWwindow*, unsigned int c);
 
   GLFWwindow* window;
 };
