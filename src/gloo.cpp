@@ -1,5 +1,5 @@
 // Local Headers
-#include "shader.h"
+#include "gloo.h"
 
 // Standard Headers
 #include <cassert>
@@ -19,9 +19,14 @@ Shader & Shader::activate()
     return *this;
 }
 
-void Shader::bind(unsigned int location, float value) { glUniform1f(location, value); }
+void Shader::bind(unsigned int location, float value) 
+{ 
+    glUniform1f(location, value); 
+}
 void Shader::bind(unsigned int location, glm::mat4 const & matrix)
-{ glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); }
+{ 
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
+}
 
 Shader & Shader::attach(std::string const & filename)
 {

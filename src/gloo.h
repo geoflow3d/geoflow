@@ -40,12 +40,45 @@ public:
 private:
 
     // Disable Copying and Assignment
-    // Shader(Shader const &) = delete;
-    // Shader & operator=(Shader const &) = delete;
+    Shader(Shader const &) = delete;
+    Shader & operator=(Shader const &) = delete;
 
     // Private Member Variables
     GLuint mProgram;
     GLint  mStatus;
     GLint  mLength;
 
+};
+
+class Buffer
+{
+public:
+    Buffer() { }
+    ~Buffer() { glDeleteBuffers(1, &mBuffer); }
+
+    void init();
+
+    void set_data();
+
+private:
+    GLuint mBuffer;
+};
+
+class Painter
+{
+public:
+    Painter() { }
+    ~Painter() { glDeleteVertexArrays(1, &mVertexArray); }
+
+    void init();
+
+    void set_buffer();
+    void set_program();
+
+    void setup_VertexArray();
+
+    void render();
+
+private:
+    GLuint mVertexArray;
 };

@@ -10,7 +10,6 @@
 #include <glm/geometric.hpp>
 
 #include "app.h"
-#include "shader.h"
 
 class poviApp: public App {
 public:

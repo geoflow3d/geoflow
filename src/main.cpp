@@ -5,6 +5,6 @@
 int main(void)
 {
     std::cout << "start." << std::endl;
-    poviApp a = poviApp(800, 600, "test-app");
+    poviApp a(800, 600, "test-app");
     a.run();
 }

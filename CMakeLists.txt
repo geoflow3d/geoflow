@@ -29,7 +29,7 @@ add_executable(
   src/app.cpp 
   src/app_povi.cpp 
   glad/src/glad.c 
-  src/shader.cpp
+  src/gloo.cpp
   imgui/imgui.cpp
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
