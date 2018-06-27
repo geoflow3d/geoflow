@@ -82,3 +82,70 @@ Shader & Shader::link()
     assert(mStatus == true);
     return *this;
 }
+
+
+
+void Buffer::init()
+{
+    glGenBuffers(1, &mBuffer);
+}
+
+void Buffer::activate()
+{
+    glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
+}
+
+template<typename T> void Buffer::set_data(T* data, size_t n)
+{
+    activate();
+    glBufferData(GL_ARRAY_BUFFER, sizeof(T)*n, data, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+template void Buffer::set_data(float*, size_t);
+template void Buffer::set_data(double*, size_t);
+
+
+void Painter::init()
+{
+    glGenVertexArrays(1, &mVertexArray);
+}
+
+void Painter::set_buffer(Buffer& b)
+{
+    buffer = &b;
+}
+void Painter::set_program(Shader& s)
+{
+    shader = &s;
+}
+
+void Painter::setup_VertexArray()
+{
+    glBindVertexArray(mVertexArray);
+    buffer->activate();
+
+    // // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    // // Color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0); // Unbind VAO
+}
+
+void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
+{
+    shader->activate();
+
+    GLint projLoc = glGetUniformLocation(shader->get(), "u_projection"); 
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    GLint viewLoc = glGetUniformLocation(shader->get(), "u_view"); 
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    GLint modLoc = glGetUniformLocation(shader->get(), "u_model"); 
+    glUniformMatrix4fv(modLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    glBindVertexArray(mVertexArray);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+}

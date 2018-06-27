@@ -67,6 +67,7 @@ App::App(int width, int height, std::string title)
 
 
 void App::run(){
+    glfwMakeContextCurrent(window);
 	on_initialise();
 
     bool show_demo_window = true;
@@ -74,7 +75,7 @@ void App::run(){
 
     while (!glfwWindowShouldClose(window))
     { 
-        glfwMakeContextCurrent(window);
+        // glfwMakeContextCurrent(window);
         glViewport(0, 0, width, height);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);

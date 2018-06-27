@@ -7,6 +7,7 @@
 
 // Standard Headers
 #include <string>
+#include <string>
 
 // Define Namespace
 class Shader
@@ -57,8 +58,10 @@ public:
     ~Buffer() { glDeleteBuffers(1, &mBuffer); }
 
     void init();
+    void activate();
+    GLuint get() { return mBuffer; }
 
-    void set_data();
+    template<typename T> void set_data(T* data, size_t n);
 
 private:
     GLuint mBuffer;
@@ -71,14 +74,17 @@ public:
     ~Painter() { glDeleteVertexArrays(1, &mVertexArray); }
 
     void init();
+    GLuint get() { return mVertexArray; }
 
-    void set_buffer();
-    void set_program();
+    void set_buffer(Buffer& b);
+    void set_program(Shader& s);
 
     void setup_VertexArray();
 
-    void render();
+    void render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection);
 
 private:
     GLuint mVertexArray;
+    Buffer * buffer;
+    Shader * shader;
 };

@@ -25,6 +25,8 @@ void on_mouse_move(double xpos, double ypos);
 void on_mouse_press(int button, int action, int mods);
 GLuint VBO, VAO;
 Shader shader;
+Buffer buffer;
+Painter painter;
 
 glm::mat4 model;
 glm::mat4 view;

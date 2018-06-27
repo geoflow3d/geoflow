@@ -1,4 +1,5 @@
 #include "app_povi.h"
+#include <array>
 
 void poviApp::on_initialise(){
 
@@ -8,35 +9,28 @@ void poviApp::on_initialise(){
     update_radius();
 
     // Set up vertex data (and buffer(s)) and attribute pointers
-    GLfloat vertices[] = {
+    std::array<GLfloat,18> vertices = {
         // Positions         // Colors
         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // Bottom Right
        -0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // Bottom Left
         0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // Top 
     };
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-    glBindVertexArray(VAO);
+    buffer.init();
+    painter.init();
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    buffer.set_data(vertices.data(), vertices.size());
 
-    // // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    // // Color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0); // Unbind VAO
+    painter.set_buffer(buffer);
+    painter.setup_VertexArray();
 
     // Shader shader;
     shader.init();
     shader.attach("basic.vert");
     shader.attach("basic.frag");
     shader.link();
+
+    painter.set_program(shader);
 
     // std::cout << "prog." << shader.get() << std::endl;
 }
@@ -50,18 +44,7 @@ void poviApp::on_resize(int new_width, int new_height) {
 
 void poviApp::on_draw(){
     // Render
-    shader.activate();
-
-    GLint projLoc = glGetUniformLocation(shader.get(), "u_projection"); 
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-    GLint viewLoc = glGetUniformLocation(shader.get(), "u_view"); 
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    GLint modLoc = glGetUniformLocation(shader.get(), "u_model"); 
-    glUniformMatrix4fv(modLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
+    painter.render(model, view, projection);
 }
 
 void poviApp::on_mouse_press(int button, int action, int mods) {   
