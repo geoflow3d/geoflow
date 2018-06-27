@@ -60,11 +60,13 @@ public:
     void init();
     void activate();
     GLuint get() { return mBuffer; }
+    size_t size() { return element_size; }
 
     template<typename T> void set_data(T* data, size_t n);
 
 private:
     GLuint mBuffer;
+    size_t element_size;
 };
 
 class Painter
