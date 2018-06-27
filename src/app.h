@@ -20,6 +20,7 @@ public:
 
    virtual void on_initialise(){};
    void run();
+   void draw();
    virtual void on_draw(){};
   
    virtual void on_resize(int new_width, int new_height){};  
@@ -28,12 +29,9 @@ public:
    virtual void on_mouse_press(int button, int action, int mods){};
    virtual void on_mouse_move(double xpos, double ypos){};
 
-  int width;
-  int height;
-  GLuint VBO, VAO;
-  GLuint mProgram;
-  GLint  mStatus;
-  GLint  mLength;
+  int width, height;
+  int viewport_width, viewport_height;
+  ImVec4 clear_color;
 
 protected:
   static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);

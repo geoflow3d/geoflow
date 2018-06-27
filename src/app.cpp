@@ -1,7 +1,7 @@
 #include "app.h"
 
 App::App(int width, int height, std::string title)
-	:width(width), height(height) {
+	:width(width), height(height), clear_color(ImVec4(0.45f, 0.55f, 0.60f, 1.00f)) {
 
     glfwSetErrorCallback(error_callback);
     
@@ -63,56 +63,62 @@ App::App(int width, int height, std::string title)
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetCharCallback(window, char_callback);
+
 }
 
 
 void App::run(){
-    glfwMakeContextCurrent(window);
+    
 	on_initialise();
 
-    bool show_demo_window = true;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    int viewport_width, viewport_height;
+    // bool show_demo_window = true;
 
     while (!glfwWindowShouldClose(window))
     { 
-        // get framebuffer size, which could be different from the window size in case of eg a retina display  
-        glfwGetFramebufferSize(window, &viewport_width, &viewport_height);
-        glViewport(0, 0, viewport_width, viewport_height);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        on_draw();
-
-        glfwPollEvents();
-        
-        // Start the ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        if (show_demo_window)
-        {
-            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-            ImGui::ShowDemoWindow(&show_demo_window);
-        }
-
-        // ImGui Rendering
-        ImGui::Render();
-        int display_w, display_h;
-        
-        // glfwGetFramebufferSize(window, &display_w, &display_h);
-        // glViewport(0, 0, display_w, display_h);
-        
-        // glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    	
-        glfwMakeContextCurrent(window);
-        glfwSwapBuffers(window);
+        // process events:
+        glfwWaitEvents(); // and sleep until there is an event
+        //glfwPollEvents(); // don't sleep, eg needed for animations
+        draw();
+        draw(); //second draw to ensure imgui is updated in case of glfwWaitEvents()
     }
     glfwDestroyWindow(window);
     glfwTerminate();
     exit(EXIT_SUCCESS);
+}
+
+void App::draw(){
+    glfwMakeContextCurrent(window);
+    // get framebuffer size, which could be different from the window size in case of eg a retina display  
+    glfwGetFramebufferSize(window, &viewport_width, &viewport_height);
+    glViewport(0, 0, viewport_width, viewport_height);
+    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    on_draw();
+    
+    // Start the ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    if (true)
+    {
+        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+        ImGui::ShowDemoWindow();
+    }
+
+    // ImGui Rendering
+    ImGui::Render();
+    int display_w, display_h;
+    
+    // glfwGetFramebufferSize(window, &display_w, &display_h);
+    // glViewport(0, 0, display_w, display_h);
+    
+    // glClear(GL_COLOR_BUFFER_BIT);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    
+    glfwMakeContextCurrent(window);
+    glfwSwapBuffers(window);
 }
 
 void App::key_callback(
