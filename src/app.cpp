@@ -74,6 +74,10 @@ void App::run(){
 
     while (!glfwWindowShouldClose(window))
     { 
+        // don't do anything if window not in focus
+        if(!glfwGetWindowAttrib(window, GLFW_FOCUSED))
+            glfwWaitEvents();
+
         glfwMakeContextCurrent(window);
         // get framebuffer size, which could be different from the window size in case of eg a retina display  
         glfwGetFramebufferSize(window, &viewport_width, &viewport_height);

@@ -47,6 +47,8 @@ void poviApp::on_resize(int new_width, int new_height) {
 void poviApp::on_draw(){
     // Render
     painter.render(model, view, projection);
+    xy_pos p0 = screen2view(last_mouse_pos);
+    ImGui::Text("Mouse delta: (%g, %g)", p0.x, p0.y);
     // ImGui::Text("Blah blah\nBlah Blah");
 }
 
@@ -91,10 +93,11 @@ void poviApp::on_mouse_move(double xpos, double ypos) {
 
         glm::quat q0 = arcball(p0);
         glm::quat q1 = arcball(p1);
-        ImGui::Text("Blah blah\nBlah Blah");
         rotation = q1 * q0 * rotation;
         update_view_matrix();
     }
+    last_mouse_pos.x = xpos;
+    last_mouse_pos.y = ypos;
 }
 void poviApp::on_mouse_wheel(double xoffset, double yoffset){
     scale *= yoffset/50 + 1;
@@ -103,11 +106,11 @@ void poviApp::on_mouse_wheel(double xoffset, double yoffset){
 
 void poviApp::update_view_matrix(){
     auto t = glm::mat4(1.0f);
-    t = glm::translate(t, translation);
-    t = glm::translate(t, translation_ondrag);
+    // t = glm::translate(t, translation);
+    // t = glm::translate(t, translation_ondrag);
     t = glm::scale(t, glm::vec3(scale));
-    t = glm::rotate(t, glm::angle(rotation), glm::axis(rotation));
-    // t = glm::mat4_cast(rotation) * t;
+    // t = glm::rotate(t, glm::angle(rotation), glm::axis(rotation));
+    t = glm::mat4_cast(rotation) * t;
     view = glm::translate(t, glm::vec3(0.0f,0.0f,cam_pos));
 }
 void poviApp::update_projection_matrix(){

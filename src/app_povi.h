@@ -58,10 +58,10 @@ xy_pos last_mouse_pos;
 double radius;
 
 double fov = 5;
-double clip_near = 2;
+double clip_near = 0.1;
 double clip_far = 100;
 
-double cam_pos = -12;
+double cam_pos = -1;
 double scale = 0.6;
 glm::vec3 translation;
 glm::vec3 translation_ondrag;
