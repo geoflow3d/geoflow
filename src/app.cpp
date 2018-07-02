@@ -74,9 +74,7 @@ void App::run(){
 
     while (!glfwWindowShouldClose(window))
     { 
-        // don't do anything if window not in focus
-        if(!glfwGetWindowAttrib(window, GLFW_FOCUSED))
-            glfwWaitEvents();
+ 
 
         glfwMakeContextCurrent(window);
         // get framebuffer size, which could be different from the window size in case of eg a retina display  
@@ -91,8 +89,12 @@ void App::run(){
         ImGui::NewFrame();
 
         // process events:
+               // don't do anything if window not in focus
+        if(!glfwGetWindowAttrib(window, GLFW_FOCUSED))
+            glfwWaitEvents();
         // glfwWaitEvents(); // and sleep until there is an event
-        glfwPollEvents(); // don't sleep, eg needed for animations
+        else
+            glfwPollEvents(); // don't sleep, eg needed for animations
         
         on_draw();
         ImGui::Checkbox("Show demo window", &show_demo_window);

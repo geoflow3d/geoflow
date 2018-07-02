@@ -149,4 +149,5 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     glBindVertexArray(mVertexArray);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
+    // std::cout << "draw" <<std::endl;
 }

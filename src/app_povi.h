@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -42,10 +43,10 @@ void on_key_press(int key, int action, int mods);
 void on_mouse_wheel(double xoffset, double yoffset);
 void on_mouse_move(double xpos, double ypos);
 void on_mouse_press(int button, int action, int mods);
-GLuint VBO, VAO;
-Shader shader;
-Buffer buffer;
-Painter painter;
+
+// Shader shader;
+// Buffer buffer;
+std::vector<Painter> painters;
 
 glm::mat4 model;
 glm::mat4 view;

@@ -13,21 +13,48 @@ void poviApp::on_initialise(){
         0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // Top 
     };
 
-    buffer.init();
-    painter.init();
+    std::array<GLfloat,8> crosshair_lines = {
+        -1,  0,
+         1,  0,
+         0, -1,
+         0,  1
+    };
+    
+    Painter data_painter;
+    data_painter.init();
 
-    buffer.set_data(vertices.data(), vertices.size());
+    Buffer data_buffer;
+    data_buffer.init();
+    data_buffer.set_data(vertices.data(), vertices.size());
 
-    painter.set_buffer(buffer);
-    painter.setup_VertexArray();
+    Shader data_shader;
+    data_shader.init();
+    data_shader.attach("basic.vert");
+    data_shader.attach("basic.frag");
+    data_shader.link();
+    
+    data_painter.set_buffer(data_buffer);
+    data_painter.set_program(data_shader);
+    data_painter.setup_VertexArray();
 
-    // Shader shader;
-    shader.init();
-    shader.attach("basic.vert");
-    shader.attach("basic.frag");
-    shader.link();
+    painters.push_back(data_painter);
 
-    painter.set_program(shader);
+    // Painter ch_painter;
+    // ch_painter.init();
+    // Buffer ch_buffer;
+    // ch_buffer.init();
+    // ch_buffer.set_data(crosshair_lines.data(), crosshair_lines.size());
+    // Shader ch_shader;
+    // ch_shader.init();
+    // ch_shader.attach("crosshair.vert");
+    // ch_shader.attach("crosshair.frag");
+    // ch_shader.link();
+    
+    // ch_painter.set_buffer(ch_buffer);
+    // ch_painter.setup_VertexArray();
+    // ch_painter.set_program(ch_shader);
+
+    // painters.push_back(crosshair);
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 
@@ -43,8 +70,9 @@ void poviApp::on_draw(){
     // Render
     update_view_matrix();
     update_projection_matrix();
-    painter.render(model, view, projection);
-
+    for (auto painter:painters){
+        painter.render(model, view, projection);
+    }
     ImGui::Begin("View parameters");
     xy_pos p0 = screen2view(last_mouse_pos);
     ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);
@@ -85,7 +113,6 @@ void poviApp::on_mouse_press(int button, int action, int mods) {
 void poviApp::on_mouse_move(double xpos, double ypos) {
     if (drag==TRANSLATE) {
         xy_pos delta = { xpos-drag_init_pos.x, ypos-drag_init_pos.y };
-        // std::cout << "in drag " << screen2view({xpos,ypos}).x << screen2view({xpos,ypos}).y << std::endl;
 
         double scale_ = -cam_pos * 2* std::tan(glm::radians(fov/2.));
         // multiply with inverse view matrix and apply translation in world coordinates
