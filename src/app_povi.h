@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
-
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,7 +46,7 @@ void on_mouse_press(int button, int action, int mods);
 
 // Shader shader;
 // Buffer buffer;
-std::vector<Painter> painters;
+std::vector<std::unique_ptr<Painter>> painters;
 
 glm::mat4 model;
 glm::mat4 view;

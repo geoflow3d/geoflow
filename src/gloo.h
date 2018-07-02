@@ -7,7 +7,7 @@
 
 // Standard Headers
 #include <string>
-#include <string>
+#include <memory>
 
 // Define Namespace
 class Shader
@@ -78,8 +78,8 @@ public:
     void init();
     GLuint get() { return mVertexArray; }
 
-    void set_buffer(Buffer& b);
-    void set_program(Shader& s);
+    void set_buffer(std::unique_ptr<Buffer> b);
+    void set_program(std::unique_ptr<Shader> s);
 
     void setup_VertexArray();
 
@@ -87,6 +87,6 @@ public:
 
 private:
     GLuint mVertexArray;
-    Buffer * buffer;
-    Shader * shader;
+    std::unique_ptr<Buffer> buffer;
+    std::unique_ptr<Shader> shader;
 };

@@ -20,24 +20,26 @@ void poviApp::on_initialise(){
          0,  1
     };
     
-    Painter data_painter;
-    data_painter.init();
+    auto data_painter = std::make_unique<Painter>();
+    data_painter->init();
 
-    Buffer data_buffer;
-    data_buffer.init();
-    data_buffer.set_data(vertices.data(), vertices.size());
+    // std::unique_ptr<Buffer> data_buffer(new Buffer);
+    auto data_buffer = std::make_unique<Buffer>();
+    data_buffer->init();
+    data_buffer->set_data(vertices.data(), vertices.size());
 
-    Shader data_shader;
-    data_shader.init();
-    data_shader.attach("basic.vert");
-    data_shader.attach("basic.frag");
-    data_shader.link();
+    // Shader data_shader;
+    auto data_shader = std::make_unique<Shader>();
+    data_shader->init();
+    data_shader->attach("basic.vert");
+    data_shader->attach("basic.frag");
+    data_shader->link();
     
-    data_painter.set_buffer(data_buffer);
-    data_painter.set_program(data_shader);
-    data_painter.setup_VertexArray();
+    data_painter->set_buffer(std::move(data_buffer));
+    data_painter->set_program(std::move(data_shader));
+    data_painter->setup_VertexArray();
 
-    painters.push_back(data_painter);
+    painters.push_back(std::move(data_painter));
 
     // Painter ch_painter;
     // ch_painter.init();
@@ -70,8 +72,8 @@ void poviApp::on_draw(){
     // Render
     update_view_matrix();
     update_projection_matrix();
-    for (auto painter:painters){
-        painter.render(model, view, projection);
+    for (auto &painter:painters){
+        painter->render(model, view, projection);
     }
     ImGui::Begin("View parameters");
     xy_pos p0 = screen2view(last_mouse_pos);

@@ -111,13 +111,13 @@ void Painter::init()
     glGenVertexArrays(1, &mVertexArray);
 }
 
-void Painter::set_buffer(Buffer& b)
+void Painter::set_buffer(std::unique_ptr<Buffer> b)
 {
-    buffer = &b;
+    buffer.swap(b);
 }
-void Painter::set_program(Shader& s)
+void Painter::set_program(std::unique_ptr<Shader> s)
 {
-    shader = &s;
+    shader.swap(s);
 }
 
 void Painter::setup_VertexArray()
