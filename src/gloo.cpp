@@ -95,6 +95,10 @@ void Buffer::activate()
     glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
 }
 
+void Buffer::add_field(std::string name, DTYPE dtype, size_t dim) {
+    data_structure.push_back(std::make_tuple<name, dtype, dim>);
+}
+
 template<typename T> void Buffer::set_data(T* data, size_t n)
 {
     activate();
@@ -126,10 +130,10 @@ void Painter::setup_VertexArray()
     buffer->activate();
 
     // // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * buffer->size(), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * buffer->element_bytesize(), (GLvoid*)0);
     glEnableVertexAttribArray(0);
     // // Color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * buffer->size(), (GLvoid*)(3 * buffer->size()));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * buffer->element_bytesize(), (GLvoid*)(3 * buffer->element_bytesize()));
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0); // Unbind VAO

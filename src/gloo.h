@@ -51,6 +51,11 @@ private:
 
 };
 
+enum DTYPE {
+    FLOAT,
+    DOUBLE
+};
+
 class Buffer
 {
 public:
@@ -60,13 +65,17 @@ public:
     void init();
     void activate();
     GLuint get() { return mBuffer; }
-    size_t size() { return element_size; }
+    size_t element_bytesize() { return element_size; }
+
+    void add_field(std::string name, DTYPE dtype, size_t dim);
 
     template<typename T> void set_data(T* data, size_t n);
 
 private:
     GLuint mBuffer;
     size_t element_size;
+    // name, type, dim
+    std::vector<std::tuple<std::string, DTYPE, size_t>> data_structure;
 };
 
 class Painter
