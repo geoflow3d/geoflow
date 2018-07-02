@@ -55,26 +55,19 @@ mouse_drag drag = NO_DRAG;
 xy_pos drag_init_pos;
 xy_pos last_mouse_pos;
 
-float radius;
-
-float fov = 5;
-float clip_near = 0.1;
+float fov = 60;
+float clip_near = 0.01;
 float clip_far = 100;
 
-float cam_pos = -1;
+float cam_pos = -2;
 float scale = 0.6;
 glm::vec3 translation;
 glm::vec3 translation_ondrag;
 glm::quat rotation;
 glm::quat rotation_ondrag;
 
-void update_radius();
 void update_projection_matrix();
 void update_view_matrix();
-
-inline xy_pos screen2view(xy_pos p){
-    return {(p.x-width/2.)/radius, ((height-p.y)-height/2.)/radius};
-}
-
+inline xy_pos screen2view(xy_pos p);
 
 };
