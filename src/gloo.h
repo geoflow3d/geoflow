@@ -8,6 +8,8 @@
 // Standard Headers
 #include <string>
 #include <memory>
+#include <tuple>
+#include <vector>
 
 // Define Namespace
 class Shader
@@ -67,15 +69,18 @@ public:
     GLuint get() { return mBuffer; }
     size_t element_bytesize() { return element_size; }
 
-    void add_field(std::string name, DTYPE dtype, size_t dim);
+    void add_field(size_t dim);
+    std::vector<size_t> get_fields();
+    size_t get_stride();
+    size_t get_length();
 
     template<typename T> void set_data(T* data, size_t n);
 
 private:
     GLuint mBuffer;
-    size_t element_size;
+    size_t element_size, length, stride=0;
     // name, type, dim
-    std::vector<std::tuple<std::string, DTYPE, size_t>> data_structure;
+    std::vector<size_t> data_fields;
 };
 
 class Painter
@@ -89,6 +94,7 @@ public:
 
     void set_buffer(std::unique_ptr<Buffer> b);
     void set_program(std::unique_ptr<Shader> s);
+    void set_drawmode(int dm) {draw_mode = dm;}
 
     void setup_VertexArray();
 
@@ -96,6 +102,7 @@ public:
 
 private:
     GLuint mVertexArray;
+    int draw_mode;
     std::unique_ptr<Buffer> buffer;
     std::unique_ptr<Shader> shader;
 };

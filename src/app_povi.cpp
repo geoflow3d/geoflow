@@ -27,6 +27,8 @@ void poviApp::on_initialise(){
     auto data_buffer = std::make_unique<Buffer>();
     data_buffer->init();
     data_buffer->set_data(vertices.data(), vertices.size());
+    data_buffer->add_field(3);
+    data_buffer->add_field(3);
 
     // Shader data_shader;
     auto data_shader = std::make_unique<Shader>();
@@ -38,25 +40,30 @@ void poviApp::on_initialise(){
     data_painter->set_buffer(std::move(data_buffer));
     data_painter->set_program(std::move(data_shader));
     data_painter->setup_VertexArray();
+    data_painter->set_drawmode(GL_TRIANGLES);
 
     painters.push_back(std::move(data_painter));
 
-    // Painter ch_painter;
-    // ch_painter.init();
-    // Buffer ch_buffer;
-    // ch_buffer.init();
-    // ch_buffer.set_data(crosshair_lines.data(), crosshair_lines.size());
-    // Shader ch_shader;
-    // ch_shader.init();
-    // ch_shader.attach("crosshair.vert");
-    // ch_shader.attach("crosshair.frag");
-    // ch_shader.link();
-    
-    // ch_painter.set_buffer(ch_buffer);
-    // ch_painter.setup_VertexArray();
-    // ch_painter.set_program(ch_shader);
+    auto ch_painter = std::make_unique<Painter>();
+    ch_painter->init();
 
-    // painters.push_back(crosshair);
+    auto ch_buffer = std::make_unique<Buffer>();
+    ch_buffer->init();
+    ch_buffer->set_data(crosshair_lines.data(), crosshair_lines.size());
+    ch_buffer->add_field(2);
+
+    auto ch_shader = std::make_unique<Shader>();
+    ch_shader->init();
+    ch_shader->attach("crosshair.vert");
+    ch_shader->attach("crosshair.frag");
+    ch_shader->link();
+    
+    ch_painter->set_buffer(std::move(ch_buffer));
+    ch_painter->set_program(std::move(ch_shader));
+    ch_painter->setup_VertexArray();
+    ch_painter->set_drawmode(GL_LINES);
+
+    painters.push_back(std::move(ch_painter));
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 

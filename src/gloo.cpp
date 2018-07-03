@@ -95,14 +95,27 @@ void Buffer::activate()
     glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
 }
 
-void Buffer::add_field(std::string name, DTYPE dtype, size_t dim) {
-    data_structure.push_back(std::make_tuple<name, dtype, dim>);
+void Buffer::add_field(size_t dim) {
+    data_fields.push_back(dim);
+    stride = stride+dim;
+}
+
+std::vector<size_t> Buffer::get_fields() {
+    return data_fields;
+}
+
+size_t Buffer::get_stride() {
+    return stride;
+}
+size_t Buffer::get_length() {
+    return length;
 }
 
 template<typename T> void Buffer::set_data(T* data, size_t n)
 {
     activate();
     element_size = sizeof(T);
+    length = n;
     glBufferData(GL_ARRAY_BUFFER, element_size*n, data, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -130,11 +143,13 @@ void Painter::setup_VertexArray()
     buffer->activate();
 
     // // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * buffer->element_bytesize(), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    // // Color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * buffer->element_bytesize(), (GLvoid*)(3 * buffer->element_bytesize()));
-    glEnableVertexAttribArray(1);
+    int start=0, i=0;
+    int stride = buffer->get_stride();
+    for(int dim:buffer->get_fields()) {
+        glVertexAttribPointer(i, dim, GL_FLOAT, GL_FALSE, stride * buffer->element_bytesize(), (GLvoid*)(start * buffer->element_bytesize()));
+        glEnableVertexAttribArray(i++);
+        start = start+dim;
+    }
 
     glBindVertexArray(0); // Unbind VAO
 }
@@ -151,7 +166,7 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     glUniformMatrix4fv(modLoc, 1, GL_FALSE, glm::value_ptr(model));
 
     glBindVertexArray(mVertexArray);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(draw_mode, 0, buffer->get_length());
     glBindVertexArray(0);
     // std::cout << "draw" <<std::endl;
 }

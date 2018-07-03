@@ -1,7 +1,7 @@
 #include "app.h"
 
 App::App(int width, int height, std::string title)
-	:width(width), height(height), clear_color(ImVec4(0.45f, 0.55f, 0.60f, 1.00f)) {
+	:width(width), height(height), clear_color(ImVec4(0.052, 0.106, 0.133, 1.00f)) {
 
     glfwSetErrorCallback(error_callback);
     
@@ -98,6 +98,7 @@ void App::run(){
         
         on_draw();
         ImGui::Checkbox("Show demo window", &show_demo_window);
+        ImGui::ColorPicker4("Clear color", (float*)&clear_color);
 
         if (show_demo_window)
         {
