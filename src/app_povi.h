@@ -67,6 +67,7 @@ glm::vec3 translation_ondrag;
 glm::quat rotation;
 glm::quat rotation_ondrag;
 
+void center();
 void update_projection_matrix();
 void update_view_matrix();
 inline xy_pos screen2view(xy_pos p);

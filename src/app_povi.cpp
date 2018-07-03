@@ -70,6 +70,12 @@ void poviApp::on_initialise(){
     // std::cout << "prog." << shader.get() << std::endl;
 }
 
+void poviApp::center() 
+{
+    translation = glm::vec3();
+    rotation = glm::quat();
+}
+
 void poviApp::on_resize(int new_width, int new_height) {
     width = new_width;
     height = new_height;
@@ -95,8 +101,8 @@ void poviApp::on_draw(){
 }
 
 void poviApp::on_key_press(int key, int action, int mods) {
-    if (action == GLFW_PRESS && key == GLFW_KEY_LEFT_SHIFT) {
-
+    if (action == GLFW_PRESS && key == GLFW_KEY_C) {
+        center();
     }
 }
 
