@@ -5,69 +5,42 @@ void poviApp::on_initialise(){
 
     model = glm::mat4();
 
-    // Set up vertex data (and buffer(s)) and attribute pointers
-    std::array<GLfloat,18> vertices = {
-        // Positions         // Colors
-        0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // Bottom Right
-       -0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // Bottom Left
-        0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // Top 
-    };
-
     std::array<GLfloat,8> crosshair_lines = {
         -1,  0,
          1,  0,
          0, -1,
          0,  1
     };
-    
-    auto data_painter = std::make_unique<Painter>();
-    data_painter->init();
-
-    // std::unique_ptr<Buffer> data_buffer(new Buffer);
-    auto data_buffer = std::make_unique<Buffer>();
-    data_buffer->init();
-    data_buffer->set_data(vertices.data(), vertices.size());
-    data_buffer->add_field(3);
-    data_buffer->add_field(3);
-
-    // Shader data_shader;
-    auto data_shader = std::make_unique<Shader>();
-    data_shader->init();
-    data_shader->attach("basic.vert");
-    data_shader->attach("basic.frag");
-    data_shader->link();
-    
-    data_painter->set_buffer(std::move(data_buffer));
-    data_painter->set_program(std::move(data_shader));
-    data_painter->setup_VertexArray();
-    data_painter->set_drawmode(GL_TRIANGLES);
-
-    painters.push_back(std::move(data_painter));
-
-    auto ch_painter = std::make_unique<Painter>();
-    ch_painter->init();
+    // ch_painter = Painter();
 
     auto ch_buffer = std::make_unique<Buffer>();
-    ch_buffer->init();
+    // be carefull with that data, crosshair_lines will be undefined when this function finishes...
     ch_buffer->set_data(crosshair_lines.data(), crosshair_lines.size());
     ch_buffer->add_field(2);
 
     auto ch_shader = std::make_unique<Shader>();
-    ch_shader->init();
     ch_shader->attach("crosshair.vert");
     ch_shader->attach("crosshair.frag");
-    ch_shader->link();
     
-    ch_painter->set_buffer(std::move(ch_buffer));
-    ch_painter->set_program(std::move(ch_shader));
-    ch_painter->setup_VertexArray();
-    ch_painter->set_drawmode(GL_LINES);
-
-    painters.push_back(std::move(ch_painter));
+    ch_painter.set_buffer(std::move(ch_buffer));
+    ch_painter.set_program(std::move(ch_shader));
+    ch_painter.set_drawmode(GL_LINES);
+    ch_painter.init(); 
+    // painters.push_back(std::move(ch_painter));
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 
     // std::cout << "prog." << shader.get() << std::endl;
+}
+
+void poviApp::add_painter(std::shared_ptr<Painter> painter) 
+{
+    painters.push_back(painter);
+}
+
+void poviApp::remove_painter(std::weak_ptr<Painter> painter) 
+{
+
 }
 
 void poviApp::center() 
@@ -88,6 +61,8 @@ void poviApp::on_draw(){
     for (auto &painter:painters){
         painter->render(model, view, projection);
     }
+    ch_painter.render(model, view, projection);
+
     ImGui::Begin("View parameters");
     xy_pos p0 = screen2view(last_mouse_pos);
     ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);

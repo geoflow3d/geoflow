@@ -10,7 +10,10 @@
 // Define Namespace
 
 void Shader::init() {
-    mProgram = glCreateProgram(); 
+    mProgram = glCreateProgram();
+    build();
+    link();
+    is_initialised = true;
 }
 
 Shader & Shader::activate()
@@ -32,30 +35,38 @@ Shader & Shader::attach(std::string const & filename)
 {
     // Load GLSL Shader Source from File
     std::string path = PROJECT_SOURCE_DIR "/shaders/";
-    std::ifstream fd(path + filename);
-    auto src = std::string(std::istreambuf_iterator<char>(fd),
-                          (std::istreambuf_iterator<char>()));
-
-    // Create a Shader Object
-    const char * source = src.c_str();
-    auto shader = create(filename);
-    glShaderSource(shader, 1, & source, nullptr);
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, & mStatus);
-
-    // Display the Build Log on Error
-    if (mStatus == false)
-    {
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, & mLength);
-        std::unique_ptr<char[]> buffer(new char[mLength]);
-        glGetShaderInfoLog(shader, mLength, nullptr, buffer.get());
-        fprintf(stderr, "%s\n%s", filename.c_str(), buffer.get());
-    }
-
-    // Attach the Shader and Free Allocated Memory
-    glAttachShader(mProgram, shader);
-    glDeleteShader(shader);
+    path += filename;
+    sources.push_back(path);
     return *this;
+}
+
+void Shader::build()
+{
+    for(auto filename:sources){
+        std::ifstream fd(filename);
+        auto src = std::string(std::istreambuf_iterator<char>(fd),
+                            (std::istreambuf_iterator<char>()));
+
+        // Create a Shader Object
+        const char * source = src.c_str();
+        auto shader = create(filename);
+        glShaderSource(shader, 1, & source, nullptr);
+        glCompileShader(shader);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, & mStatus);
+
+        // Display the Build Log on Error
+        if (mStatus == false)
+        {
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, & mLength);
+            std::unique_ptr<char[]> buffer(new char[mLength]);
+            glGetShaderInfoLog(shader, mLength, nullptr, buffer.get());
+            fprintf(stderr, "%s\n%s", filename.c_str(), buffer.get());
+        }
+
+        // Attach the Shader and Free Allocated Memory
+        glAttachShader(mProgram, shader);
+        glDeleteShader(shader);
+    }
 }
 
 GLuint Shader::create(std::string const & filename)
@@ -86,8 +97,12 @@ Shader & Shader::link()
 
 
 void Buffer::init()
-{
+{   
     glGenBuffers(1, &mBuffer);
+    activate();
+    glBufferData(GL_ARRAY_BUFFER, element_size*length, data, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    is_initialised = true;
 }
 
 void Buffer::activate()
@@ -111,21 +126,25 @@ size_t Buffer::get_length() {
     return length;
 }
 
-template<typename T> void Buffer::set_data(T* data, size_t n)
+template<typename T> void Buffer::set_data(T* d, size_t n)
 {
-    activate();
+    data = d;
     element_size = sizeof(T);
     length = n;
-    glBufferData(GL_ARRAY_BUFFER, element_size*n, data, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
 }
 template void Buffer::set_data(float*, size_t);
-template void Buffer::set_data(double*, size_t);
+// template void Buffer::set_data(double*, size_t);
 
 
 void Painter::init()
 {
+    buffer->init();
+    shader->init();
     glGenVertexArrays(1, &mVertexArray);
+    setup_VertexArray();
+    // if (buffer->is_initialised && shader->is_initialised)
+    is_initialised = true;
 }
 
 void Painter::set_buffer(std::unique_ptr<Buffer> b)
@@ -156,6 +175,9 @@ void Painter::setup_VertexArray()
 
 void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
 {
+    if(!is_initialised){
+        init();
+    }
     shader->activate();
 
     GLint projLoc = glGetUniformLocation(shader->get(), "u_projection"); 

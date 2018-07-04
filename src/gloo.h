@@ -46,10 +46,15 @@ private:
     Shader(Shader const &) = delete;
     Shader & operator=(Shader const &) = delete;
 
+    void build();
+
     // Private Member Variables
     GLuint mProgram;
     GLint  mStatus;
     GLint  mLength;
+    std::vector<std::string> sources;
+
+    bool is_initialised=false;
 
 };
 
@@ -77,10 +82,13 @@ public:
     template<typename T> void set_data(T* data, size_t n);
 
 private:
+    GLfloat* data;
     GLuint mBuffer;
     size_t element_size, length, stride=0;
     // name, type, dim
     std::vector<size_t> data_fields;
+
+    bool is_initialised=false;
 };
 
 class Painter
@@ -105,4 +113,6 @@ private:
     int draw_mode;
     std::unique_ptr<Buffer> buffer;
     std::unique_ptr<Shader> shader;
+
+    bool is_initialised=false;
 };

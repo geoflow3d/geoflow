@@ -34,6 +34,8 @@ inline glm::quat arcball(xy_pos p){
 class poviApp: public App {
 public:
 poviApp(int width, int height, std::string title):App(width, height, title){}
+void add_painter(std::shared_ptr<Painter> painter);
+void remove_painter(std::weak_ptr<Painter> painter); 
 
 protected:
 void on_initialise();
@@ -46,7 +48,7 @@ void on_mouse_press(int button, int action, int mods);
 
 // Shader shader;
 // Buffer buffer;
-std::vector<std::unique_ptr<Painter>> painters;
+std::vector<std::shared_ptr<Painter>> painters;
 
 glm::mat4 model;
 glm::mat4 view;
@@ -59,6 +61,8 @@ xy_pos last_mouse_pos;
 float fov = 60;
 float clip_near = 0.01;
 float clip_far = 100;
+
+Painter ch_painter;
 
 float cam_pos = -2;
 float scale = 0.6;
