@@ -25,9 +25,7 @@ link_directories(${GLFW_LIBRARY_DIRS})
 
 add_definitions(-DGLFW_INCLUDE_NONE -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
 
-add_executable(
-  povi 
-  src/main.cpp 
+add_library(povi_lib STATIC 
   src/app.cpp 
   src/app_povi.cpp 
   glad/src/glad.c 
@@ -38,4 +36,10 @@ add_executable(
   imgui/imgui_impl_glfw.cpp
   imgui/imgui_impl_opengl3.cpp
 )
-target_link_libraries(povi ${GLFW_LIBRARIES})
+
+add_executable(
+  povi 
+  src/main.cpp 
+)
+target_link_libraries(povi_lib ${GLFW_LIBRARIES})
+target_link_libraries(povi povi_lib)
