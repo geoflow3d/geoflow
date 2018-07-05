@@ -4,13 +4,6 @@
 void poviApp::on_initialise(){
 
     model = glm::mat4();
-
-    std::array<GLfloat,8> crosshair_lines = {
-        -1,  0,
-         1,  0,
-         0, -1,
-         0,  1
-    };
     // ch_painter = Painter();
 
     auto ch_buffer = std::make_unique<Buffer>();

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <array>
 #include <vector>
 #include <memory>
 #include <tuple>
@@ -67,6 +68,12 @@ float clip_near = 0.01;
 float clip_far = 100;
 
 Painter ch_painter;
+std::array<GLfloat,8> crosshair_lines = {
+		-1,  0,
+			1,  0,
+			0, -1,
+			0,  1
+};
 
 float cam_pos = -2;
 float scale = 0.6;
