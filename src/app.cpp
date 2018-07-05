@@ -97,8 +97,8 @@ void App::run(){
             glfwPollEvents(); // don't sleep, eg needed for animations
         
         on_draw();
-        ImGui::Checkbox("Show demo window", &show_demo_window);
         ImGui::ColorPicker4("Clear color", (float*)&clear_color);
+        ImGui::Checkbox("Show demo window", &show_demo_window);
 
         if (show_demo_window)
         {

@@ -13,7 +13,7 @@ void Shader::init() {
     mProgram = glCreateProgram();
     build();
     link();
-    is_initialised = true;
+    initialised = true;
 }
 
 Shader & Shader::activate()
@@ -98,11 +98,12 @@ Shader & Shader::link()
 
 void Buffer::init()
 {   
-    glGenBuffers(1, &mBuffer);
+    if (!mBuffer)
+        glGenBuffers(1, &mBuffer);
     activate();
     glBufferData(GL_ARRAY_BUFFER, element_size*length, data, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    is_initialised = true;
+    initialised = true;
 }
 
 void Buffer::activate()
@@ -131,7 +132,7 @@ template<typename T> void Buffer::set_data(T* d, size_t n)
     data = d;
     element_size = sizeof(T);
     length = n;
-    
+    initialised = false;
 }
 template void Buffer::set_data(float*, size_t);
 // template void Buffer::set_data(double*, size_t);
@@ -139,12 +140,11 @@ template void Buffer::set_data(float*, size_t);
 
 void Painter::init()
 {
-    buffer->init();
-    shader->init();
-    glGenVertexArrays(1, &mVertexArray);
-    setup_VertexArray();
+    if(!mVertexArray)
+        glGenVertexArrays(1, &mVertexArray);
+    // setup_VertexArray();
     // if (buffer->is_initialised && shader->is_initialised)
-    is_initialised = true;
+    initialised = true;
 }
 
 void Painter::set_buffer(std::unique_ptr<Buffer> b)
@@ -175,8 +175,13 @@ void Painter::setup_VertexArray()
 
 void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
 {
-    if(!is_initialised){
+    if(!shader->is_initialised())
+        shader->init();
+    if(!initialised)
         init();
+    if(!buffer->is_initialised()){
+        buffer->init();
+        setup_VertexArray();
     }
     shader->activate();
 
@@ -190,5 +195,4 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     glBindVertexArray(mVertexArray);
     glDrawArrays(draw_mode, 0, buffer->get_length()/buffer->get_stride());
     glBindVertexArray(0);
-    // std::cout << "draw" <<std::endl;
 }

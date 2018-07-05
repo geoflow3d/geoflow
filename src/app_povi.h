@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <memory>
+#include <tuple>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,8 +35,9 @@ inline glm::quat arcball(xy_pos p){
 class poviApp: public App {
 public:
 poviApp(int width, int height, std::string title):App(width, height, title){}
-void add_painter(std::shared_ptr<Painter> painter);
+void add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible=true);
 void remove_painter(std::weak_ptr<Painter> painter); 
+void draw_that(void (*func)()) { drawthis_func = func; };
 
 protected:
 void on_initialise();
@@ -48,7 +50,9 @@ void on_mouse_press(int button, int action, int mods);
 
 // Shader shader;
 // Buffer buffer;
-std::vector<std::shared_ptr<Painter>> painters;
+private:
+std::vector< std::tuple<std::shared_ptr<Painter>,std::string,bool> > painters;
+void (*drawthis_func)();
 
 glm::mat4 model;
 glm::mat4 view;

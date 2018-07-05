@@ -21,6 +21,7 @@ public:
     ~Shader() { glDeleteProgram(mProgram); }
 
     void init();
+    bool is_initialised(){ return initialised;};
 
     // Public Member Functions
     Shader & activate();
@@ -49,12 +50,12 @@ private:
     void build();
 
     // Private Member Variables
-    GLuint mProgram;
+    GLuint mProgram=0;
     GLint  mStatus;
     GLint  mLength;
     std::vector<std::string> sources;
 
-    bool is_initialised=false;
+    bool initialised=false;
 
 };
 
@@ -70,6 +71,7 @@ public:
     ~Buffer() { glDeleteBuffers(1, &mBuffer); }
 
     void init();
+    bool is_initialised(){ return initialised;};
     void activate();
     GLuint get() { return mBuffer; }
     size_t element_bytesize() { return element_size; }
@@ -83,12 +85,12 @@ public:
 
 private:
     GLfloat* data;
-    GLuint mBuffer;
+    GLuint mBuffer=0;
     size_t element_size, length, stride=0;
     // name, type, dim
     std::vector<size_t> data_fields;
 
-    bool is_initialised=false;
+    bool initialised=false;
 };
 
 class Painter
@@ -98,6 +100,7 @@ public:
     ~Painter() { glDeleteVertexArrays(1, &mVertexArray); }
 
     void init();
+    bool is_initialised(){ return initialised;};
     GLuint get() { return mVertexArray; }
 
     void set_buffer(std::unique_ptr<Buffer> b);
@@ -109,10 +112,10 @@ public:
     void render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection);
 
 private:
-    GLuint mVertexArray;
+    GLuint mVertexArray=0;
     int draw_mode;
     std::unique_ptr<Buffer> buffer;
     std::unique_ptr<Shader> shader;
 
-    bool is_initialised=false;
+    bool initialised=false;
 };

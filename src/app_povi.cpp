@@ -33,9 +33,9 @@ void poviApp::on_initialise(){
     // std::cout << "prog." << shader.get() << std::endl;
 }
 
-void poviApp::add_painter(std::shared_ptr<Painter> painter) 
+void poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
 {
-    painters.push_back(painter);
+    painters.push_back(std::make_tuple(painter, name, visible));
 }
 
 void poviApp::remove_painter(std::weak_ptr<Painter> painter) 
@@ -59,19 +59,28 @@ void poviApp::on_draw(){
     update_view_matrix();
     update_projection_matrix();
     for (auto &painter:painters){
-        painter->render(model, view, projection);
+        if (std::get<2>(painter))
+            std::get<0>(painter)->render(model, view, projection);
     }
     ch_painter.render(model, view, projection);
 
-    ImGui::Begin("View parameters");
+    if (drawthis_func)
+        drawthis_func();
+
+    // ImGui::Begin("View parameters");
     xy_pos p0 = screen2view(last_mouse_pos);
-    ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);
-    ImGui::Text("Mouse pos [view]: (%g, %g)", p0.x, p0.y);
+    // ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);
+    // ImGui::Text("Mouse pos [view]: (%g, %g)", p0.x, p0.y);
     ImGui::SliderFloat("Field of view", &fov, 1, 180);
     ImGui::SliderFloat("Clip near", &clip_near, 0.01, 100);
     ImGui::SliderFloat("Clip far", &clip_far, 1, 1000);
     ImGui::SliderFloat("Camera position", &cam_pos, -20, -1);
     ImGui::SliderFloat("Scale", &scale, 0.01, 100);
+    // ImGui::End();
+
+    ImGui::Begin("Painters");
+    for(auto &painter:painters)
+        ImGui::Checkbox(std::get<1>(painter).c_str(), &std::get<2>(painter));
     ImGui::End();
 }
 
