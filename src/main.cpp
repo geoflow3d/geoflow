@@ -18,12 +18,12 @@ int main(void)
 
     auto data_painter = std::make_shared<Painter>();
 
-   data_painter->set_data(vertices.data(), vertices.size(), {3,3});
-   data_painter->attach_shader("basic.vert");
-   data_painter->attach_shader("basic.frag");
-   data_painter->set_drawmode(GL_TRIANGLES);
+    data_painter->set_data(vertices.data(), vertices.size(), {3,3});
+    data_painter->attach_shader("basic.vert");
+    data_painter->attach_shader("basic.frag");
+    data_painter->set_drawmode(GL_TRIANGLES);
 
-   a.add_painter(std::move(data_painter), "triangle");
+    a.add_painter(std::move(data_painter), "triangle");
 
     a.run();
 }
