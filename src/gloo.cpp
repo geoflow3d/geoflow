@@ -188,7 +188,7 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     glUniformMatrix4fv(modLoc, 1, GL_FALSE, glm::value_ptr(model));
 
     glBindVertexArray(mVertexArray);
-    glDrawArrays(draw_mode, 0, buffer->get_length());
+    glDrawArrays(draw_mode, 0, buffer->get_length()/buffer->get_stride());
     glBindVertexArray(0);
     // std::cout << "draw" <<std::endl;
 }
