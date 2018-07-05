@@ -111,10 +111,10 @@ void Buffer::activate()
     glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
 }
 
-void Buffer::add_field(size_t dim) {
-    data_fields.push_back(dim);
-    stride = stride+dim;
-}
+// void Buffer::add_field(size_t dim) {
+//     data_fields.push_back(dim);
+//     stride = stride+dim;
+// }
 
 std::vector<size_t> Buffer::get_fields() {
     return data_fields;
@@ -127,14 +127,21 @@ size_t Buffer::get_length() {
     return length;
 }
 
-template<typename T> void Buffer::set_data(T* d, size_t n)
+template<typename T> void Buffer::set_data(T* d, size_t n, std::initializer_list<int> dims)
 {
     data = d;
     element_size = sizeof(T);
     length = n;
+    
+    data_fields.clear();
+    stride = 0;
+    for(auto dim:dims){
+        data_fields.push_back(dim);
+        stride += dim;
+    }
     initialised = false;
 }
-template void Buffer::set_data(float*, size_t);
+template void Buffer::set_data(GLfloat*, size_t, std::initializer_list<int>);
 // template void Buffer::set_data(double*, size_t);
 
 
@@ -147,14 +154,23 @@ void Painter::init()
     initialised = true;
 }
 
-void Painter::set_buffer(std::unique_ptr<Buffer> b)
+void Painter::attach_shader(std::string const & filename)
 {
-    buffer.swap(b);
+    shader->attach(filename);
 }
-void Painter::set_program(std::unique_ptr<Shader> s)
+void Painter::set_data(GLfloat* data, size_t n, std::initializer_list<int> dims)
 {
-    shader.swap(s);
+    buffer->set_data(data, n, dims);
 }
+
+// void Painter::set_buffer(std::unique_ptr<Buffer> b)
+// {
+//     buffer.swap(b);
+// }
+// void Painter::set_program(std::unique_ptr<Shader> s)
+// {
+//     shader.swap(s);
+// }
 
 void Painter::setup_VertexArray()
 {

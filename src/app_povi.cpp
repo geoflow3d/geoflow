@@ -1,24 +1,15 @@
 #include "app_povi.h"
-#include <array>
 
 void poviApp::on_initialise(){
 
     model = glm::mat4();
     // ch_painter = Painter();
 
-    auto ch_buffer = std::make_unique<Buffer>();
-    // be carefull with that data, crosshair_lines will be undefined when this function finishes...
-    ch_buffer->set_data(crosshair_lines.data(), crosshair_lines.size());
-    ch_buffer->add_field(2);
-
-    auto ch_shader = std::make_unique<Shader>();
-    ch_shader->attach("crosshair.vert");
-    ch_shader->attach("crosshair.frag");
-    
-    ch_painter.set_buffer(std::move(ch_buffer));
-    ch_painter.set_program(std::move(ch_shader));
+    ch_painter.set_data(crosshair_lines.data(), crosshair_lines.size(), {2});
+    ch_painter.attach_shader("crosshair.vert");
+    ch_painter.attach_shader("crosshair.frag");
     ch_painter.set_drawmode(GL_LINES);
-    ch_painter.init(); 
+    // ch_painter.init();
     // painters.push_back(std::move(ch_painter));
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);

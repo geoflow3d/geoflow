@@ -10,6 +10,7 @@
 #include <memory>
 #include <tuple>
 #include <vector>
+#include <initializer_list>
 
 // Define Namespace
 class Shader
@@ -76,12 +77,12 @@ public:
     GLuint get() { return mBuffer; }
     size_t element_bytesize() { return element_size; }
 
-    void add_field(size_t dim);
+    // void add_field(size_t dim);
     std::vector<size_t> get_fields();
     size_t get_stride();
     size_t get_length();
 
-    template<typename T> void set_data(T* data, size_t n);
+    template<typename T> void set_data(T* data, size_t n, std::initializer_list<int> dims);
 
 private:
     GLfloat* data;
@@ -96,26 +97,28 @@ private:
 class Painter
 {
 public:
-    Painter() { }
+    Painter() {}
     ~Painter() { glDeleteVertexArrays(1, &mVertexArray); }
 
     void init();
     bool is_initialised(){ return initialised;};
-    GLuint get() { return mVertexArray; }
+    // GLuint get() { return mVertexArray; }
 
-    void set_buffer(std::unique_ptr<Buffer> b);
-    void set_program(std::unique_ptr<Shader> s);
+    void attach_shader(std::string const & filename);
+    void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
+
     void set_drawmode(int dm) {draw_mode = dm;}
-
-    void setup_VertexArray();
 
     void render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection);
 
 private:
+    // void set_buffer(std::unique_ptr<Buffer> b);
+    // void set_program(std::unique_ptr<Shader> s);
+    void setup_VertexArray();
     GLuint mVertexArray=0;
     int draw_mode;
-    std::unique_ptr<Buffer> buffer;
-    std::unique_ptr<Shader> shader;
+    std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
+    std::unique_ptr<Shader> shader = std::make_unique<Shader>();
 
     bool initialised=false;
 };
