@@ -151,6 +151,8 @@ void Painter::init()
         glGenVertexArrays(1, &mVertexArray);
     // setup_VertexArray();
     // if (buffer->is_initialised && shader->is_initialised)
+    if (draw_mode==GL_POINTS)
+        set_uniform("u_pointsize",1.0);
     initialised = true;
 }
 
@@ -187,6 +189,12 @@ void Painter::setup_VertexArray()
     }
 
     glBindVertexArray(0); // Unbind VAO
+}
+
+void Painter::set_uniform(std::string const & name, GLfloat value) {
+    shader->activate();
+    GLint loc = glGetUniformLocation(shader->get(), name.c_str());
+    glUniform1f(loc, value);
 }
 
 void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)

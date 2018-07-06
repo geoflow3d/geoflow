@@ -65,14 +65,29 @@ void poviApp::on_draw(){
     // ImGui::End();
 
     ImGui::Begin("Painters");
-    for(auto &painter:painters)
+    for(auto &painter:painters){
+        auto p = std::get<0>(painter);
         ImGui::Checkbox(std::get<1>(painter).c_str(), &std::get<2>(painter));
+        if(p->get_drawmode()==GL_POINTS){
+            // ImGui::SameLine();
+            ImGui::Indent();
+            ImGui::PushItemWidth(50);
+            auto s = std::get<1>(painter)+" pointsize";
+            if(ImGui::DragFloat(s.c_str(), &p->pointsize))
+                p->set_uniform("u_pointsize",p->pointsize);
+            ImGui::PopItemWidth();
+            ImGui::Unindent();
+        }
+    }
     ImGui::End();
 }
 
 void poviApp::on_key_press(int key, int action, int mods) {
     if (action == GLFW_PRESS && key == GLFW_KEY_C) {
         center();
+    }
+    if (action == GLFW_PRESS && key == GLFW_KEY_T) {
+        rotation = glm::quat();
     }
 }
 

@@ -6,10 +6,13 @@ uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_projection;
 
+uniform float u_pointsize;
+
 out vec3 ourColor;
 
 void main()
 {
     gl_Position = u_projection * u_view * u_model * vec4(position, 1.0);
     ourColor = color;
+    gl_PointSize = u_pointsize;
 }

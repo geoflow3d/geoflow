@@ -25,6 +25,8 @@ App::App(int width, int height, std::string title)
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
     glfwSwapInterval(1);
 
     // Setup Dear ImGui binding
