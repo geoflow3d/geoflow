@@ -17,9 +17,11 @@ void poviApp::on_initialise(){
     // std::cout << "prog." << shader.get() << std::endl;
 }
 
-void poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
+std::weak_ptr<Painter> poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
 {
     painters.push_back(std::make_tuple(painter, name, visible));
+    std::weak_ptr<Painter> handle = painter;
+    return handle;
 }
 
 void poviApp::remove_painter(std::weak_ptr<Painter> painter) 

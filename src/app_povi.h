@@ -36,7 +36,7 @@ inline glm::quat arcball(xy_pos p){
 class poviApp: public App {
 public:
 poviApp(int width, int height, std::string title):App(width, height, title){}
-void add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible=true);
+std::weak_ptr<Painter> add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible=true);
 void remove_painter(std::weak_ptr<Painter> painter); 
 void draw_that(void (*func)()) { drawthis_func = func; };
 

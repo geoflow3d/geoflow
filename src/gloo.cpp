@@ -98,7 +98,7 @@ Shader & Shader::link()
 
 void Buffer::init()
 {   
-    if (!mBuffer)
+    if (mBuffer==0)
         glGenBuffers(1, &mBuffer);
     activate();
     glBufferData(GL_ARRAY_BUFFER, element_size*length, data, GL_DYNAMIC_DRAW);
@@ -147,7 +147,7 @@ template void Buffer::set_data(GLfloat*, size_t, std::initializer_list<int>);
 
 void Painter::init()
 {
-    if(!mVertexArray)
+    if(mVertexArray==0)
         glGenVertexArrays(1, &mVertexArray);
     // setup_VertexArray();
     // if (buffer->is_initialised && shader->is_initialised)
