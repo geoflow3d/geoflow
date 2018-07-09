@@ -39,6 +39,7 @@ poviApp(int width, int height, std::string title):App(width, height, title){}
 std::weak_ptr<Painter> add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible=true);
 void remove_painter(std::weak_ptr<Painter> painter); 
 void draw_that(void (*func)()) { drawthis_func = func; };
+void center(float, float, float z=0);
 
 protected:
 void on_initialise();
@@ -76,13 +77,12 @@ std::array<GLfloat,8> crosshair_lines = {
 };
 
 float cam_pos = -2;
-float scale = 0.6;
-glm::vec3 translation;
+float scale = 0.05;
+glm::vec3 translation, center_point;
 glm::vec3 translation_ondrag;
 glm::quat rotation;
 glm::quat rotation_ondrag;
 
-void center();
 void update_projection_matrix();
 void update_view_matrix();
 inline xy_pos screen2view(xy_pos p);

@@ -17,6 +17,10 @@ void poviApp::on_initialise(){
     // std::cout << "prog." << shader.get() << std::endl;
 }
 
+void poviApp::center(float x, float y, float z) {
+    center_point = glm::vec3(x,y,z);
+}
+
 std::weak_ptr<Painter> poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
 {
     painters.push_back(std::make_tuple(painter, name, visible));
@@ -27,12 +31,6 @@ std::weak_ptr<Painter> poviApp::add_painter(std::shared_ptr<Painter> painter, st
 void poviApp::remove_painter(std::weak_ptr<Painter> painter) 
 {
 
-}
-
-void poviApp::center() 
-{
-    translation = glm::vec3();
-    rotation = glm::quat();
 }
 
 void poviApp::on_resize(int new_width, int new_height) {
@@ -84,7 +82,8 @@ void poviApp::on_draw(){
 
 void poviApp::on_key_press(int key, int action, int mods) {
     if (action == GLFW_PRESS && key == GLFW_KEY_C) {
-        center();
+        translation = glm::vec3();
+        rotation = glm::quat();
     }
     if (action == GLFW_PRESS && key == GLFW_KEY_T) {
         rotation = glm::quat();
