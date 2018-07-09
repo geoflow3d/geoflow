@@ -9,6 +9,7 @@
 #include <string>
 #include <memory>
 #include <tuple>
+#include <map>
 #include <vector>
 #include <initializer_list>
 
@@ -107,14 +108,14 @@ public:
     void attach_shader(std::string const & filename);
     void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
     void set_uniform(std::string const & name, GLfloat value);
-
+    float * get_uniform(std::string const & name);
     void set_drawmode(int dm) {draw_mode = dm;}
     int get_drawmode() {return draw_mode;}
 
     void render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection);
     
     // how to deal with uniforms?
-    float pointsize=1;
+    // float pointsize=1;
 private:
     // void set_buffer(std::unique_ptr<Buffer> b);
     // void set_program(std::unique_ptr<Shader> s);
@@ -123,8 +124,7 @@ private:
     int draw_mode;
     std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
     std::unique_ptr<Shader> shader = std::make_unique<Shader>();
-
-    
+    std::map<std::string,float> uniforms;
 
     bool initialised=false;
 };

@@ -71,8 +71,7 @@ void poviApp::on_draw(){
             ImGui::Indent();
             ImGui::PushItemWidth(50);
             auto s = std::get<1>(painter)+" pointsize";
-            if(ImGui::DragFloat(s.c_str(), &p->pointsize))
-                p->set_uniform("u_pointsize",p->pointsize);
+            ImGui::DragFloat(s.c_str(), p->get_uniform("u_pointsize"));
             ImGui::PopItemWidth();
             ImGui::Unindent();
         }

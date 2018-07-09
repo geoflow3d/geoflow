@@ -151,8 +151,8 @@ void Painter::init()
         glGenVertexArrays(1, &mVertexArray);
     // setup_VertexArray();
     // if (buffer->is_initialised && shader->is_initialised)
-    if (draw_mode==GL_POINTS)
-        set_uniform("u_pointsize",1.0);
+    // if (draw_mode==GL_POINTS)
+    //     set_uniform("u_pointsize",1.0);
     initialised = true;
 }
 
@@ -192,9 +192,11 @@ void Painter::setup_VertexArray()
 }
 
 void Painter::set_uniform(std::string const & name, GLfloat value) {
-    shader->activate();
-    GLint loc = glGetUniformLocation(shader->get(), name.c_str());
-    glUniform1f(loc, value);
+    uniforms[name] = value;
+}
+
+float * Painter::get_uniform(std::string const & name) {
+    return &uniforms[name];
 }
 
 void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
@@ -215,6 +217,11 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     GLint modLoc = glGetUniformLocation(shader->get(), "u_model"); 
     glUniformMatrix4fv(modLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    for (auto u: uniforms) {
+        GLint loc = glGetUniformLocation(shader->get(), u.first.c_str());
+        glUniform1f(loc, u.second);
+    }
 
     glBindVertexArray(mVertexArray);
     glDrawArrays(draw_mode, 0, buffer->get_length()/buffer->get_stride());
