@@ -70,8 +70,8 @@ void poviApp::on_draw(){
             // ImGui::SameLine();
             ImGui::Indent();
             ImGui::PushItemWidth(50);
-            auto s = std::get<1>(painter)+" pointsize";
-            ImGui::DragFloat(s.c_str(), p->get_uniform("u_pointsize"));
+            auto s = std::get<1>(painter)+" psize";
+            ImGui::SliderFloat(s.c_str(), p->get_uniform("u_pointsize"), 0.1, 20);
             ImGui::PopItemWidth();
             ImGui::Unindent();
         }
