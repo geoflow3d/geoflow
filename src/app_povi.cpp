@@ -46,7 +46,8 @@ void poviApp::on_draw(){
         if (std::get<2>(painter))
             std::get<0>(painter)->render(model, view, projection);
     }
-    ch_painter.render(model, view, projection);
+    if (drag != NO_DRAG)
+        ch_painter.render(model, view, projection);
 
     if (drawthis_func)
         drawthis_func();
