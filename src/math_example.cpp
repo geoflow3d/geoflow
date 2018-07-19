@@ -5,7 +5,7 @@ using namespace geoflow;
 
 class AddderNode:public Node {
   public:
-  AddderNode(){
+  AddderNode(NodeManager& manager):Node(manager) {
     add_input("in1");
     add_input("in2");
     add_output("result");
@@ -26,31 +26,31 @@ class AddderNode:public Node {
 
 class NumberNode:public Node {
   public:
-  float number_value=float();
-  NumberNode(float val){
-    number_value = val;
+  NumberNode(NodeManager& manager):Node(manager) {
     add_output("result");
   }
-  
-  
 
   void process(){
     std::cout << "begin NumberNode::process()" << "\n";
-    set_value("result", number_value);
+    set_value("result", 1);
     std::cout << "end NumberNode::process()" << "\n";
   }
 };
 
 int main(void) {
   NodeManager N = NodeManager();
-  auto adder = N.add(std::make_shared<AddderNode>());
-  auto number = N.add(std::make_shared<NumberNode>(2));
-  auto adder2 = N.add(std::make_shared<AddderNode>());
-  auto number2 = N.add(std::make_shared<NumberNode>(42));
+  auto adder = N.add<AddderNode>();
+  auto number = N.add<NumberNode>();
+  // auto adder2 = N.add<AddderNode>();
+  // auto number2 = N.add<NumberNode>();
   N.connect(number, adder, "result", "in1");
   N.connect(number, adder, "result", "in2");
-  N.connect(adder, adder2, "result", "in1");
-  N.connect(adder, adder2, "result", "in2");
-  number.lock()->check_inputs();
-  std::cout << "Result: " << std::any_cast<float>(adder2.lock()->outputTerminals["result"]->cdata) << "\n";
+  // N.connect(adder, adder2, "result", "in1");
+  // N.connect(adder, adder2, "result", "in2");
+  N.run(*number.lock());
+  try{
+    std::cout << "Result: " << std::any_cast<float>(adder.lock()->outputTerminals["result"]->cdata) << "\n";
+  } catch(const std::bad_any_cast& e) {
+    std::cout << "Oops... " << e.what() << '\n';
+  }
 }

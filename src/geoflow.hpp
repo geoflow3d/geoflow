@@ -5,12 +5,15 @@
 #include <any>
 #include <map>
 #include <set>
+#include <thread>
+#include <condition_variable>
 
 #include <iostream>
 
 namespace geoflow {
 
   class Node;
+  class NodeManager;
 
   class Terminal {
     public:
@@ -36,10 +39,10 @@ namespace geoflow {
     
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
-    
+    public:
     std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connections;
 
-    public:
+    
     OutputTerminal(Node& parent_gnode): Terminal(parent_gnode){};
     
     std::weak_ptr<OutputTerminal> get_ptr(){
@@ -53,17 +56,22 @@ namespace geoflow {
     void push(std::any data);
   };
 
-  // enum node_status {
-  //   NO_OUTPUT,
-  //   WAITING,
-  //   PROCESSING,
-  //   IDLE
-  // };
-  class Node {
+  enum node_status {
+    WAITING,
+    PROCESSING,
+    DONE
+  };
+  class Node : public std::enable_shared_from_this<Node>{
     public:
+    Node(NodeManager& manager) : manager(manager){
+    };
+
     std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
     struct parameters;
+    node_status status=WAITING;
+    // std::string name;
+    NodeManager& manager;
 
     void add_input(std::string name){
       inputTerminals[name] = std::make_shared<InputTerminal>(
@@ -76,8 +84,11 @@ namespace geoflow {
       );
     }
 
+    std::shared_ptr<Node> get_ptr(){return shared_from_this();};
+
     // std::get_input_terminal(std::string name){
-    void check_inputs();
+    void update();
+    void propagate_outputs();
 
     // private:
     std::any get_value(std::string input_name){
@@ -88,6 +99,8 @@ namespace geoflow {
     }
 
     // virtual void define_terminals()=0;
+    // void execute();
+    // virtual void io()=0;
     virtual void process()=0;
   };
 
@@ -96,9 +109,20 @@ namespace geoflow {
     public:
     NodeManager(){};
     std::vector<std::shared_ptr<Node>> nodes;
+    std::vector<std::shared_ptr<Node>> node_queue;
 
-    void process_from_Node(Node &Node);
-    std::weak_ptr<Node> add(std::shared_ptr<Node>);
+    std::condition_variable cv;
+    std::mutex mutex;
+
+    void run(Node &node);
+    void run_node(std::shared_ptr<Node> node);
+    bool check_process();
+    void queue(std::shared_ptr<Node> n);
+    template<class NodeClass> std::weak_ptr<Node> add(){
+        auto n = std::make_shared<NodeClass>(*this);
+        nodes.push_back(n);
+        return n;
+      };
     void remove_Node(Node &Node);
     void connect(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, std::string s1, std::string s2);
     // void remove_connection(Connection &conn);
