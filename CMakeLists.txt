@@ -15,18 +15,24 @@ if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" VERSION_GREATER 2.6)
 endif()
 
 set(CMAKE_CXX_FLAGS "-O2")
+
  
-include_directories( src )
+include_directories(src thirdparty/povi/src thirdparty/povi/imgui thirdparty/povi/glad/include)
 
 set(CMAKE_EXE_LINKER_FLAGS -Wl)
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_INSTALL_RPATH "/usr/local/opt/llvm/lib")
 link_directories("/usr/local/opt/llvm/lib")
 
-# add_library(libgeoflow STATIC src/geoflow.cpp )
-# target_link_libraries(libgeoflow )
-# Creating entries for target
-
 # add_subdirectory(examples)
+add_subdirectory(thirdparty/povi)
 
-add_executable(math src/math_example.cpp src/geoflow.cpp)
+add_executable(basic examples/basic.cpp src/geoflow.cpp)
+
+add_executable(
+  gui 
+  examples/gui.cpp 
+  src/nodes.cpp 
+  src/geoflow.cpp
+)
+target_link_libraries(gui povi_lib)

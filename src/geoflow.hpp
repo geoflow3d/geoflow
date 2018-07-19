@@ -85,7 +85,6 @@ namespace geoflow {
 
     std::shared_ptr<Node> get_ptr(){return shared_from_this();};
 
-    // std::get_input_terminal(std::string name){
     void update();
     void propagate_outputs();
 

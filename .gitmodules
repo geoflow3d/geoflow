@@ -1,0 +1,3 @@
+[submodule "thirdparty/povi"]
+	path = thirdparty/povi
+	url = git@github.com:Ylannl/povi.git

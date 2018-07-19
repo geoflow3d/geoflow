@@ -45,9 +45,6 @@ using namespace geoflow;
   }
 
   bool NodeManager::check_process(){
-    std::cout << "executing check_process, node_queue.size()=" << node_queue.size() << "\n";
-    //https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
-
     while (!node_queue.empty()){
       auto n = node_queue.front();
       node_queue.pop();
@@ -66,6 +63,4 @@ using namespace geoflow;
     node->status = PROCESSING;
     node->process();
     node->status = DONE;
-    // cv.notify_one();
-    
   }
