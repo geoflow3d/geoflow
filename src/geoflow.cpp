@@ -38,7 +38,7 @@ using namespace geoflow;
 
 
   void NodeManager::queue(std::shared_ptr<Node> n) {
-    node_queue.push_back(n);
+    node_queue.push(n);
   }
   void NodeManager::connect(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, std::string s1, std::string s2) {
     n1.lock()->outputTerminals[s1]->connect(*n2.lock()->inputTerminals[s2]);
@@ -47,44 +47,25 @@ using namespace geoflow;
   bool NodeManager::check_process(){
     std::cout << "executing check_process, node_queue.size()=" << node_queue.size() << "\n";
     //https://stackoverflow.com/questions/9927163/erase-element-in-vector-while-iterating-the-same-vector
-    for (auto it = node_queue.begin(); it != node_queue.end();){
-      if ((*it)->status==DONE) {
-        std::cout << "\tfound a DONE node\n";
-        (*it)->propagate_outputs();
-        node_queue.erase(it);
-      } else {
-        it++;
-      }
+
+    while (!node_queue.empty()){
+      auto n = node_queue.front();
+      node_queue.pop();
+      n->process();
+      n->propagate_outputs();
     }
-    for (auto it = node_queue.begin(); it != node_queue.end();){
-      if ((*it)->status==WAITING) {
-        std::cout << "\tfound a WAITING node\n";
-        auto t = std::thread(&NodeManager::run_node, this, std::ref(*it));
-        t.detach();
-        // node_queue.push_back(*it);
-      }
-    }
-    return node_queue.size()==0;\
+    return 1;
   }
 
   void NodeManager::run(Node &node){
-    std::unique_lock<std::mutex> mlock(mutex);
-
     queue(node.get_ptr());
     check_process();
-    // auto t = std::thread(&NodeManager::run_node, this, node.get_ptr());
-    // t.detach();
-
-    cv.wait(mlock, std::bind(&NodeManager::check_process, this));
   }
 
   void NodeManager::run_node(std::shared_ptr<Node> node){
     node->status = PROCESSING;
     node->process();
-    
     node->status = DONE;
-    std::cout << "\tWTF\n";
-    std::lock_guard<std::mutex> guard(mutex);
     // cv.notify_one();
     
   }

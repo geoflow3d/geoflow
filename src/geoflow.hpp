@@ -5,8 +5,7 @@
 #include <any>
 #include <map>
 #include <set>
-#include <thread>
-#include <condition_variable>
+#include <queue>
 
 #include <iostream>
 
@@ -98,9 +97,6 @@ namespace geoflow {
       outputTerminals[output_name]->push(std::any(value));
     }
 
-    // virtual void define_terminals()=0;
-    // void execute();
-    // virtual void io()=0;
     virtual void process()=0;
   };
 
@@ -109,10 +105,7 @@ namespace geoflow {
     public:
     NodeManager(){};
     std::vector<std::shared_ptr<Node>> nodes;
-    std::vector<std::shared_ptr<Node>> node_queue;
-
-    std::condition_variable cv;
-    std::mutex mutex;
+    std::queue<std::shared_ptr<Node>> node_queue;
 
     void run(Node &node);
     void run_node(std::shared_ptr<Node> node);
@@ -125,7 +118,6 @@ namespace geoflow {
       };
     void remove_Node(Node &Node);
     void connect(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, std::string s1, std::string s2);
-    // void remove_connection(Connection &conn);
   };
 
 }
