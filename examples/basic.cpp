@@ -3,12 +3,12 @@
 
 using namespace geoflow;
 
-class AddderNode:public Node {
+class AdderNode:public Node {
   public:
-  AddderNode(NodeManager& manager):Node(manager) {
-    add_input("in1");
-    add_input("in2");
-    add_output("result");
+  AdderNode(NodeManager& manager):Node(manager, "Adder") {
+    add_input("in1", TT_float);
+    add_input("in2", TT_float);
+    add_output("result", TT_float);
   }
 
   void process(){
@@ -22,8 +22,8 @@ class AddderNode:public Node {
 
 class NumberNode:public Node {
   public:
-  NumberNode(NodeManager& manager):Node(manager) {
-    add_output("result");
+  NumberNode(NodeManager& manager):Node(manager, "Number") {
+    add_output("result", TT_float);
   }
 
   void process(){
@@ -35,10 +35,12 @@ class NumberNode:public Node {
 
 int main(void) {
   NodeManager N = NodeManager();
-  auto adder = N.add<AddderNode>();
-  auto number = N.add<NumberNode>();
-  auto adder2 = N.add<AddderNode>();
-  auto number2 = N.add<NumberNode>();
+  N.register_node<AdderNode>("Adder");
+  N.register_node<NumberNode>("Number");
+  auto adder = N.add("Adder");
+  auto number = N.add("Number");
+  auto adder2 = N.add("Adder");
+  auto number2 = N.add("Number");
   N.connect(number, adder, "result", "in1");
   N.connect(number, adder, "result", "in2");
   N.connect(adder, adder2, "result", "in1");

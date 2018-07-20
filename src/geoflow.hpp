@@ -2,6 +2,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <functional>
 #include <any>
 #include <map>
 #include <set>
@@ -14,10 +15,16 @@ namespace geoflow {
   class Node;
   class NodeManager;
 
+  enum TerminalType : uint32_t{
+    TT_any = 0,
+    TT_float,
+    TT_int
+  };
   class Terminal {
     public:
-    Terminal(Node& parent_gnode):parent(parent_gnode){};   
+    Terminal(Node& parent_gnode, TerminalType type):parent(parent_gnode), type(type){};   
 
+    TerminalType type;
     Node& parent;
     std::any cdata;
 
@@ -29,7 +36,7 @@ namespace geoflow {
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
 
     public:
-    InputTerminal(Node& parent_gnode): Terminal(parent_gnode){};
+    InputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
     
     std::weak_ptr<InputTerminal> get_ptr(){
       return weak_from_this();
@@ -42,7 +49,7 @@ namespace geoflow {
     std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connections;
 
     
-    OutputTerminal(Node& parent_gnode): Terminal(parent_gnode){};
+    OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
     
     std::weak_ptr<OutputTerminal> get_ptr(){
       return weak_from_this();
@@ -62,24 +69,24 @@ namespace geoflow {
   };
   class Node : public std::enable_shared_from_this<Node>{
     public:
-    Node(NodeManager& manager) : manager(manager){
+    Node(NodeManager& manager, std::string name) : manager(manager), name(name){
     };
 
     std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
     struct parameters;
     node_status status=WAITING;
-    // std::string name;
+    std::string name;
     NodeManager& manager;
 
-    void add_input(std::string name){
+    void add_input(std::string name, TerminalType type){
       inputTerminals[name] = std::make_shared<InputTerminal>(
-        *this
+        *this, type
       );
     }
-    void add_output(std::string name){
+    void add_output(std::string name, TerminalType type){
       outputTerminals[name] = std::make_shared<OutputTerminal>(
-        *this
+        *this, type
       );
     }
 
@@ -106,12 +113,24 @@ namespace geoflow {
     std::vector<std::shared_ptr<Node>> nodes;
     std::queue<std::shared_ptr<Node>> node_queue;
 
+    template<class NodeClass> static std::shared_ptr<NodeClass> create_node(NodeManager& nm){
+      return std::make_shared<NodeClass>(nm);
+    }
+    
+    std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;
+
     void run(Node &node);
     void run_node(std::shared_ptr<Node> node);
     bool check_process();
     void queue(std::shared_ptr<Node> n);
-    template<class NodeClass> std::weak_ptr<Node> add(){
-        auto n = std::make_shared<NodeClass>(*this);
+    template<class NodeClass> void register_node(std::string name){
+        // node_register[name] = std::make_shared<NodeClass>;
+        node_register[name] = create_node<NodeClass>;
+        // auto n = std::make_shared<NodeClass>(*this);
+      };
+    std::weak_ptr<Node> add(std::string name){
+        auto f = node_register[name];
+        auto n = f(*this);
         nodes.push_back(n);
         return n;
       };
