@@ -56,11 +56,13 @@ using namespace geoflow;
     return 1;
   }
 
-  void NodeManager::run(Node &node) {
-    if (node.update()){
+  bool NodeManager::run(Node &node) {
+    if (node.update()) {
       notify_children(node);
       check_process();
-    }
+      return true;
+    } 
+    return false;
   }
 
   void NodeManager::notify_children(Node &node) {

@@ -112,7 +112,7 @@ namespace geoflow {
   class NodeManager {
     public:
     NodeManager(){};
-    std::vector<std::shared_ptr<Node>> nodes;
+    // std::vector<std::shared_ptr<Node>> nodes;
     std::queue<std::shared_ptr<Node>> node_queue;
 
     template<class NodeClass> static std::shared_ptr<NodeClass> create_node(NodeManager& nm){
@@ -121,7 +121,7 @@ namespace geoflow {
     
     std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;
 
-    void run(Node &node);
+    bool run(Node &node);
     void run_node(std::shared_ptr<Node> node);
     bool check_process();
     void queue(std::shared_ptr<Node> n);
@@ -130,14 +130,14 @@ namespace geoflow {
         node_register[name] = create_node<NodeClass>;
         // auto n = std::make_shared<NodeClass>(*this);
       };
-    std::weak_ptr<Node> add(std::string name){
+    std::shared_ptr<Node> create(std::string name){
         auto f = node_register[name];
         auto n = f(*this);
-        nodes.push_back(n);
+        // nodes.push_back(n);
         return n;
       };
     void notify_children(Node &node);
-    void remove_Node(Node &Node);
+    // void remove(Node &Node) {};
     void connect(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, std::string s1, std::string s2);
   };
 

@@ -122,16 +122,14 @@ namespace ImGui
 
 	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type)
 	{
-		auto gf_node_wptr = gf_manager.add(type);
-		auto node = std::make_unique<Node>(gf_node_wptr);
+		auto gf_node = gf_manager.add(type);
+		auto node = std::make_unique<Node>(gf_node);
 
 		////////////////////////////////////////////////////////////////////////////////
 		
 		node->id_ = -++id_;
 		node->name_ = type + std::to_string(id_).c_str();
 		node->position_ = pos;
-
-		auto gf_node = gf_node_wptr.lock();
 
 		for (auto& input : gf_node->inputTerminals){
 			auto connection = std::make_unique<Connection>(input.second);

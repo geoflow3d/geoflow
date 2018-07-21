@@ -192,9 +192,9 @@ namespace ImGui
 			std::vector<std::unique_ptr<Connection>> inputs_;
 			std::vector<std::unique_ptr<Connection>> outputs_;
 
-			std::weak_ptr<geoflow::Node> gf_node;
+			std::shared_ptr<geoflow::Node> gf_node;
 
-			Node(std::weak_ptr<geoflow::Node> gf_node):gf_node(gf_node)
+			Node(std::shared_ptr<geoflow::Node> gf_node):gf_node(gf_node)
 			{
 				id_ = 0;
 				state_ = NodeStateFlag_Default;
@@ -204,6 +204,10 @@ namespace ImGui
 
 				collapsed_height = 0.0f;
 				full_height = 0.0f;
+			}
+			~Node(){
+				// gf_node->parent.remove(gf_node.lock());
+				std::cout << "Destructing Node\n";
 			}
 
 			Node* Get()
