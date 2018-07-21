@@ -13,6 +13,8 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
+#include "geoflow.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -20,22 +22,22 @@
 
 namespace ImGui
 {
-	enum ConnectionType : uint32_t
-	{
-		ConnectionType_None = 0,
-		ConnectionType_Vec3,
-		ConnectionType_Float,
-		ConnectionType_Int,
-	};
+	// enum ConnectionType : uint32_t
+	// {
+	// 	ConnectionType_None = 0,
+	// 	ConnectionType_Vec3,
+	// 	ConnectionType_Float,
+	// 	ConnectionType_Int,
+	// };
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	struct NodeType
-	{
-		std::string name_;
-		std::vector<std::pair<std::string, ConnectionType>> inputs_;
-		std::vector<std::pair<std::string, ConnectionType>> outputs_;
-	};
+	// struct NodeType
+	// {
+	// 	std::string name_;
+	// 	std::vector<std::pair<std::string, ConnectionType>> inputs_;
+	// 	std::vector<std::pair<std::string, ConnectionType>> outputs_;
+	// };
 
 	template<int n>
 	struct BezierWeights
@@ -64,67 +66,67 @@ namespace ImGui
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	static const std::vector<ImGui::NodeType> nodes_types_=
-	{
-		////////////////////////////////////////////////////////////////////////////////
-		{
-			{ std::string("Test") },
+	// static const std::vector<ImGui::NodeType> nodes_types_=
+	// {
+	// 	////////////////////////////////////////////////////////////////////////////////
+	// 	{
+	// 		{ std::string("Test") },
 
-			{
-				{ std::string("FloatTEST"), ImGui::ConnectionType_Float },
-				{ std::string("Int"), ImGui::ConnectionType_Int }
-			},
+	// 		{
+	// 			{ std::string("FloatTEST"), ImGui::ConnectionType_Float },
+	// 			{ std::string("Int"), ImGui::ConnectionType_Int }
+	// 		},
 
-			{
-				{ std::string("Float"), ImGui::ConnectionType_Float }
-			}
-		},
-		////////////////////////////////////////////////////////////////////////////////
-		{
-			{ std::string("BigInput") },
+	// 		{
+	// 			{ std::string("Float"), ImGui::ConnectionType_Float }
+	// 		}
+	// 	},
+	// 	////////////////////////////////////////////////////////////////////////////////
+	// 	{
+	// 		{ std::string("BigInput") },
 
-			{
-				{ std::string("Float1"), ImGui::ConnectionType_Float },
-				{ std::string("Float2"), ImGui::ConnectionType_Float },
-				{ std::string("Int1"), ImGui::ConnectionType_Int },
-				{ std::string("Int2"), ImGui::ConnectionType_Int },
-				{ {}, ImGui::ConnectionType_None },
-				{ std::string("Float3"), ImGui::ConnectionType_Float },
-				{ std::string("Float4"), ImGui::ConnectionType_Float },
-				{ std::string("Float5"), ImGui::ConnectionType_Float }
-			},
+	// 		{
+	// 			{ std::string("Float1"), ImGui::ConnectionType_Float },
+	// 			{ std::string("Float2"), ImGui::ConnectionType_Float },
+	// 			{ std::string("Int1"), ImGui::ConnectionType_Int },
+	// 			{ std::string("Int2"), ImGui::ConnectionType_Int },
+	// 			{ {}, ImGui::ConnectionType_None },
+	// 			{ std::string("Float3"), ImGui::ConnectionType_Float },
+	// 			{ std::string("Float4"), ImGui::ConnectionType_Float },
+	// 			{ std::string("Float5"), ImGui::ConnectionType_Float }
+	// 		},
 
-			{
-				{ std::string("Float1"), ImGui::ConnectionType_Float },
-				{ std::string("Int1"), ImGui::ConnectionType_Int },
-				{ {}, ImGui::ConnectionType_None },
-				{ std::string("Vec1"), ImGui::ConnectionType_Vec3 }
-			}
-		},
-		////////////////////////////////////////////////////////////////////////////////
-		{
-			{ std::string("BigOutput") },
+	// 		{
+	// 			{ std::string("Float1"), ImGui::ConnectionType_Float },
+	// 			{ std::string("Int1"), ImGui::ConnectionType_Int },
+	// 			{ {}, ImGui::ConnectionType_None },
+	// 			{ std::string("Vec1"), ImGui::ConnectionType_Vec3 }
+	// 		}
+	// 	},
+	// 	////////////////////////////////////////////////////////////////////////////////
+	// 	{
+	// 		{ std::string("BigOutput") },
 
-			{
-				{ std::string("VecTEST"), ImGui::ConnectionType_Vec3 },
-				{ {}, ImGui::ConnectionType_None },
-				{ std::string("Int"), ImGui::ConnectionType_Int },
-				{ std::string("Float"), ImGui::ConnectionType_Float }
-			},
+	// 		{
+	// 			{ std::string("VecTEST"), ImGui::ConnectionType_Vec3 },
+	// 			{ {}, ImGui::ConnectionType_None },
+	// 			{ std::string("Int"), ImGui::ConnectionType_Int },
+	// 			{ std::string("Float"), ImGui::ConnectionType_Float }
+	// 		},
 
-			{
-				{ std::string("FloatTEST"), ImGui::ConnectionType_Float },
-				{ std::string("Float"), ImGui::ConnectionType_Float },
-				{ {}, ImGui::ConnectionType_None },
-				{ std::string("Int1"), ImGui::ConnectionType_Int },
-				{ std::string("Int2"), ImGui::ConnectionType_Int },
-				{ {}, ImGui::ConnectionType_None },
-				{ std::string("VecABC"), ImGui::ConnectionType_Vec3 },
-				{ std::string("VecXYZ"), ImGui::ConnectionType_Vec3 }
-			}
-		}
-		////////////////////////////////////////////////////////////////////////////////
-	};
+	// 		{
+	// 			{ std::string("FloatTEST"), ImGui::ConnectionType_Float },
+	// 			{ std::string("Float"), ImGui::ConnectionType_Float },
+	// 			{ {}, ImGui::ConnectionType_None },
+	// 			{ std::string("Int1"), ImGui::ConnectionType_Int },
+	// 			{ std::string("Int2"), ImGui::ConnectionType_Int },
+	// 			{ {}, ImGui::ConnectionType_None },
+	// 			{ std::string("VecABC"), ImGui::ConnectionType_Vec3 },
+	// 			{ std::string("VecXYZ"), ImGui::ConnectionType_Vec3 }
+	// 		}
+	// 	}
+	// 	////////////////////////////////////////////////////////////////////////////////
+	// };
 
 	////////////////////////////////////////////////////////////////////////////////
 
@@ -133,27 +135,33 @@ namespace ImGui
 	private:	
 		////////////////////////////////////////////////////////////////////////////////
 
+		geoflow::NodeManager& gf_manager;
+
 		struct Node;
 
 		struct Connection
 		{
 			ImVec2 position_;
 			std::string name_;
-			ConnectionType type_;
+			geoflow::TerminalType type_;
 
 			Node* target_;
 			Connection* input_;
 			uint32_t connections_;
 
-			Connection()
+			std::weak_ptr<geoflow::Terminal> gf_terminal;
+
+			Connection(std::weak_ptr<geoflow::Terminal> gf_term)
 			{
 				position_ = ImVec2(0.0f, 0.0f);
 
-				type_ = ConnectionType_None;
+				// type_ = ConnectionType_None;
 
 				target_ = nullptr;
 				input_ = nullptr;
 				connections_ = 0;
+
+				gf_terminal = gf_term;
 			}
 
 			Connection* Get()
@@ -184,7 +192,9 @@ namespace ImGui
 			std::vector<std::unique_ptr<Connection>> inputs_;
 			std::vector<std::unique_ptr<Connection>> outputs_;
 
-			Node()
+			std::weak_ptr<geoflow::Node> gf_node;
+
+			Node(std::weak_ptr<geoflow::Node> gf_node):gf_node(gf_node)
 			{
 				id_ = 0;
 				state_ = NodeStateFlag_Default;
@@ -346,10 +356,10 @@ namespace ImGui
 
 		////////////////////////////////////////////////////////////////////////////////
 
-		Nodes::Node*  CreateNodeFromType(ImVec2 pos, const NodeType& type);
+		Nodes::Node*  CreateNodeFromType(ImVec2 pos, std::string type);
 
 	public:
-		explicit Nodes();
+		explicit Nodes(geoflow::NodeManager& nm);
 		~Nodes();
 
 		void ProcessNodes();

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -42,12 +44,12 @@ namespace geoflow {
       return weak_from_this();
     }
     void push(std::any data);
-    
+
+    bool wait_for_update = true;    
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     public:
     std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connections;
-
     
     OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
     
@@ -92,7 +94,7 @@ namespace geoflow {
 
     std::shared_ptr<Node> get_ptr(){return shared_from_this();};
 
-    void update();
+    bool update();
     void propagate_outputs();
 
     // private:
@@ -134,6 +136,7 @@ namespace geoflow {
         nodes.push_back(n);
         return n;
       };
+    void notify_children(Node &node);
     void remove_Node(Node &Node);
     void connect(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, std::string s1, std::string s2);
   };

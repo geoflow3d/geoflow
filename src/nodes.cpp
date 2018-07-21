@@ -10,7 +10,7 @@
 
 namespace ImGui
 {
-	Nodes::Nodes()
+	Nodes::Nodes(geoflow::NodeManager& nm):gf_manager(nm)
 	{
 		id_ = 0;
 		element_.Reset();
@@ -120,47 +120,65 @@ namespace ImGui
 		ImGui::SetWindowFontScale(1.0f);
 	}
 
-	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, const NodeType& type)
+	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type)
 	{
-		auto node = std::make_unique<Node>();
+		auto gf_node_wptr = gf_manager.add(type);
+		auto node = std::make_unique<Node>(gf_node_wptr);
 
 		////////////////////////////////////////////////////////////////////////////////
 		
 		node->id_ = -++id_;
-		node->name_ = type.name_ + std::to_string(id_).c_str();
+		node->name_ = type + std::to_string(id_).c_str();
 		node->position_ = pos;
 
-		{
-			auto &inputs = node->inputs_;
-			std::for_each
-			(
-				type.inputs_.begin(),
-				type.inputs_.end(),
-				[&inputs](auto& element)
-				{
-					auto connection = std::make_unique<Connection>();
-					connection->name_ = element.first;
-					connection->type_ = element.second;
+		auto gf_node = gf_node_wptr.lock();
 
-					inputs.push_back(std::move(connection));
-				}
-			);
+		for (auto& input : gf_node->inputTerminals){
+			auto connection = std::make_unique<Connection>(input.second);
+			connection->name_ = input.first;
+			connection->type_ = input.second->type;
 
-			auto &outputs = node->outputs_;
-			std::for_each
-			(
-				type.outputs_.begin(),
-				type.outputs_.end(),
-				[&outputs](auto& element)
-				{
-					auto connection = std::make_unique<Connection>();
-					connection->name_ = element.first;
-					connection->type_ = element.second;
-			
-					outputs.push_back(std::move(connection));
-				}
-			);
+			node->inputs_.push_back(std::move(connection));
 		}
+		for (auto& output : gf_node->outputTerminals){
+			auto connection = std::make_unique<Connection>(output.second);
+			connection->name_ = output.first;
+			connection->type_ = output.second->type;
+
+			node->outputs_.push_back(std::move(connection));
+		}
+
+		// {
+		// 	auto &inputs = node->inputs_;
+		// 	std::for_each
+		// 	(
+		// 		type.inputs_.begin(),
+		// 		type.inputs_.end(),
+		// 		[&inputs](auto& element)
+		// 		{
+		// 			auto connection = std::make_unique<Connection>();
+		// 			connection->name_ = element.first;
+		// 			connection->type_ = element.second;
+
+		// 			inputs.push_back(std::move(connection));
+		// 		}
+		// 	);
+
+		// 	auto &outputs = node->outputs_;
+		// 	std::for_each
+		// 	(
+		// 		type.outputs_.begin(),
+		// 		type.outputs_.end(),
+		// 		[&outputs](auto& element)
+		// 		{
+		// 			auto connection = std::make_unique<Connection>();
+		// 			connection->name_ = element.first;
+		// 			connection->type_ = element.second;
+			
+		// 			outputs.push_back(std::move(connection));
+		// 		}
+		// 	);
+		// }
 
 		////////////////////////////////////////////////////////////////////////////////
 
@@ -826,10 +844,10 @@ namespace ImGui
 
 			for (auto& connection : node.inputs_)
 			{
-				if (connection->type_ == ConnectionType_None)
-				{
-					continue;
-				}
+				// if (connection->type_ == ConnectionType_None)
+				// {
+				// 	continue;
+				// }
 
 				bool consider_io = false;
 
@@ -947,10 +965,10 @@ namespace ImGui
 
 			for (auto& connection : node.outputs_)
 			{
-				if (connection->type_ == ConnectionType_None)
-				{
-					continue;
-				}
+				// if (connection->type_ == ConnectionType_None)
+				// {
+				// 	continue;
+				// }
 
 				bool consider_io = false;
 
@@ -1146,12 +1164,12 @@ namespace ImGui
 			{
 				element_.Reset(NodesState_Block);
 
-				for (auto& node : nodes_types_)
+				for (auto& node : gf_manager.node_register)
 				{
-					if (ImGui::MenuItem(node.name_.c_str()))
+					if (ImGui::MenuItem(node.first.c_str()))
 					{					
 						element_.Reset();
-						element_.node_ = CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, node);
+						element_.node_ = CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, node.first);
 					}
 				}				
 				ImGui::EndPopup();

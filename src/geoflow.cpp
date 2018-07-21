@@ -10,6 +10,7 @@ using namespace geoflow;
 
   void InputTerminal::push(std::any data){
     cdata = data;
+    wait_for_update = false;
     parent.update();
   };
 
@@ -24,16 +25,17 @@ using namespace geoflow;
       }
   }
 
-  void Node::update(){
+  bool Node::update(){
     std::cout << "Node::update()\n";
     for(auto &input : inputTerminals){
-      if(!input.second->has_data()){
-        std::cout << "\tDetected inputTerminal without data...\n";
-        return;
+      if(!input.second->has_data() || input.second->wait_for_update){
+        std::cout << "\tDetected inputTerminal that is not ready...\n";
+        return false;
         }
     }
     std::cout << "\tAll inputTerminals set, proceed to on_process()...\n";
     manager.queue(get_ptr());
+    return true;
   };
 
 
@@ -54,9 +56,34 @@ using namespace geoflow;
     return 1;
   }
 
-  void NodeManager::run(Node &node){
-    queue(node.get_ptr());
-    check_process();
+  void NodeManager::run(Node &node) {
+    if (node.update()){
+      notify_children(node);
+      check_process();
+    }
+  }
+
+  void NodeManager::notify_children(Node &node) {
+    std::queue<std::shared_ptr<Node>> nodes_to_notify;
+    std::set<std::shared_ptr<Node>> visited;
+    nodes_to_notify.push(node.get_ptr());
+    visited.insert(node.get_ptr());
+    while(!nodes_to_notify.empty()) {
+      auto n = nodes_to_notify.front();
+      nodes_to_notify.pop();
+      
+      for (auto& oT : n->outputTerminals) {
+        for (auto& c :oT.second->connections) {
+          auto iT = c.lock();
+          iT->wait_for_update = true;
+          auto child_node = iT->parent.get_ptr();
+          if (visited.count(child_node)==0) {
+            visited.insert(child_node);
+            nodes_to_notify.push(child_node);
+          }
+        }
+      }
+    }
   }
 
   void NodeManager::run_node(std::shared_ptr<Node> node){

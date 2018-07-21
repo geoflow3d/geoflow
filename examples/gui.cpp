@@ -6,10 +6,13 @@
 #include "nodes.h"
 #include <array>
 
+#include "basic_nodes.hpp"
+
 // #include <boost/program_options.hpp>
 
 static poviApp a(1280, 800, "Step edge detector");
-static ImGui::Nodes nodes_;
+static geoflow::NodeManager N;
+static ImGui::Nodes nodes_(N);
 
 void on_draw() {
     ImGui::Begin("Nodes");
@@ -19,6 +22,9 @@ void on_draw() {
 
 int main(int ac, const char * av[])
 {
+    N.register_node<AdderNode>("Adder");
+    N.register_node<NumberNode>("Number");
+    N.register_node<NumberNodeI>("NumberI");
     a.draw_that(on_draw);
     a.run();
 }

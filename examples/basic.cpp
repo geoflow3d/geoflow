@@ -1,37 +1,8 @@
 #include "geoflow.hpp"
+#include "basic_nodes.hpp"
 #include <iostream>
 
 using namespace geoflow;
-
-class AdderNode:public Node {
-  public:
-  AdderNode(NodeManager& manager):Node(manager, "Adder") {
-    add_input("in1", TT_float);
-    add_input("in2", TT_float);
-    add_output("result", TT_float);
-  }
-
-  void process(){
-    std::cout << "begin AddderNode::process()" << "\n";
-    auto in1 = get_value("in1");
-    auto in2 = get_value("in2");
-    set_value("result", std::any_cast<float>(in1)+std::any_cast<float>(in2));
-    std::cout << "end AddderNode::process()" << "\n";
-  }
-};
-
-class NumberNode:public Node {
-  public:
-  NumberNode(NodeManager& manager):Node(manager, "Number") {
-    add_output("result", TT_float);
-  }
-
-  void process(){
-    std::cout << "begin NumberNode::process()" << "\n";
-    set_value("result", float(1));
-    std::cout << "end NumberNode::process()" << "\n";
-  }
-};
 
 int main(void) {
   NodeManager N = NodeManager();
