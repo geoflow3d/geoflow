@@ -122,7 +122,7 @@ namespace ImGui
 
 	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type)
 	{
-		auto gf_node = gf_manager.add(type);
+		auto gf_node = gf_manager.create(type);
 		auto node = std::make_unique<Node>(gf_node);
 
 		////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,10 @@ namespace ImGui
 		node->name_ = type + std::to_string(id_).c_str();
 		node->position_ = pos;
 
-		for (auto& input : gf_node->inputTerminals){
+		std::cout << "reading inputs from " << type <<  "\n";
+		std::cout << "\t has " << gf_node->inputTerminals.size() <<  " input terminals\n";
+		for (auto input : gf_node->inputTerminals){
+			std::cout << "&term " << input.second.get() << "\n";
 			auto connection = std::make_unique<Connection>(input.second);
 			connection->name_ = input.first;
 			connection->type_ = input.second->type;
@@ -330,6 +333,7 @@ namespace ImGui
 			else
 			{	// full node goes to collapsed
 				element_.node_->size_.y = element_.node_->collapsed_height;
+				gf_manager.run(*element_.node_->gf_node);
 			}
 
 			element_.node_->state_ = -element_.node_->state_;
@@ -884,6 +888,7 @@ namespace ImGui
 						if (connection->input_)
 						{
 							connection->input_->connections_--;
+							geoflow::disconnect(connection->input_->gf_terminal.get(), connection->gf_terminal.get());
 						}
 
 						connection->target_ = nullptr;
@@ -925,12 +930,16 @@ namespace ImGui
 								if (connection->input_)
 								{
 									connection->input_->connections_--;
+									geoflow::disconnect(connection->input_->gf_terminal.get(), connection->gf_terminal.get());
 								}
 
 								connection->target_ = element_.node_;
 								connection->input_ = element_.connection_;
 								connection->connections_ = 1;
 								element_.connection_->connections_++;
+
+								geoflow::connect(element_.connection_->gf_terminal.get(), connection->gf_terminal.get());
+								// std::cout << "connected " << element_.connection_->name_ << " to " <<connection->name_ <<"\n";
 
 								element_.Reset(NodesState_HoverIO);
 								element_.node_ = node.Get();
@@ -1037,6 +1046,9 @@ namespace ImGui
 								element_.connection_->input_ = connection.get();
 								element_.connection_->connections_ = 1;
 
+								geoflow::connect(connection->gf_terminal.get(), element_.connection_->gf_terminal.get());
+								// std::cout << "connected " << connection->name_ << " to " << element_.connection_->name_ << "\n";
+
 								connection->connections_++;
 
 								element_.Reset(NodesState_HoverIO);
@@ -1142,9 +1154,12 @@ namespace ImGui
 		{
 			ImGui::SetCursorScreenPos(canvas_position_);
 
-			bool consider_menu = !ImGui::IsAnyItemHovered();
+			bool consider_menu = true;//ImGui::IsAnyItemHovered();
 			consider_menu &= ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-			consider_menu &= element_.state_ == NodesState_Default || element_.state_ == NodesState_Selected;
+			consider_menu &= 
+				element_.state_ == NodesState_Default 
+				|| element_.state_ == NodesState_Selected
+				|| element_.state_ == NodesState_HoverNode;
 			consider_menu &= ImGui::IsMouseReleased(1);		
 			
 			if (consider_menu)
@@ -1152,8 +1167,14 @@ namespace ImGui
 				ImGuiContext* context = ImGui::GetCurrentContext();
 
 				if (context->IO.MouseDragMaxDistanceSqr[1] < 36.0f)
-				{
-					ImGui::OpenPopup("NodesContextMenu");
+				{						
+					if (element_.state_ == NodesState_HoverNode) {
+						std::cout << "creating NodeActionsContextMenu\n";
+						ImGui::OpenPopup("NodeActionsContextMenu");
+					} else {
+						std::cout << "creating NodesContextMenu\n";
+						ImGui::OpenPopup("NodesContextMenu");
+					}
 				}								
 			}
 
@@ -1170,6 +1191,18 @@ namespace ImGui
 						element_.node_ = CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, node.first);
 					}
 				}				
+				ImGui::EndPopup();
+			}
+
+			if (ImGui::BeginPopup("NodeActionsContextMenu"))
+			{
+				auto node = element_.node_;
+				element_.Reset(NodesState_Block);
+
+				if (ImGui::MenuItem("Update")) {					
+					gf_manager.run(*node->gf_node);
+				}
+
 				ImGui::EndPopup();
 			}
 			ImGui::PopStyleVar();
@@ -1214,6 +1247,11 @@ namespace ImGui
 			ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
 			ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
 			ImGui::Text("Canvas_scale: %.2f", canvas_scale_);
+
+			ImGui::Text("");
+			
+			if (element_.node_)
+				ImGui::Text("element_node: %s", element_->node_.name_.c_str());
 		}
 
 		////////////////////////////////////////////////////////////////////////////////

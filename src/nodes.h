@@ -149,9 +149,9 @@ namespace ImGui
 			Connection* input_;
 			uint32_t connections_;
 
-			std::weak_ptr<geoflow::Terminal> gf_terminal;
+			std::shared_ptr<geoflow::Terminal> gf_terminal;
 
-			Connection(std::weak_ptr<geoflow::Terminal> gf_term)
+			Connection(std::shared_ptr<geoflow::Terminal> gf_term)
 			{
 				position_ = ImVec2(0.0f, 0.0f);
 
@@ -162,6 +162,10 @@ namespace ImGui
 				connections_ = 0;
 
 				gf_terminal = gf_term;
+			}
+			~Connection()
+			{
+				std::cout << "destructing Connection " << name_ <<"\n";
 			}
 
 			Connection* Get()

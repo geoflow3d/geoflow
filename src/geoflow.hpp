@@ -24,7 +24,12 @@ namespace geoflow {
   };
   class Terminal {
     public:
-    Terminal(Node& parent_gnode, TerminalType type):parent(parent_gnode), type(type){};   
+    Terminal(Node& parent_gnode, TerminalType type):parent(parent_gnode), type(type) {
+      std::cout<< "Constructing geoflow::Terminal " << this << "\n";
+    }; 
+    ~Terminal() {
+      std::cout<< "Destructing geoflow::Terminal " << this << "\n";
+    }
 
     TerminalType type;
     Node& parent;
@@ -49,6 +54,7 @@ namespace geoflow {
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     public:
+    //use a set to make sure we don't get duplicate connections
     std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connections;
     
     OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
@@ -57,9 +63,8 @@ namespace geoflow {
       return weak_from_this();
     }
 
-    void connect(InputTerminal& in) {
-      connections.insert(in.get_ptr());
-    }
+    void connect(InputTerminal& in);
+    void disconnect(InputTerminal& in);
     
     void push(std::any data);
   };
@@ -73,6 +78,7 @@ namespace geoflow {
     public:
     Node(NodeManager& manager, std::string name) : manager(manager), name(name){
     };
+    ~Node(){std::cout<< "Destructing geoflow::Node " << this << "\n";}
 
     std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
@@ -138,7 +144,12 @@ namespace geoflow {
       };
     void notify_children(Node &node);
     // void remove(Node &Node) {};
-    void connect(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, std::string s1, std::string s2);
+    
+    // void connect(InputTerminal& t1, Terminal& t2);
   };
+
+  void connect(Node& n1, Node& n2, std::string s1, std::string s2);
+  void connect(Terminal* t1, Terminal* t2);
+  void disconnect(Terminal* t1, Terminal* t2);
 
 }
