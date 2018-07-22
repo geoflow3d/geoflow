@@ -12,8 +12,21 @@ using namespace geoflow;
     cdata = data;
     wait_for_update = false;
     parent.update();
-  };
+  }
+  void InputTerminal::clear() {
+    cdata.reset();
+    parent.status = WAITING;
+  }
 
+  OutputTerminal::~OutputTerminal(){
+      for(auto& conn : connections) {
+        if (!conn.expired()) {
+          auto in = conn.lock();
+          in->clear();
+          in->parent.notify_children();
+        }
+      }
+    }
   void OutputTerminal::push(std::any data) {
     cdata = data;
   }
@@ -23,6 +36,9 @@ using namespace geoflow;
     std::cout << "\t &this terminal:" << this << "\n";
     std::cout << "\t &input terminal:" << &in << "\n";
     connections.insert(in.get_ptr());
+    if (has_data()) {
+      in.push(cdata);
+    }
     std::cout << "\t #connections:" << connections.size() << "\n";
   }
   void OutputTerminal::disconnect(InputTerminal& in) { 
@@ -30,10 +46,8 @@ using namespace geoflow;
     std::cout << "\t parent:" << parent.name << "\n";
     std::cout << "\t &this terminal:" << this << "\n";
     std::cout << "\t &input terminal:" << &in << "\n";
-    auto it = connections.find(in.get_ptr());
-    connections.erase(it);
-    if(!it->expired())
-      it->lock()->cdata.reset();// clear data to enforce a new connection must be made to this input terminal before the parent node can use it
+    connections.erase(in.get_ptr());
+    // clear data to enforce a new connection must be made to this input terminal before the parent node can use it
     std::cout << "\t #connections:" << connections.size() << "\n";
   }
 
@@ -60,11 +74,13 @@ using namespace geoflow;
     for(auto &input : inputTerminals) {
       if(!input.second->has_data() || input.second->wait_for_update) {
         std::cout << "\tDetected inputTerminal that is not ready...\n";
+        status = WAITING;
         return false;
         }
     }
-    std::cout << "\tAll inputTerminals set, proceed to on_process()...\n";
+    std::cout << "\tAll inputTerminals set, node is READY...\n";
     manager.queue(get_ptr());
+    status = READY;
     return true;
   };
 
@@ -80,40 +96,31 @@ using namespace geoflow;
     while (!node_queue.empty()){
       auto n = node_queue.front();
       node_queue.pop();
+      n->status = PROCESSING;
       n->process();
+      n->status = DONE;
       n->propagate_outputs();
     }
     return 1;
   }
 
   bool NodeManager::run(Node &node) {
+    std::queue<std::shared_ptr<Node>>().swap(node_queue); // clear to prevent double processing of nodes ()
     if (node.update()) {
-      notify_children(node);
+      node.notify_children();
       check_process();
       return true;
     } 
     return false;
   }
 
-  void NodeManager::notify_children(Node &node) {
-    std::queue<std::shared_ptr<Node>> nodes_to_notify;
-    std::set<std::shared_ptr<Node>> visited;
-    nodes_to_notify.push(node.get_ptr());
-    visited.insert(node.get_ptr());
-    while(!nodes_to_notify.empty()) {
-      auto n = nodes_to_notify.front();
-      nodes_to_notify.pop();
-      
-      for (auto& oT : n->outputTerminals) {
-        for (auto& c :oT.second->connections) {
-          auto iT = c.lock();
-          iT->wait_for_update = true;
-          auto child_node = iT->parent.get_ptr();
-          if (visited.count(child_node)==0) {
-            visited.insert(child_node);
-            nodes_to_notify.push(child_node);
-          }
-        }
+  void Node::notify_children() {
+    for (auto& oT : outputTerminals) {
+      for (auto& c :oT.second->connections) {
+        auto iT = c.lock();
+        iT->wait_for_update = true;
+        iT->clear();
+        iT->parent.notify_children();
       }
     }
   }

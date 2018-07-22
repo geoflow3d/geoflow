@@ -250,6 +250,7 @@ namespace ImGui
 			ImRect rect_;
 
 			Node* node_;
+			Node* node_slot0_;
 			Connection* connection_;
 
 			void Reset(NodesState state = NodesState_Default)

@@ -11,6 +11,7 @@
 #include <queue>
 
 #include <iostream>
+#include <sstream>
 
 namespace geoflow {
 
@@ -49,6 +50,7 @@ namespace geoflow {
       return weak_from_this();
     }
     void push(std::any data);
+    void clear();
 
     bool wait_for_update = true;    
   };
@@ -58,6 +60,7 @@ namespace geoflow {
     std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connections;
     
     OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
+    ~OutputTerminal();
     
     std::weak_ptr<OutputTerminal> get_ptr(){
       return weak_from_this();
@@ -71,8 +74,10 @@ namespace geoflow {
 
   enum node_status {
     WAITING,
+    READY,
     PROCESSING,
-    DONE
+    DONE,
+    ERROR
   };
   class Node : public std::enable_shared_from_this<Node>{
     public:
@@ -102,6 +107,7 @@ namespace geoflow {
 
     bool update();
     void propagate_outputs();
+    void notify_children();
 
     // private:
     std::any get_value(std::string input_name){
@@ -112,6 +118,21 @@ namespace geoflow {
     }
 
     virtual void process()=0;
+
+    std::string get_info() {
+      std::stringstream s;
+      s << "status: ";
+      switch (status){
+        case WAITING: s << "WAITING"; break;
+        case READY: s << "READY"; break;
+        case PROCESSING: s << "PROCESSING"; break;
+        case DONE: s << "DONE"; break;
+        case ERROR: s << "ERROR"; break;
+        default: s << "UNKNOWN"; break;
+      }
+      s << "\n";
+      return s.str();
+    }
   };
 
 
@@ -142,7 +163,6 @@ namespace geoflow {
         // nodes.push_back(n);
         return n;
       };
-    void notify_children(Node &node);
     // void remove(Node &Node) {};
     
     // void connect(InputTerminal& t1, Terminal& t2);

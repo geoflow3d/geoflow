@@ -98,7 +98,7 @@ namespace ImGui
 				selected |= element_.state_ == NodesState_DragingConnection;
 				selected &= element_.connection_ == connection.get();
 							
-				draw_list->AddBezierCurve(p1, p2, p3, p4, ImColor(0.5f, 0.5f, 0.5f, 1.0f), 2.0f * canvas_scale_);
+				draw_list->AddBezierCurve(p1, p2, p3, p4, ImColor(0.8f, 0.8f, 0.8f, 1.0f), 2.0f * canvas_scale_);
 
 				if (selected)
 				{
@@ -333,7 +333,6 @@ namespace ImGui
 			else
 			{	// full node goes to collapsed
 				element_.node_->size_.y = element_.node_->collapsed_height;
-				gf_manager.run(*element_.node_->gf_node);
 			}
 
 			element_.node_->state_ = -element_.node_->state_;
@@ -820,16 +819,29 @@ namespace ImGui
 			ImVec2 title_pos;
 			title_pos.x = node_rect_min.x + ((title_area.x - node_rect_min.x) / 2.0f) - (title_name_size.x / 2.0f);
 			
+			// set border color based on status of node
+			auto bcol = ImColor(0.6, 0.6f, 0.6f, 1.0f);
+			if (node.gf_node->status==geoflow::DONE)
+				bcol = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
+			else if (node.gf_node->status==geoflow::WAITING)
+				bcol = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
+			else if (node.gf_node->status==geoflow::READY)
+				bcol = ImColor(0.0f, 0.0f, 1.0f, 1.0f);
+
 			if (node.state_ > 0)
 			{
-				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.25f, 0.25f, 0.25f, 0.9f), corner, ImDrawCornerFlags_All);
-				drawList->AddRectFilled(node_rect_min, title_area, ImColor(0.25f, 0.0f, 0.125f, 0.9f), corner, ImDrawCornerFlags_Top);
+				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.4f, 0.4f, 0.4f, 1.0f), corner, ImDrawCornerFlags_All);
+				drawList->AddRectFilled(node_rect_min, title_area, ImColor(0.3f, 0.3f, 0.3f, 1.0f), corner, ImDrawCornerFlags_Top);
+
+				drawList->AddRect(node_rect_min, node_rect_max, bcol, corner, ImDrawCornerFlags_All, 1.0f);
 
 				title_pos.y = node_rect_min.y + ((title_name_size.y * 2.0f) / 2.0f) - (title_name_size.y / 2.0f);
 			}
 			else
 			{
-				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.25f, 0.0f, 0.125f, 0.9f), corner, ImDrawCornerFlags_All);
+				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.3f, 0.3f, 0.3f, 1.0f), corner, ImDrawCornerFlags_All);
+
+				drawList->AddRect(node_rect_min, node_rect_max, bcol, corner, ImDrawCornerFlags_All, 1.0f);
 
 				title_pos.y = node_rect_min.y + ((node_rect_max.y - node_rect_min.y) / 2.0f) - (title_name_size.y / 2.0f);
 			}
@@ -905,7 +917,7 @@ namespace ImGui
 
 				////////////////////////////////////////////////////////////////////////////////
 
-				ImColor color = ImColor(0.5f, 0.5f, 0.5f, 1.0f);
+				ImColor color = ImColor(0.8f, 0.8f, 0.8f, 1.0f);
 
 				if (connection->connections_ > 0)
 				{
@@ -1020,11 +1032,11 @@ namespace ImGui
 
 				////////////////////////////////////////////////////////////////////////////////
 
-				ImColor color = ImColor(0.5f, 0.5f, 0.5f, 1.0f);
+				ImColor color = ImColor(0.8f, 0.8f, 0.8f, 1.0f);
 
 				if (connection->connections_ > 0)
 				{
-					drawList->AddCircleFilled(connection_pos, (output_name_size.y / 3.0f), ImColor(0.5f, 0.5f, 0.5f, 1.0f));
+					drawList->AddCircleFilled(connection_pos, (output_name_size.y / 3.0f), ImColor(0.8f, 0.8f, 0.8f, 1.0f));
 				}
 
 				// currently we are dragin some input, check if there is a possibilty to connect here (this output)
@@ -1121,7 +1133,7 @@ namespace ImGui
 		{
 			ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-			ImU32 color = ImColor(0.5f, 0.5f, 0.5f, 0.1f);
+			ImU32 color = ImColor(0.4f, 0.4f, 0.4f, 0.4f);
 			const float size = 64.0f * canvas_scale_;
 
 			for (float x = fmodf(canvas_scroll_.x, size); x < canvas_size_.x; x += size)
@@ -1170,6 +1182,7 @@ namespace ImGui
 				{						
 					if (element_.state_ == NodesState_HoverNode) {
 						std::cout << "creating NodeActionsContextMenu\n";
+						element_.node_slot0_ = element_.node_;
 						ImGui::OpenPopup("NodeActionsContextMenu");
 					} else {
 						std::cout << "creating NodesContextMenu\n";
@@ -1196,11 +1209,12 @@ namespace ImGui
 
 			if (ImGui::BeginPopup("NodeActionsContextMenu"))
 			{
-				auto node = element_.node_;
+				auto node = element_.node_slot0_->gf_node;
 				element_.Reset(NodesState_Block);
-
-				if (ImGui::MenuItem("Update")) {					
-					gf_manager.run(*node->gf_node);
+				ImGui::Text("%s", node->get_info().c_str());
+				if (ImGui::MenuItem("Run")) {					
+					gf_manager.run(*node);
+					// element_.node_slot0_ = nullptr;
 				}
 
 				ImGui::EndPopup();
@@ -1251,7 +1265,9 @@ namespace ImGui
 			ImGui::Text("");
 			
 			if (element_.node_)
-				ImGui::Text("element_node: %s", element_->node_.name_.c_str());
+				ImGui::Text("element_node: %s", element_.node_->name_.c_str());
+			if (element_.node_slot0_)
+				ImGui::Text("element_node_slot0_: %s", element_.node_slot0_->name_.c_str());
 		}
 
 		////////////////////////////////////////////////////////////////////////////////
