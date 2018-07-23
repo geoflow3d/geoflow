@@ -50,9 +50,7 @@ namespace geoflow {
       return weak_from_this();
     }
     void push(std::any data);
-    void clear();
-
-    bool wait_for_update = true;    
+    void clear();   
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     public:

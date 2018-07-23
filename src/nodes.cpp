@@ -559,6 +559,7 @@ namespace ImGui
 					
 					nodes_ = std::move(replacement);
 					
+					element_.node_slot0_ = nullptr;
 					element_.Reset();
 					break;
 				}
@@ -1272,7 +1273,7 @@ namespace ImGui
 				ImGui::Text("element_node: %s", element_.node_->name_.c_str());
 				ImGui::Text("Inputerminals:");
 				for (auto& iT : element_.node_->gf_node->inputTerminals) {
-					ImGui::Text("\t%s, data: %i, wait: %i", iT.first.c_str(), iT.second->has_data(), iT.second->wait_for_update);
+					ImGui::Text("\t%s, data: %i", iT.first.c_str(), iT.second->has_data());
 				}
 				ImGui::Text("Outputerminals:");
 				for (auto& oT : element_.node_->gf_node->outputTerminals) {

@@ -10,12 +10,13 @@ using namespace geoflow;
 
   void InputTerminal::push(std::any data) {
     cdata = data;
-    wait_for_update = false;
+    // wait_for_update = false;
     parent.update();
   }
   void InputTerminal::clear() {
     cdata.reset();
     parent.status = WAITING;
+    parent.notify_children();
   }
 
   OutputTerminal::~OutputTerminal(){
@@ -23,7 +24,6 @@ using namespace geoflow;
       if (!conn.expired()) {
         auto in = conn.lock();
         in->clear();
-        in->parent.notify_children();
       }
     }
   }
@@ -47,6 +47,7 @@ using namespace geoflow;
     std::cout << "\t &this terminal:" << this << "\n";
     std::cout << "\t &input terminal:" << &in << "\n";
     connections.erase(in.get_ptr());
+    in.clear();
     // clear data to enforce a new connection must be made to this input terminal before the parent node can use it
     std::cout << "\t #connections:" << connections.size() << "\n";
   }
@@ -72,7 +73,7 @@ using namespace geoflow;
   bool Node::update() {
     std::cout << "Node::update()\n";
     for(auto &input : inputTerminals) {
-      if(!input.second->has_data() || input.second->wait_for_update) {
+      if(!input.second->has_data()) {
         std::cout << "\tDetected inputTerminal that is not ready...\n";
         status = WAITING;
         return false;
@@ -125,9 +126,8 @@ using namespace geoflow;
           std::cout << "...resolved\n";
         } else {
           auto c = conn->lock();
-          c->wait_for_update = true;
+          // c->wait_for_update = true;
           c->clear();
-          c->parent.notify_children();
           ++conn;
         }
       }
