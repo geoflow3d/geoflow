@@ -1216,6 +1216,10 @@ namespace ImGui
 					gf_manager.run(*node);
 					// element_.node_slot0_ = nullptr;
 				}
+				// if (ImGui::MenuItem("Destroy")) {					
+				// 	gf_manager.run(*node);
+				// 	// element_.node_slot0_ = nullptr;
+				// }
 
 				ImGui::EndPopup();
 			}
@@ -1264,8 +1268,17 @@ namespace ImGui
 
 			ImGui::Text("");
 			
-			if (element_.node_)
+			if (element_.node_){
 				ImGui::Text("element_node: %s", element_.node_->name_.c_str());
+				ImGui::Text("Inputerminals:");
+				for (auto& iT : element_.node_->gf_node->inputTerminals) {
+					ImGui::Text("\t%s, data: %i, wait: %i", iT.first.c_str(), iT.second->has_data(), iT.second->wait_for_update);
+				}
+				ImGui::Text("Outputerminals:");
+				for (auto& oT : element_.node_->gf_node->outputTerminals) {
+					ImGui::Text("\t%s, data: %i, #connections: %lu", oT.first.c_str(), oT.second->has_data(), oT.second->connections.size());
+				}
+			}
 			if (element_.node_slot0_)
 				ImGui::Text("element_node_slot0_: %s", element_.node_slot0_->name_.c_str());
 		}

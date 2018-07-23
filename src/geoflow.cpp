@@ -19,14 +19,14 @@ using namespace geoflow;
   }
 
   OutputTerminal::~OutputTerminal(){
-      for(auto& conn : connections) {
-        if (!conn.expired()) {
-          auto in = conn.lock();
-          in->clear();
-          in->parent.notify_children();
-        }
+    for(auto& conn : connections) {
+      if (!conn.expired()) {
+        auto in = conn.lock();
+        in->clear();
+        in->parent.notify_children();
       }
     }
+  }
   void OutputTerminal::push(std::any data) {
     cdata = data;
   }
@@ -59,7 +59,7 @@ using namespace geoflow;
         std::cout << "\t\tconnection...";
         if (conn->expired()) {
           std::cout << "expired\n";
-          oT.second->connections.erase(conn); // if the terminal on the other end no longer exist, remove this connection
+          conn = oT.second->connections.erase(conn); // if the terminal on the other end no longer exist, remove this connection
         } else {
           std::cout << "pushing data\n";
           conn->lock()->push(oT.second->cdata); // conn is the inputTerminal on the other end of the connection
@@ -115,14 +115,24 @@ using namespace geoflow;
   }
 
   void Node::notify_children() {
+    std::cout << "Node::notify_children begin\n";
     for (auto& oT : outputTerminals) {
-      for (auto& c :oT.second->connections) {
-        auto iT = c.lock();
-        iT->wait_for_update = true;
-        iT->clear();
-        iT->parent.notify_children();
+      for (auto conn = oT.second->connections.begin(); conn != oT.second->connections.end();){
+        std::cout << oT.second->connections.size() << "\n";
+        if (conn->expired()) {
+          std::cout << "expired connection\n";
+          conn = oT.second->connections.erase(conn); // if the terminal on the other end no longer exist, remove this connection
+          std::cout << "...resolved\n";
+        } else {
+          auto c = conn->lock();
+          c->wait_for_update = true;
+          c->clear();
+          c->parent.notify_children();
+          ++conn;
+        }
       }
     }
+    std::cout << "Node::notify_children end\n";
   }
 
   void NodeManager::run_node(std::shared_ptr<Node> node){
