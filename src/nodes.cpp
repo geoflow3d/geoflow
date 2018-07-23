@@ -929,12 +929,15 @@ namespace ImGui
 				if (element_.state_ == NodesState_DragingOutput || element_.state_ == NodesState_DragingOutputValid)
 				{
 					// check is draging output are not from the same node
-					if (	element_.node_ != node.Get() && element_.connection_->type_ == connection->type_)
-					{
+					// check if this connection is legal (ie does not cause a loop in the graph)
+					if (	
+						element_.node_ != node.Get() 
+						&& element_.connection_->type_ == connection->type_ 
+						&& !geoflow::detect_loop(element_.connection_->gf_terminal.get(), connection->gf_terminal.get())
+					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
-						//check if this connection is legal (ie does not cause a loop in the graph)
-						if (consider_io && !geoflow::detect_loop(element_.connection_->gf_terminal.get(), connection->gf_terminal.get()))
+						if (consider_io)
 						{
 							element_.state_ = NodesState_DragingOutputValid;
 							drawList->AddCircleFilled(connection_pos, (input_name_size.y / 3.0f), color);
@@ -1046,12 +1049,15 @@ namespace ImGui
 					element_.state_ == NodesState_DragingInput || element_.state_ == NodesState_DragingInputValid)
 				{
 					// check is draging input are not from the same node
-					if (element_.node_ != node.Get() && element_.connection_->type_ == connection->type_)
-					{
+					if (
+						element_.node_ != node.Get() 
+						&& element_.connection_->type_ == connection->type_
+						&& !geoflow::detect_loop(connection->gf_terminal.get(), element_.connection_->gf_terminal.get())
+					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
 						//check if this connection is legal (ie does not cause a loop in the graph)
-						if (consider_io && !geoflow::detect_loop(connection->gf_terminal.get(), element_.connection_->gf_terminal.get()))
+						if (consider_io)
 						{
 							element_.state_ = NodesState_DragingInputValid;
 							drawList->AddCircleFilled(connection_pos, (output_name_size.y / 2.5f), color);

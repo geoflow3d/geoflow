@@ -30,6 +30,9 @@ using namespace geoflow;
   void OutputTerminal::push(std::any data) {
     cdata = data;
   }
+  void OutputTerminal::clear() {
+    cdata.reset();
+  }
   void OutputTerminal::connect(InputTerminal& in) { 
     std::cout << "OutputTerminal.connect\n";
     std::cout << "\t parent:" << parent.name << "\n";
@@ -96,6 +99,7 @@ using namespace geoflow;
   void Node::notify_children() {
     std::cout << "Node::notify_children begin\n";
     for (auto& oT : outputTerminals) {
+      oT.second->clear(); // clear output terminal
       for (auto conn = oT.second->connections.begin(); conn != oT.second->connections.end();) {
         std::cout << oT.second->connections.size() << "\n";
         if (conn->expired()) {
@@ -103,7 +107,7 @@ using namespace geoflow;
           conn = oT.second->connections.erase(conn); // if the terminal on the other end no longer exist, remove this connection
           std::cout << "...resolved\n";
         } else {
-          auto c = conn->lock();
+          auto c = conn->lock();          
           // c->wait_for_update = true;
           c->clear(); // note: clear calls again notify_children for the child node
           ++conn;

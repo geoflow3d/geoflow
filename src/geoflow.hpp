@@ -37,6 +37,7 @@ namespace geoflow {
     std::any cdata;
 
     virtual void push(std::any data) = 0;
+    virtual void clear() = 0;
     
     bool has_data() {return cdata.has_value();};
   };
@@ -50,7 +51,7 @@ namespace geoflow {
       return weak_from_this();
     }
     void push(std::any data);
-    void clear();   
+    void clear();
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     public:
@@ -68,6 +69,7 @@ namespace geoflow {
     void disconnect(InputTerminal& in);
     
     void push(std::any data);
+    void clear();
   };
 
   enum node_status {
