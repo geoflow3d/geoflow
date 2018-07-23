@@ -225,7 +225,7 @@ namespace ImGui
 			const float half = ((ImGui::CalcTextSize(connection->name_.c_str()).y * vertical_padding) / 2.0f);
 
 			inputs_size.y += half;
-			connection->position_ = ImVec2(inputs_size.x, inputs_size.y);
+			connection->position_ = ImVec2(inputs_size.x-9.5f, inputs_size.y);
 			inputs_size.y += half;
 		}
 
@@ -235,7 +235,7 @@ namespace ImGui
 			const float half = ((ImGui::CalcTextSize(connection->name_.c_str()).y * vertical_padding) / 2.0f);
 
 			outputs_size.y += half;
-			connection->position_ = ImVec2(outputs_size.x, outputs_size.y);
+			connection->position_ = ImVec2(outputs_size.x+9.5f, outputs_size.y);
 			outputs_size.y += half;
 		}
 	
@@ -929,23 +929,24 @@ namespace ImGui
 				if (element_.state_ == NodesState_DragingOutput || element_.state_ == NodesState_DragingOutputValid)
 				{
 					// check is draging output are not from the same node
-					if (element_.node_ != node.Get() && element_.connection_->type_ == connection->type_)
+					if (	element_.node_ != node.Get() && element_.connection_->type_ == connection->type_)
 					{
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
-						if (consider_io)
+						//check if this connection is legal (ie does not cause a loop in the graph)
+						if (consider_io && !geoflow::detect_loop(element_.connection_->gf_terminal.get(), connection->gf_terminal.get()))
 						{
 							element_.state_ = NodesState_DragingOutputValid;
 							drawList->AddCircleFilled(connection_pos, (input_name_size.y / 3.0f), color);
 
 							if (!ImGui::IsMouseDown(0))
 							{
+								std::cout << "mdown!\n";
 								if (connection->input_)
 								{
 									connection->input_->connections_--;
 									geoflow::disconnect(connection->input_->gf_terminal.get(), connection->gf_terminal.get());
 								}
-
 								connection->target_ = element_.node_;
 								connection->input_ = element_.connection_;
 								connection->connections_ = 1;
@@ -1037,28 +1038,30 @@ namespace ImGui
 
 				if (connection->connections_ > 0)
 				{
-					drawList->AddCircleFilled(connection_pos, (output_name_size.y / 3.0f), ImColor(0.8f, 0.8f, 0.8f, 1.0f));
+					drawList->AddCircleFilled(connection_pos, (output_name_size.y / 2.5f), ImColor(0.8f, 0.8f, 0.8f, 1.0f));
 				}
 
 				// currently we are dragin some input, check if there is a possibilty to connect here (this output)
-				if (element_.state_ == NodesState_DragingInput || element_.state_ == NodesState_DragingInputValid)
+				if (
+					element_.state_ == NodesState_DragingInput || element_.state_ == NodesState_DragingInputValid)
 				{
 					// check is draging input are not from the same node
 					if (element_.node_ != node.Get() && element_.connection_->type_ == connection->type_)
 					{
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
-						if (consider_io)
+						//check if this connection is legal (ie does not cause a loop in the graph)
+						if (consider_io && !geoflow::detect_loop(connection->gf_terminal.get(), element_.connection_->gf_terminal.get()))
 						{
 							element_.state_ = NodesState_DragingInputValid;
-							drawList->AddCircleFilled(connection_pos, (output_name_size.y / 3.0f), color);
+							drawList->AddCircleFilled(connection_pos, (output_name_size.y / 2.5f), color);
 
 							if (!ImGui::IsMouseDown(0))
-							{
+							{	
 								element_.connection_->target_ = node.Get();
 								element_.connection_->input_ = connection.get();
 								element_.connection_->connections_ = 1;
-
+								
 								geoflow::connect(connection->gf_terminal.get(), element_.connection_->gf_terminal.get());
 								// std::cout << "connected " << connection->name_ << " to " << element_.connection_->name_ << "\n";
 
@@ -1084,11 +1087,11 @@ namespace ImGui
 
 					if (element_.state_ != NodesState_HoverIO)
 					{
-						drawList->AddCircleFilled(connection_pos, (output_name_size.y / 3.0f), color);
+						drawList->AddCircleFilled(connection_pos, (output_name_size.y / 2.5f), color);
 					}
 				}
 
-				drawList->AddCircle(connection_pos, (output_name_size.y / 3.0f), color, ((int)(6.0f * canvas_scale_) + 10), (1.5f * canvas_scale_));
+				drawList->AddCircle(connection_pos, (output_name_size.y / 2.5f), color, ((int)(6.0f * canvas_scale_) + 10), (1.5f * canvas_scale_));
 			}
 			
 			////////////////////////////////////////////////////////////////////////////////		

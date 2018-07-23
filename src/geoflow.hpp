@@ -90,16 +90,8 @@ namespace geoflow {
     std::string name;
     NodeManager& manager;
 
-    void add_input(std::string name, TerminalType type){
-      inputTerminals[name] = std::make_shared<InputTerminal>(
-        *this, type
-      );
-    }
-    void add_output(std::string name, TerminalType type){
-      outputTerminals[name] = std::make_shared<OutputTerminal>(
-        *this, type
-      );
-    }
+    void add_input(std::string name, TerminalType type);
+    void add_output(std::string name, TerminalType type);
 
     std::shared_ptr<Node> get_ptr(){return shared_from_this();};
 
@@ -117,20 +109,7 @@ namespace geoflow {
 
     virtual void process()=0;
 
-    std::string get_info() {
-      std::stringstream s;
-      s << "status: ";
-      switch (status){
-        case WAITING: s << "WAITING"; break;
-        case READY: s << "READY"; break;
-        case PROCESSING: s << "PROCESSING"; break;
-        case DONE: s << "DONE"; break;
-        case ERROR: s << "ERROR"; break;
-        default: s << "UNKNOWN"; break;
-      }
-      s << "\n";
-      return s.str();
-    }
+    std::string get_info();
   };
 
 
@@ -139,35 +118,25 @@ namespace geoflow {
     NodeManager(){};
     // std::vector<std::shared_ptr<Node>> nodes;
     std::queue<std::shared_ptr<Node>> node_queue;
+    std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;
 
     template<class NodeClass> static std::shared_ptr<NodeClass> create_node(NodeManager& nm){
       return std::make_shared<NodeClass>(nm);
     }
     
-    std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;
-
     bool run(Node &node);
     void run_node(std::shared_ptr<Node> node);
     bool check_process();
     void queue(std::shared_ptr<Node> n);
-    template<class NodeClass> void register_node(std::string name){
-        // node_register[name] = std::make_shared<NodeClass>;
-        node_register[name] = create_node<NodeClass>;
-        // auto n = std::make_shared<NodeClass>(*this);
-      };
-    std::shared_ptr<Node> create(std::string name){
-        auto f = node_register[name];
-        auto n = f(*this);
-        // nodes.push_back(n);
-        return n;
-      };
-    // void remove(Node &Node) {};
-    
-    // void connect(InputTerminal& t1, Terminal& t2);
+    template<class NodeClass> void register_node(std::string name) {
+      node_register[name] = create_node<NodeClass>;
+    }
+    std::shared_ptr<Node> create(std::string name);
   };
 
-  void connect(Node& n1, Node& n2, std::string s1, std::string s2);
-  void connect(Terminal* t1, Terminal* t2);
+  bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
+  bool connect(Terminal* t1, Terminal* t2);
   void disconnect(Terminal* t1, Terminal* t2);
-
+  bool detect_loop(Terminal* t1, Terminal* t2);
+  bool detect_loop(OutputTerminal* iT, InputTerminal* oT);
 }
