@@ -1222,6 +1222,7 @@ namespace ImGui
 				auto node = element_.node_slot0_->gf_node;
 				element_.Reset(NodesState_Block);
 				ImGui::Text("%s", node->get_info().c_str());
+				node->gui();
 				if (ImGui::MenuItem("Run")) {					
 					gf_manager.run(*node);
 					// element_.node_slot0_ = nullptr;

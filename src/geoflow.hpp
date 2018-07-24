@@ -87,7 +87,7 @@ namespace geoflow {
 
     std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
-    struct parameters;
+    // struct parameters;
     node_status status=WAITING;
     std::string name;
     NodeManager& manager;
@@ -110,9 +110,12 @@ namespace geoflow {
     }
 
     virtual void process()=0;
+    virtual void gui(){};
 
     std::string get_info();
   };
+
+  class ObjectNode {};
 
 
   class NodeManager {

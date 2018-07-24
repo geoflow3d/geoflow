@@ -28,6 +28,7 @@ link_directories("/usr/local/opt/llvm/lib")
 add_subdirectory(thirdparty/povi)
 
 add_executable(basic examples/basic.cpp src/geoflow.cpp)
+target_link_libraries(basic povi_lib)
 
 add_executable(
   gui 

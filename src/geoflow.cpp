@@ -8,6 +8,7 @@ using namespace geoflow;
   //   // std::cout << "Terminal::Terminal(), parent.expired: " << parent_gnode.expired() << "\n";
   // };
 
+  // TODO: what happens if connect several output terminals to 1 input terminal? -> should clear other connections to same input terminal
   void InputTerminal::push(std::any data) {
     cdata = data;
     // wait_for_update = false;
@@ -21,8 +22,7 @@ using namespace geoflow;
 
   OutputTerminal::~OutputTerminal() {
     for(auto& conn : connections) {
-      if (!conn.expired()) {
-        auto in = conn.lock();
+      if (auto in = conn.lock()) {
         in->clear();
       }
     }
@@ -207,8 +207,7 @@ using namespace geoflow;
           return true;
         }
         for (auto& c :oT.second->connections) {
-          if (!c.expired()) {
-            auto iT = c.lock();
+          if (auto iT = c.lock()) {
             auto child_node = iT->parent.get_ptr();
             if (visited.count(child_node)==0) {
               visited.insert(child_node);

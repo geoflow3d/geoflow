@@ -12,12 +12,12 @@ int main(void) {
   auto number = N.create("Number");
   auto adder2 = N.create("Adder");
   auto number2 = N.create("Number");
-  connect(*adder2, *adder, "result", "in1");
-  connect(*adder, *adder2, "result", "in1");
-  // connect(*number, *adder, "result", "in1");
-  // connect(*number, *adder, "result", "in2");
+  // connect(*adder2, *adder, "result", "in1");
   // connect(*adder, *adder2, "result", "in1");
-  // connect(*adder, *adder2, "result", "in2");
+  connect(*number, *adder, "result", "in1");
+  connect(*number, *adder, "result", "in2");
+  connect(*adder, *adder2, "result", "in1");
+  connect(*adder, *adder2, "result", "in2");
   bool success = N.run(*number);
   if (success){
     try{
