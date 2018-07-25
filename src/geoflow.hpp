@@ -54,9 +54,11 @@ namespace geoflow {
     void clear();
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
+    typedef std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connection_set;
+
     public:
-    //use a set to make sure we don't get duplicate connections
-    std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connections;
+    //use a set to make sure we don't get duplicate connection
+    connection_set connections;
     
     OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
     ~OutputTerminal();
@@ -67,6 +69,8 @@ namespace geoflow {
 
     void connect(InputTerminal& in);
     void disconnect(InputTerminal& in);
+    void propagate();
+    connection_set& get_connections();
     
     void push(std::any data);
     void clear();
@@ -83,11 +87,14 @@ namespace geoflow {
     public:
     Node(NodeManager& manager, std::string name) : manager(manager), name(name){
     };
-    ~Node(){std::cout<< "Destructing geoflow::Node " << this << "\n";}
+    ~Node(){
+      std::cout<< "Destructing geoflow::Node " << this << "\n";
+      notify_children();
+    }
 
     std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
-    // struct parameters;
+
     node_status status=WAITING;
     std::string name;
     NodeManager& manager;
@@ -121,22 +128,24 @@ namespace geoflow {
   class NodeManager {
     public:
     NodeManager(){};
-    // std::vector<std::shared_ptr<Node>> nodes;
     std::queue<std::shared_ptr<Node>> node_queue;
     std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;
 
-    template<class NodeClass> static std::shared_ptr<NodeClass> create_node(NodeManager& nm){
-      return std::make_shared<NodeClass>(nm);
-    }
-    
-    bool run(Node &node);
-    void run_node(std::shared_ptr<Node> node);
-    bool check_process();
-    void queue(std::shared_ptr<Node> n);
     template<class NodeClass> void register_node(std::string name) {
       node_register[name] = create_node<NodeClass>;
     }
-    std::shared_ptr<Node> create(std::string name);
+    template<class NodeClass> static std::shared_ptr<NodeClass> create_node(NodeManager& nm){
+      return std::make_shared<NodeClass>(nm);
+    }
+    std::shared_ptr<Node> create(std::string name) {
+      auto f = node_register[name];
+      auto n = f(*this);
+      return n;
+    }
+    
+    bool run(Node &node);
+    void queue(std::shared_ptr<Node> n);
+    
   };
 
   bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
