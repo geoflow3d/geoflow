@@ -117,6 +117,8 @@ public:
     // how to deal with uniforms?
     // float pointsize=1;
 private:
+    Painter(Painter const &) = delete;
+    Painter & operator=(Painter const &) = delete;
     // void set_buffer(std::unique_ptr<Buffer> b);
     // void set_program(std::unique_ptr<Shader> s);
     void setup_VertexArray();
