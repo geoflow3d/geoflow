@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "app_povi.h"
-#include <array>
+#include <vector>
 
 int main(void)
 {
@@ -9,7 +9,7 @@ int main(void)
     poviApp a(1280, 800, "test-app");
 
     // Set up vertex data (and buffer(s)) and attribute pointers
-    std::array<GLfloat,18> vertices = {
+    std::vector<float> vertices = {
         // Positions         // Colors
         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // Bottom Right
        -0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // Bottom Left

@@ -21,16 +21,20 @@ void poviApp::center(float x, float y, float z) {
     center_point = glm::vec3(x,y,z);
 }
 
-std::weak_ptr<Painter> poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
+void poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
 {
     painters.push_back(std::make_tuple(painter, name, visible));
-    std::weak_ptr<Painter> handle = painter;
-    return handle;
 }
 
-void poviApp::remove_painter(std::weak_ptr<Painter> painter) 
+void poviApp::remove_painter(std::shared_ptr<Painter> painter) 
 {
-
+    for (auto t=painters.begin(); t!=painters.end(); ) {
+        if (std::get<0>(*t) == painter) {
+            t = painters.erase(t);
+        } else {
+            t++;
+        }
+    }
 }
 
 void poviApp::on_resize(int new_width, int new_height) {
