@@ -46,7 +46,7 @@ void on_initialise();
 void on_resize(int new_width, int new_height);
 void on_draw();
 void on_key_press(int key, int action, int mods);
-void on_mouse_wheel(double xoffset, double yoffset);
+void on_scroll(double xoffset, double yoffset);
 void on_mouse_move(double xpos, double ypos);
 void on_mouse_press(int button, int action, int mods);
 

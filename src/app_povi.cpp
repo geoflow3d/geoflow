@@ -131,7 +131,7 @@ void poviApp::on_mouse_move(double xpos, double ypos) {
     last_mouse_pos.x = xpos;
     last_mouse_pos.y = ypos;
 }
-void poviApp::on_mouse_wheel(double xoffset, double yoffset){
+void poviApp::on_scroll(double xoffset, double yoffset){
     scale *= yoffset/50 + 1;
     // update_view_matrix();
 }
