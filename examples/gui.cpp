@@ -10,9 +10,9 @@
 
 // #include <boost/program_options.hpp>
 
-static poviApp a(1280, 800, "Step edge detector");
+static auto a = std::make_shared<poviApp>(1280, 800, "Step edge detector");
 static geoflow::NodeManager N;
-static ImGui::Nodes nodes_(N, a);
+static ImGui::Nodes nodes_(N, *a);
 
 void on_draw() {
     ImGui::Begin("Nodes");
@@ -26,6 +26,6 @@ int main(int ac, const char * av[])
     N.register_node<AdderNode>("Adder");
     N.register_node<NumberNode>("Number");
     N.register_node<NumberNodeI>("NumberI");
-    a.draw_that(on_draw);
-    a.run();
+    a->draw_that(on_draw);
+    a->run();
 }

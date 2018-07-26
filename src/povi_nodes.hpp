@@ -10,6 +10,7 @@ using namespace geoflow;
 
 class PoviPainterNode:public Node {
   std::shared_ptr<Painter> painter;
+  std::weak_ptr<poviApp> pv_app;
   
   public:
   std::string name = "mypainter";
@@ -22,22 +23,51 @@ class PoviPainterNode:public Node {
     // a.add_painter(painter, "mypainter");
     add_input("data", TT_vec_float);
   }
+  ~PoviPainterNode(){
+    // note: this assumes we have only attached this painter to one poviapp
+    if (auto a = pv_app.lock()) {
+      std::cout << "remove painter\n";
+      a->remove_painter(painter);
+    } else std::cout << "remove painter failed\n";
+  }
 
-  std::shared_ptr<Painter> get_painter() {
-    return painter;
+  void add_to(poviApp& a, std::string name) {
+    a.add_painter(painter, name);
+    pv_app = a.get_ptr();
   }
 
   void on_push(InputTerminal& t) {
     auto& d = std::any_cast<std::vector<float>&>(t.cdata);
-    std::cout << d.size() << " " << "\n";
     painter->set_data(d.data(), d.size(), {3,3});
-    std::cout << "set data on painter\n";
   }
   void on_clear(InputTerminal& t) {
     painter->set_data(nullptr, 0, {3,3}); // put empty array
   }
 
   void gui(){
+    const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
+    static const char* item_current = items[2];            // Here our selection is a single pointer stored outside the object.
+    if (ImGui::BeginCombo("draw mode", item_current)) // The second parameter is the label previewed before opening the combo.
+    {
+      for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+      {
+        bool is_selected = (item_current == items[n]);
+        if (ImGui::Selectable(items[n], is_selected))
+          item_current = items[n];
+          ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+        if (item_current==items[0])
+          painter->set_drawmode(GL_POINTS);
+        else if (item_current==items[1])
+          painter->set_drawmode(GL_LINES);
+        else if (item_current==items[2])
+          painter->set_drawmode(GL_TRIANGLES);
+        else if (item_current==items[3])
+          painter->set_drawmode(GL_LINE_STRIP);
+        else if (item_current==items[4])
+          painter->set_drawmode(GL_LINE_LOOP);
+      }
+        ImGui::EndCombo();
+    }
     // type: points, lines, triangles
     // fp_painter->attach_shader("basic.vert");
     // fp_painter->attach_shader("basic.frag");

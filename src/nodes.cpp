@@ -123,9 +123,10 @@ namespace ImGui
 	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type)
 	{
 		std::shared_ptr<geoflow::Node> gf_node;
+		++id_;
 		if (type == "PoviPainter"){
 			auto painter_node = std::make_shared<PoviPainterNode>(gf_manager);
-			pv_app.add_painter(painter_node->get_painter(), painter_node->name);
+			painter_node->add_to(pv_app, type + std::to_string(id_));
 			gf_node = painter_node;
 		} else {
 		gf_node = gf_manager.create(type);
@@ -134,8 +135,8 @@ namespace ImGui
 		
 		////////////////////////////////////////////////////////////////////////////////
 		
-		node->id_ = -++id_;
-		node->name_ = type + std::to_string(id_).c_str();
+		node->id_ = -id_;
+		node->name_ = type + std::to_string(id_);
 		node->position_ = pos;
 
 		std::cout << "reading inputs from " << type <<  "\n";
@@ -1203,9 +1204,8 @@ namespace ImGui
 				element_.Reset(NodesState_Block);
 				ImGui::Text("%s", node->get_info().c_str());
 				node->gui();
-				if (ImGui::MenuItem("Run")) {					
+				if (ImGui::MenuItem("Run")) {		
 					gf_manager.run(*node);
-					// element_.node_slot0_ = nullptr;
 				}
 				// if (ImGui::MenuItem("Destroy")) {					
 				// 	gf_manager.run(*node);
@@ -1245,19 +1245,19 @@ namespace ImGui
 		
 			ImGui::Text("");
 		
-			ImGui::Text("Mouse: %.2f, %.2f", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
-			ImGui::Text("Mouse delta: %.2f, %.2f", ImGui::GetIO().MouseDelta.x, ImGui::GetIO().MouseDelta.y);
-			ImGui::Text("Offset: %.2f, %.2f", offset.x, offset.y);
+			// ImGui::Text("Mouse: %.2f, %.2f", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
+			// ImGui::Text("Mouse delta: %.2f, %.2f", ImGui::GetIO().MouseDelta.x, ImGui::GetIO().MouseDelta.y);
+			// ImGui::Text("Offset: %.2f, %.2f", offset.x, offset.y);
 		
-			ImGui::Text("");
+			// ImGui::Text("");
 		
-			ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
-			ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
-			ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
-			ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
-			ImGui::Text("Canvas_scale: %.2f", canvas_scale_);
+			// ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
+			// ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
+			// ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
+			// ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
+			// ImGui::Text("Canvas_scale: %.2f", canvas_scale_);
 
-			ImGui::Text("");
+			// ImGui::Text("");
 			
 			if (element_.node_){
 				ImGui::Text("element_node: %s", element_.node_->name_.c_str());
