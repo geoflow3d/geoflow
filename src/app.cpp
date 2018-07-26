@@ -184,7 +184,7 @@ void App::scroll_callback(
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
 
-    a->on_mouse_wheel(xoffset, yoffset);
+    a->on_scroll(xoffset, yoffset);
 }
 
 void App::char_callback(
