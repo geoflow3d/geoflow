@@ -1102,8 +1102,8 @@ namespace ImGui
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
 		////////////////////////////////////////////////////////////////////////////////
-
-		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+		// ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && 
+		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
 		{
 			if (ImGui::GetIO().MousePos.x != -FLT_MAX) //try to fix bug where canvas_scroll_ becomes nan and canvas is no longer rendered
 				canvas_mouse_ = ImGui::GetIO().MousePos - ImGui::GetCursorScreenPos();
