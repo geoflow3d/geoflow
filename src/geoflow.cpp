@@ -6,10 +6,12 @@ using namespace geoflow;
   void InputTerminal::push(std::any data) {
     cdata = data;
     parent.update();
+    parent.on_push(*this);
   }
   void InputTerminal::clear() {
     cdata.reset();
     parent.status = WAITING;
+    parent.on_clear(*this);
   }
 
   OutputTerminal::~OutputTerminal() {

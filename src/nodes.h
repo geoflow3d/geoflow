@@ -14,6 +14,7 @@
 #include "imgui_internal.h"
 
 #include "geoflow.hpp"
+#include "povi_nodes.hpp"
 
 #include <memory>
 #include <string>
@@ -136,6 +137,7 @@ namespace ImGui
 		////////////////////////////////////////////////////////////////////////////////
 
 		geoflow::NodeManager& gf_manager;
+		poviApp& pv_app;
 
 		struct Node;
 
@@ -368,7 +370,7 @@ namespace ImGui
 		Nodes::Node*  CreateNodeFromType(ImVec2 pos, std::string type);
 
 	public:
-		explicit Nodes(geoflow::NodeManager& nm);
+		explicit Nodes(geoflow::NodeManager& nm, poviApp& a);
 		~Nodes();
 
 		void ProcessNodes();

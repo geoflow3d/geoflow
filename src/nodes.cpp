@@ -10,7 +10,7 @@
 
 namespace ImGui
 {
-	Nodes::Nodes(geoflow::NodeManager& nm):gf_manager(nm)
+	Nodes::Nodes(geoflow::NodeManager& nm, poviApp& a):gf_manager(nm), pv_app(a)
 	{
 		id_ = 0;
 		element_.Reset();
@@ -122,9 +122,16 @@ namespace ImGui
 
 	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type)
 	{
-		auto gf_node = gf_manager.create(type);
+		std::shared_ptr<geoflow::Node> gf_node;
+		if (type == "PoviPainter"){
+			auto painter_node = std::make_shared<PoviPainterNode>(gf_manager);
+			pv_app.add_painter(painter_node->get_painter(), painter_node->name);
+			gf_node = painter_node;
+		} else {
+		gf_node = gf_manager.create(type);
+		}
 		auto node = std::make_unique<Node>(gf_node);
-
+		
 		////////////////////////////////////////////////////////////////////////////////
 		
 		node->id_ = -++id_;
@@ -148,38 +155,6 @@ namespace ImGui
 
 			node->outputs_.push_back(std::move(connection));
 		}
-
-		// {
-		// 	auto &inputs = node->inputs_;
-		// 	std::for_each
-		// 	(
-		// 		type.inputs_.begin(),
-		// 		type.inputs_.end(),
-		// 		[&inputs](auto& element)
-		// 		{
-		// 			auto connection = std::make_unique<Connection>();
-		// 			connection->name_ = element.first;
-		// 			connection->type_ = element.second;
-
-		// 			inputs.push_back(std::move(connection));
-		// 		}
-		// 	);
-
-		// 	auto &outputs = node->outputs_;
-		// 	std::for_each
-		// 	(
-		// 		type.outputs_.begin(),
-		// 		type.outputs_.end(),
-		// 		[&outputs](auto& element)
-		// 		{
-		// 			auto connection = std::make_unique<Connection>();
-		// 			connection->name_ = element.first;
-		// 			connection->type_ = element.second;
-			
-		// 			outputs.push_back(std::move(connection));
-		// 		}
-		// 	);
-		// }
 
 		////////////////////////////////////////////////////////////////////////////////
 
@@ -1213,7 +1188,12 @@ namespace ImGui
 						element_.Reset();
 						element_.node_ = CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, node.first);
 					}
-				}				
+				}
+				if (ImGui::MenuItem("PoviPainter"))
+					{					
+						element_.Reset();
+						element_.node_ = CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, "PoviPainter");
+					}
 				ImGui::EndPopup();
 			}
 

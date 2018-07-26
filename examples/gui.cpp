@@ -12,7 +12,7 @@
 
 static poviApp a(1280, 800, "Step edge detector");
 static geoflow::NodeManager N;
-static ImGui::Nodes nodes_(N);
+static ImGui::Nodes nodes_(N, a);
 
 void on_draw() {
     ImGui::Begin("Nodes");
@@ -22,6 +22,7 @@ void on_draw() {
 
 int main(int ac, const char * av[])
 {
+    N.register_node<TriangleNode>("Triangle");
     N.register_node<AdderNode>("Adder");
     N.register_node<NumberNode>("Number");
     N.register_node<NumberNodeI>("NumberI");

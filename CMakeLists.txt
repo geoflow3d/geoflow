@@ -17,7 +17,7 @@ endif()
 set(CMAKE_CXX_FLAGS "-O2")
 
  
-include_directories(src thirdparty/povi/src thirdparty/povi/imgui thirdparty/povi/glad/include)
+include_directories(/usr/local/include src thirdparty/povi/src thirdparty/povi/imgui thirdparty/povi/glad/include)
 
 set(CMAKE_EXE_LINKER_FLAGS -Wl)
 set(CMAKE_MACOSX_RPATH 1)

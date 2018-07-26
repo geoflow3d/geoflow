@@ -21,7 +21,8 @@ namespace geoflow {
   enum TerminalType : uint32_t{
     TT_any = 0,
     TT_float,
-    TT_int
+    TT_int,
+    TT_vec_float
   };
   class Terminal {
     public:
@@ -116,7 +117,9 @@ namespace geoflow {
       outputTerminals[output_name]->push(std::any(value));
     }
 
-    virtual void process()=0;
+    virtual void on_push(InputTerminal& it){};
+    virtual void on_clear(InputTerminal& it){};
+    virtual void process(){};
     virtual void gui(){};
 
     std::string get_info();
