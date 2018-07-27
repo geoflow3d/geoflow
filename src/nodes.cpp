@@ -131,6 +131,7 @@ namespace ImGui
 		} else {
 		gf_node = gf_manager.create(type);
 		}
+		gf_manager.run(*gf_node);
 		auto node = std::make_unique<Node>(gf_node);
 		
 		////////////////////////////////////////////////////////////////////////////////
@@ -932,6 +933,7 @@ namespace ImGui
 								element_.connection_->connections_++;
 
 								geoflow::connect(element_.connection_->gf_terminal.get(), connection->gf_terminal.get());
+								gf_manager.run(connection->gf_terminal->parent);
 								// std::cout << "connected " << element_.connection_->name_ << " to " <<connection->name_ <<"\n";
 
 								element_.Reset(NodesState_HoverIO);
@@ -1045,6 +1047,7 @@ namespace ImGui
 								element_.connection_->connections_ = 1;
 								
 								geoflow::connect(connection->gf_terminal.get(), element_.connection_->gf_terminal.get());
+								gf_manager.run(element_.connection_->gf_terminal->parent);
 								// std::cout << "connected " << connection->name_ << " to " << element_.connection_->name_ << "\n";
 
 								connection->connections_++;
