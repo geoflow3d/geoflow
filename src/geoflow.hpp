@@ -22,6 +22,9 @@ namespace geoflow {
     TT_any = 0,
     TT_float,
     TT_int,
+    TT_vec1f,
+    TT_vec3f,
+    TT_vec6f,
     TT_vec_float
   };
   class Terminal {
