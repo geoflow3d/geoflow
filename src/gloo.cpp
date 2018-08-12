@@ -26,9 +26,17 @@ void Shader::bind(unsigned int location, float value)
 { 
     glUniform1f(location, value); 
 }
+void Shader::bind(unsigned int location, int value) 
+{ 
+    glUniform1i(location, value); 
+}
 void Shader::bind(unsigned int location, glm::mat4 const & matrix)
 { 
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
+}
+void Shader::bind(unsigned int location, glm::vec4 const & vector)
+{ 
+    glUniform4fv(location, 1, glm::value_ptr(vector)); 
 }
 
 Shader & Shader::attach(std::string const & filename)
@@ -154,6 +162,9 @@ void Painter::init()
     // if (draw_mode==GL_POINTS)
     //     set_uniform("u_pointsize",1.0);
     initialised = true;
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4fv("u_color")));   
 }
 
 void Painter::attach_shader(std::string const & filename)
@@ -191,12 +202,21 @@ void Painter::setup_VertexArray()
     glBindVertexArray(0); // Unbind VAO
 }
 
-void Painter::set_uniform(std::string const & name, GLfloat value) {
-    uniforms[name] = value;
-}
+// void Painter::set_uniform(std::string const & name, GLfloat value) {
+//     uniforms[name] = value;
+// }
 
-float * Painter::get_uniform(std::string const & name) {
-    return &uniforms[name];
+// float * Painter::get_uniform(std::string const & name) {
+//     return &uniforms[name];
+// }
+
+void Painter::gui() {
+    for (auto &u: uniforms) {
+        if(u->get_name()=="u_pointsize" && get_drawmode()!=GL_POINTS)
+            continue;
+        else
+            u->gui();
+    }
 }
 
 void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
@@ -205,22 +225,19 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
         shader->init();
     if(!initialised)
         init();
-    if(!buffer->is_initialised()){
+    if(!buffer->is_initialised()) {
         buffer->init();
         setup_VertexArray();
     }
     shader->activate();
 
-    GLint projLoc = glGetUniformLocation(shader->get(), "u_projection"); 
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-    GLint viewLoc = glGetUniformLocation(shader->get(), "u_view"); 
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    GLint modLoc = glGetUniformLocation(shader->get(), "u_model"); 
-    glUniformMatrix4fv(modLoc, 1, GL_FALSE, glm::value_ptr(model));
+    // note all shaders have these! eg crosshair painter
+    shader->bind("u_projection", projection);
+    shader->bind("u_view", view);
+    shader->bind("u_model", model);
 
-    for (auto u: uniforms) {
-        GLint loc = glGetUniformLocation(shader->get(), u.first.c_str());
-        glUniform1f(loc, u.second);
+    for (auto &u: uniforms) {
+        u->bind(*shader);
     }
 
     glBindVertexArray(mVertexArray);

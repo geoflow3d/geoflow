@@ -71,15 +71,11 @@ void poviApp::on_draw(){
     for(auto &painter:painters){
         auto p = std::get<0>(painter);
         ImGui::Checkbox(std::get<1>(painter).c_str(), &std::get<2>(painter));
-        if(p->get_drawmode()==GL_POINTS){
-            // ImGui::SameLine();
-            ImGui::Indent();
-            ImGui::PushItemWidth(50);
-            auto s = std::get<1>(painter)+" psize";
-            ImGui::SliderFloat(s.c_str(), p->get_uniform("u_pointsize"), 0.1, 20);
-            ImGui::PopItemWidth();
-            ImGui::Unindent();
-        }
+        ImGui::Indent();
+        ImGui::PushItemWidth(50);
+        p->gui();
+        ImGui::PopItemWidth();
+        ImGui::Unindent();
     }
     ImGui::End();
 }
