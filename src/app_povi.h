@@ -69,17 +69,19 @@ mouse_drag drag = NO_DRAG;
 xy_pos drag_init_pos;
 xy_pos last_mouse_pos;
 
+Box bbox;
+
 float fov = 60;
 float clip_near = 0.01;
 float clip_far = 100;
 
-Painter ch_painter;
-std::array<GLfloat,8> crosshair_lines = {
-		-1,  0,
-			1,  0,
-			0, -1,
-			0,  1
-};
+// Painter ch_painter;
+// std::array<GLfloat,8> crosshair_lines = {
+// 	-1,  0,
+// 	1,  0,
+// 	0, -1,
+// 	0,  1
+// };
 
 float cam_pos = -2;
 float scale = 0.05;

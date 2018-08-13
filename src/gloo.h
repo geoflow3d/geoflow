@@ -7,11 +7,15 @@
 
 // Standard Headers
 #include <string>
+#include <iostream>
 #include <memory>
 #include <tuple>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <initializer_list>
+#include <limits>
+#include <algorithm>
+#include <array>
 
 #include <imgui.h>
 
@@ -143,7 +147,7 @@ class Uniform1i:public Uniform
 
 class Uniform4fv:public Uniform
 {
-    glm::vec4 value = glm::vec4(0.5,0.5,0.5,1.0);
+    glm::vec4 value = glm::vec4(0.85,0.85,0.85,1.0);
     public:
     using Uniform::Uniform;
     void gui(){
@@ -155,11 +159,60 @@ class Uniform4fv:public Uniform
         s.bind(name, value);
     }
 };
+class Box;
+class Box {
+    private:
+    std::array<float,3> pmin, pmax;
+    bool just_cleared;
+    public:
+    Box(){
+        std::cout << "CCC\n";
+        clear();
+    }
+    void add(float p[]){
+        if(just_cleared){
+            pmin[0] = p[0];
+            pmin[1] = p[1];
+            pmin[2] = p[2];
+            pmax[0] = p[0];
+            pmax[1] = p[1];
+            pmax[2] = p[2];
+            just_cleared = false;
+        }
+        pmin[0] = std::min(p[0], pmin[0]);
+        pmin[1] = std::min(p[1], pmin[1]);
+        pmin[2] = std::min(p[2], pmin[2]);
+        pmax[0] = std::max(p[0], pmax[0]);
+        pmax[1] = std::max(p[1], pmax[1]);
+        pmax[2] = std::max(p[2], pmax[2]);
+        // std::cout << "adding point p = " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+        // std::cout << "bb min = " << pmin[0] << ", " << pmin[1] << ", " << pmin[2] << "\n";
+        // std::cout << "bb max = " << pmax[0] << ", " << pmax[1] << ", " << pmax[2] << "\n";
+    }
+    void add(Box& otherBox){
+        add(otherBox.min().data());
+        add(otherBox.max().data());
+    }
+    void clear(){
+        pmin.fill(0);
+        pmax.fill(0);
+        just_cleared = true;
+    }
+    glm::vec3 center(){
+        return {(pmax[0]+pmin[0])/2, (pmax[1]+pmin[1])/2, (pmax[2]+pmin[2])/2};
+    }
+    std::array<float,3> min(){
+        return pmin;
+    }
+    std::array<float,3> max(){
+        return pmax;
+    }
+};
 
 class Painter
 {
 public:
-    Painter() {}
+    Painter();
     ~Painter() { glDeleteVertexArrays(1, &mVertexArray); }
 
     void init();
@@ -167,11 +220,16 @@ public:
     // GLuint get() { return mVertexArray; }
 
     void attach_shader(std::string const & filename);
-    void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
+    // void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
+    void set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims);
     // void set_uniform(std::string const & name, GLfloat value);
     // float * get_uniform(std::string const & name);
     void set_drawmode(int dm) {draw_mode = dm;}
     int get_drawmode() {return draw_mode;}
+
+    Box& get_bbox(){
+        return bbox;
+    }
 
     void gui();
     void render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection);
@@ -186,10 +244,13 @@ private:
     void setup_VertexArray();
     GLuint mVertexArray=0;
     int draw_mode;
-    std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
+    // std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
     std::unique_ptr<Shader> shader = std::make_unique<Shader>();
-    // std::map<std::string,float> uniforms;
+    // std::unordered_<std::string,float> uniforms;
     std::vector<std::unique_ptr<Uniform>> uniforms;
+    std::unordered_map<std::string, std::unique_ptr<Buffer>> attributes;
+
+    Box bbox;
 
     bool initialised=false;
 };

@@ -152,6 +152,12 @@ template<typename T> void Buffer::set_data(T* d, size_t n, std::initializer_list
 template void Buffer::set_data(GLfloat*, size_t, std::initializer_list<int>);
 // template void Buffer::set_data(double*, size_t);
 
+Painter::Painter() {
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4fv("u_color")));
+    attributes["position"] = std::make_unique<Buffer>();
+}
 
 void Painter::init()
 {
@@ -162,19 +168,16 @@ void Painter::init()
     // if (draw_mode==GL_POINTS)
     //     set_uniform("u_pointsize",1.0);
     initialised = true;
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4fv("u_color")));   
 }
 
 void Painter::attach_shader(std::string const & filename)
 {
     shader->attach(filename);
 }
-void Painter::set_data(GLfloat* data, size_t n, std::initializer_list<int> dims)
-{
-    buffer->set_data(data, n, dims);
-}
+// void Painter::set_data(GLfloat* data, size_t n, std::initializer_list<int> dims)
+// {
+//     buffer->set_data(data, n, dims);
+// }
 
 // void Painter::set_buffer(std::unique_ptr<Buffer> b)
 // {
@@ -185,19 +188,39 @@ void Painter::set_data(GLfloat* data, size_t n, std::initializer_list<int> dims)
 //     shader.swap(s);
 // }
 
+void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims) {
+    if(name == "position") {
+        bbox.clear();
+        for(size_t i=0; i<n/3; i++) {
+            bbox.add(&data[i*3]);
+        }
+        std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
+    }
+    attributes[name]->set_data(data, n, dims);
+}
+
 void Painter::setup_VertexArray()
 {
     glBindVertexArray(mVertexArray);
-    buffer->activate();
 
-    // // Position attribute
-    int start=0, i=0;
-    int stride = buffer->get_stride();
-    for(int dim:buffer->get_fields()) {
-        glVertexAttribPointer(i, dim, GL_FLOAT, GL_FALSE, stride * buffer->element_bytesize(), (GLvoid*)(start * buffer->element_bytesize()));
-        glEnableVertexAttribArray(i++);
-        start = start+dim;
+    int i=0;
+    for(auto& a : attributes) {
+        a.second->activate();
+        auto& buffer = a.second;
+        auto& name = a.first;
+        auto stride = buffer->get_stride();
+        auto loc = glGetAttribLocation(shader->get(), name.c_str());
+        glVertexAttribPointer(loc, stride, GL_FLOAT, GL_FALSE, stride * buffer->element_bytesize(), nullptr);
+        glEnableVertexAttribArray(loc);
     }
+    // // Position attribute
+    // int start=0, i=0;
+    // int stride = buffer->get_stride();
+    // for(int dim:buffer->get_fields()) {
+    //     glVertexAttribPointer(i, dim, GL_FLOAT, GL_FALSE, stride * buffer->element_bytesize(), (GLvoid*)(start * buffer->element_bytesize()));
+    //     glEnableVertexAttribArray(i++);
+    //     start = start+dim;
+    // }
 
     glBindVertexArray(0); // Unbind VAO
 }
@@ -211,12 +234,43 @@ void Painter::setup_VertexArray()
 // }
 
 void Painter::gui() {
+    ImGui::PushID(this);
+    const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
+    const char* item_current;
+    if(draw_mode==GL_POINTS) item_current=items[0];
+    else if(draw_mode==GL_LINES) item_current=items[1];
+    else if(draw_mode==GL_TRIANGLES) item_current=items[2];
+    else if(draw_mode==GL_LINE_STRIP) item_current=items[3];
+    else if(draw_mode==GL_LINE_LOOP) item_current=items[4];
+    
+    if (ImGui::BeginCombo("drawmode", item_current)) // The second parameter is the label previewed before opening the combo.
+    {
+      for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+      {
+        bool is_selected = (item_current == items[n]);
+        if (ImGui::Selectable(items[n], is_selected))
+          item_current = items[n];
+          ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+        if (item_current==items[0])
+          set_drawmode(GL_POINTS);
+        else if (item_current==items[1])
+          set_drawmode(GL_LINES);
+        else if (item_current==items[2])
+          set_drawmode(GL_TRIANGLES);
+        else if (item_current==items[3])
+          set_drawmode(GL_LINE_STRIP);
+        else if (item_current==items[4])
+          set_drawmode(GL_LINE_LOOP);
+      }
+        ImGui::EndCombo();
+    }
     for (auto &u: uniforms) {
         if(u->get_name()=="u_pointsize" && get_drawmode()!=GL_POINTS)
             continue;
         else
             u->gui();
     }
+    ImGui::PopID();
 }
 
 void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
@@ -225,10 +279,13 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
         shader->init();
     if(!initialised)
         init();
-    if(!buffer->is_initialised()) {
-        buffer->init();
-        setup_VertexArray();
+    for(auto& a : attributes) {
+        if(!a.second->is_initialised()) {
+            a.second->init();
+            setup_VertexArray();
+        }
     }
+    
     shader->activate();
 
     // note all shaders have these! eg crosshair painter
@@ -241,6 +298,8 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     }
 
     glBindVertexArray(mVertexArray);
-    glDrawArrays(draw_mode, 0, buffer->get_length()/buffer->get_stride());
+    for(auto& a : attributes) {
+        glDrawArrays(draw_mode, 0, a.second->get_length()/a.second->get_stride());
+    }
     glBindVertexArray(0);
 }

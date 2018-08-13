@@ -1,7 +1,7 @@
 #include "app.h"
 
 App::App(int width, int height, std::string title)
-	:width(width), height(height), clear_color(ImVec4(0.052, 0.106, 0.133, 1.00f)) {
+	:width(width), height(height), clear_color(ImVec4(0.0f, 0.0f, 0.0f, 1.0f)) {
 
     glfwSetErrorCallback(error_callback);
     

@@ -5,11 +5,11 @@ void poviApp::on_initialise(){
     model = glm::mat4();
     // ch_painter = Painter();
 
-    ch_painter.set_data(crosshair_lines.data(), crosshair_lines.size(), {2});
-    ch_painter.attach_shader("crosshair.vert");
-    ch_painter.attach_shader("crosshair.frag");
-    ch_painter.set_drawmode(GL_LINES);
-    // ch_painter.init();
+    // ch_painter.set_attribute("position", crosshair_lines.data(), crosshair_lines.size(), {2});
+    // ch_painter.attach_shader("crosshair.vert");
+    // ch_painter.attach_shader("crosshair.frag");
+    // ch_painter.set_drawmode(GL_LINES);
+
     // painters.push_back(std::move(ch_painter));
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
@@ -50,8 +50,8 @@ void poviApp::on_draw(){
         if (std::get<2>(painter))
             std::get<0>(painter)->render(model, view, projection);
     }
-    if (drag != NO_DRAG)
-        ch_painter.render(model, view, projection);
+    // if (drag != NO_DRAG)
+    //     ch_painter.render(model, view, projection);
 
     if (drawthis_func)
         drawthis_func();
@@ -72,7 +72,7 @@ void poviApp::on_draw(){
         auto p = std::get<0>(painter);
         ImGui::Checkbox(std::get<1>(painter).c_str(), &std::get<2>(painter));
         ImGui::Indent();
-        ImGui::PushItemWidth(50);
+        ImGui::PushItemWidth(150);
         p->gui();
         ImGui::PopItemWidth();
         ImGui::Unindent();
@@ -82,8 +82,17 @@ void poviApp::on_draw(){
 
 void poviApp::on_key_press(int key, int action, int mods) {
     if (action == GLFW_PRESS && key == GLFW_KEY_C) {
-        translation = glm::vec3();
-        rotation = glm::quat();
+        bbox.clear();
+        for (auto &painter:painters){
+            auto p_bbox = std::get<0>(painter)->get_bbox();
+            bbox.add(p_bbox);
+        }
+        translation = -bbox.center();
+        // std::cout << bbox.min()[0] << " " << bbox.min()[1] << " " << bbox.min()[2] << "\n";
+        // std::cout << bbox.max()[0] << " " << bbox.max()[1] << " " << bbox.max()[2] << "\n";
+        // std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
+        // translation = glm::vec3();
+        // rotation = glm::quat();
     }
     if (action == GLFW_PRESS && key == GLFW_KEY_T) {
         rotation = glm::quat();
