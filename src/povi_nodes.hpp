@@ -16,12 +16,12 @@ class PoviPainterNode:public Node {
   std::string name = "mypainter";
   PoviPainterNode(NodeManager& manager):Node(manager, "PoviPainter") {
     painter = std::make_shared<Painter>();
-    painter->set_data(nullptr, 0, {3,3});
+    painter->set_attribute("position", nullptr, 0, {3});
     painter->attach_shader("basic.vert");
     painter->attach_shader("basic.frag");
     painter->set_drawmode(GL_TRIANGLES);
     // a.add_painter(painter, "mypainter");
-    add_input("data", TT_vec_float);
+    add_input("vertices", TT_vec3f);
   }
   ~PoviPainterNode(){
     // note: this assumes we have only attached this painter to one poviapp
@@ -37,37 +37,16 @@ class PoviPainterNode:public Node {
   }
 
   void on_push(InputTerminal& t) {
-    auto& d = std::any_cast<std::vector<float>&>(t.cdata);
-    painter->set_data(d.data(), d.size(), {3,3});
+    // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
+    auto& d = std::any_cast<vec3f&>(t.cdata);
+    painter->set_attribute("position", d[0].data(), d.size()*3, {3});
   }
   void on_clear(InputTerminal& t) {
-    painter->set_data(nullptr, 0, {3,3}); // put empty array
+    painter->set_attribute("position", nullptr, 0, {3}); // put empty array
   }
 
   void gui(){
-    const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
-    static const char* item_current = items[2];            // Here our selection is a single pointer stored outside the object.
-    if (ImGui::BeginCombo("draw mode", item_current)) // The second parameter is the label previewed before opening the combo.
-    {
-      for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-      {
-        bool is_selected = (item_current == items[n]);
-        if (ImGui::Selectable(items[n], is_selected))
-          item_current = items[n];
-          ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
-        if (item_current==items[0])
-          painter->set_drawmode(GL_POINTS);
-        else if (item_current==items[1])
-          painter->set_drawmode(GL_LINES);
-        else if (item_current==items[2])
-          painter->set_drawmode(GL_TRIANGLES);
-        else if (item_current==items[3])
-          painter->set_drawmode(GL_LINE_STRIP);
-        else if (item_current==items[4])
-          painter->set_drawmode(GL_LINE_LOOP);
-      }
-        ImGui::EndCombo();
-    }
+    painter->gui();
     // type: points, lines, triangles
     // fp_painter->attach_shader("basic.vert");
     // fp_painter->attach_shader("basic.frag");
@@ -77,28 +56,30 @@ class PoviPainterNode:public Node {
 
 class TriangleNode:public Node {
   public:
-  // int thenumber=0;
-  std::vector<float> vertices = {
-        // Positions         // Colors
-        0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // Bottom Right
-        -0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // Bottom Left
-        0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // Top 
-    };
+  vec3f vertices = {
+    {10.5f, 9.5f, 0.0f}, 
+    {9.5f, 9.5f, 0.0f},
+    {10.0f,  10.5f, 0.0f}
+  };
+  vec3f colors = {
+    {1.0f, 0.0f, 0.0f}, 
+    {0.0f, 1.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f}
+  };
 
   TriangleNode(NodeManager& manager):Node(manager, "Triangle") {
-    add_output("out", TT_vec_float);
+    add_output("vertices", TT_vec3f);
+    add_output("colors", TT_vec3f);
   }
 
   void gui(){
-    // ImGui::InputInt("The number", &thenumber);
-    ImGui::ColorEdit3("col1", &vertices.data()[3]);
-    ImGui::ColorEdit3("col2", &vertices.data()[9]);
-    ImGui::ColorEdit3("col3", &vertices.data()[15]);
+    ImGui::ColorEdit3("col1", colors[0].data());
+    ImGui::ColorEdit3("col2", colors[1].data());
+    ImGui::ColorEdit3("col3", colors[2].data());
   }
 
   void process(){
-    // Set up vertex data (and buffer(s)) and attribute pointers
-    set_value("out", vertices);
-    // std::cout << "end NumberNode::process()" << "\n";
+    set_value("vertices", vertices);
+    set_value("colors", colors);
   }
 };
