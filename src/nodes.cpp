@@ -319,7 +319,7 @@ namespace ImGui
 		{		
 			case NodesState_Default:
 			{
-				if (ImGui::IsMouseDown(0) && !ImGui::IsMouseDown(1) && !ImGui::IsMouseDown(2))
+				if (ImGui::IsMouseClicked(0) && !ImGui::IsMouseDown(1) && !ImGui::IsMouseDown(2))
 				{
 					ImRect canvas = ImRect(ImVec2(0.0f, 0.0f), canvas_size_);
 
@@ -808,8 +808,8 @@ namespace ImGui
 
 			if (node.state_ > 0)
 			{
-				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.4f, 0.4f, 0.4f, 1.0f), corner, ImDrawCornerFlags_All);
-				drawList->AddRectFilled(node_rect_min, title_area, ImColor(0.3f, 0.3f, 0.3f, 1.0f), corner, ImDrawCornerFlags_Top);
+				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.4f, 0.4f, 0.4f, 0.7f), corner, ImDrawCornerFlags_All);
+				drawList->AddRectFilled(node_rect_min, title_area, ImColor(0.3f, 0.3f, 0.3f, 0.7f), corner, ImDrawCornerFlags_Top);
 
 				drawList->AddRect(node_rect_min, node_rect_max, bcol, corner, ImDrawCornerFlags_All, 1.0f);
 
@@ -817,7 +817,7 @@ namespace ImGui
 			}
 			else
 			{
-				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.3f, 0.3f, 0.3f, 1.0f), corner, ImDrawCornerFlags_All);
+				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.3f, 0.3f, 0.3f, 0.7f), corner, ImDrawCornerFlags_All);
 
 				drawList->AddRect(node_rect_min, node_rect_max, bcol, corner, ImDrawCornerFlags_All, 1.0f);
 
@@ -1106,11 +1106,13 @@ namespace ImGui
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
 		////////////////////////////////////////////////////////////////////////////////
-		// ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && 
-		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
-		{
-			if (ImGui::GetIO().MousePos.x != -FLT_MAX) //try to fix bug where canvas_scroll_ becomes nan and canvas is no longer rendered
+		if (ImGui::GetIO().MousePos.x != -FLT_MAX) //try to fix bug where canvas_scroll_ becomes nan and canvas is no longer rendered
 				canvas_mouse_ = ImGui::GetIO().MousePos - ImGui::GetCursorScreenPos();
+		// ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && 
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+		// if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
+		{
+			
 			canvas_position_ = ImGui::GetCursorScreenPos();
 			canvas_size_ = ImGui::GetWindowSize();
 
@@ -1248,15 +1250,15 @@ namespace ImGui
 		
 			ImGui::Text("");
 		
-			// ImGui::Text("Mouse: %.2f, %.2f", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
+			ImGui::Text("Mouse: %.2f, %.2f", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
 			// ImGui::Text("Mouse delta: %.2f, %.2f", ImGui::GetIO().MouseDelta.x, ImGui::GetIO().MouseDelta.y);
 			// ImGui::Text("Offset: %.2f, %.2f", offset.x, offset.y);
 		
 			// ImGui::Text("");
 		
-			// ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
-			// ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
-			// ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
+			ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
+			ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
+			ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
 			// ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
 			// ImGui::Text("Canvas_scale: %.2f", canvas_scale_);
 
