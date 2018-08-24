@@ -686,6 +686,8 @@ namespace ImGui
 				element_.node_->position_ += ImGui::GetIO().MouseDelta / canvas_scale_;
 				element_.connection_->target_->position_ += ImGui::GetIO().MouseDelta / canvas_scale_;
 			} break;
+
+			default: break;
 		}
 	}
 
@@ -1108,11 +1110,8 @@ namespace ImGui
 		////////////////////////////////////////////////////////////////////////////////
 		if (ImGui::GetIO().MousePos.x != -FLT_MAX) //try to fix bug where canvas_scroll_ becomes nan and canvas is no longer rendered
 				canvas_mouse_ = ImGui::GetIO().MousePos - ImGui::GetCursorScreenPos();
-		// ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && 
-		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
-		// if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
+		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows))
 		{
-			
 			canvas_position_ = ImGui::GetCursorScreenPos();
 			canvas_size_ = ImGui::GetWindowSize();
 
