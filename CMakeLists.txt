@@ -57,7 +57,7 @@ add_library(viewer STATIC
   thirdparty/imgui/examples/imgui_impl_glfw.cpp
   thirdparty/imgui/examples/imgui_impl_opengl3.cpp
 )
-target_link_libraries(viewer ${GLFW_LIBRARIES})
+target_link_libraries(viewer ${GLFW_LIBS})
 
 add_executable(
   viewer-test 
