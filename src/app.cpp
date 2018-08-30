@@ -84,11 +84,6 @@ void App::run(){
         glViewport(0, 0, viewport_width, viewport_height);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
-        
-        // Start the ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
 
         // process events:
                // don't do anything if window not in focus
@@ -97,6 +92,11 @@ void App::run(){
         // glfwWaitEvents(); // and sleep until there is an event
         else
             glfwPollEvents(); // don't sleep, eg needed for animations
+
+        // Start the ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
         
         on_draw();
         ImGui::ColorEdit4("Clear color", (float*)&clear_color);

@@ -198,6 +198,9 @@ class Box {
         pmax.fill(0);
         just_cleared = true;
     }
+    bool isEmpty(){
+        return just_cleared;
+    }
     glm::vec3 center(){
         return {(pmax[0]+pmin[0])/2, (pmax[1]+pmin[1])/2, (pmax[2]+pmin[2])/2};
     }

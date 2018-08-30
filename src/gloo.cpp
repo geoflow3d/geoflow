@@ -235,6 +235,9 @@ void Painter::setup_VertexArray()
 
 void Painter::gui() {
     ImGui::PushID(this);
+    auto c = bbox.center();
+    ImGui::Text("[%.2f, %.2f, %.2f]", c.x, c.y, c.z);
+
     const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
     const char* item_current;
     if(draw_mode==GL_POINTS) item_current=items[0];

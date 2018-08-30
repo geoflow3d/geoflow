@@ -80,19 +80,19 @@ void poviApp::on_draw(){
     ImGui::End();
 }
 
+void poviApp::center() {
+    bbox.clear();
+    for (auto &painter:painters){
+        auto p_bbox = std::get<0>(painter)->get_bbox();
+        if (!p_bbox.isEmpty())
+            bbox.add(p_bbox);
+    }
+    translation = -bbox.center();
+}
+
 void poviApp::on_key_press(int key, int action, int mods) {
     if (action == GLFW_PRESS && key == GLFW_KEY_C) {
-        bbox.clear();
-        for (auto &painter:painters){
-            auto p_bbox = std::get<0>(painter)->get_bbox();
-            bbox.add(p_bbox);
-        }
-        translation = -bbox.center();
-        // std::cout << bbox.min()[0] << " " << bbox.min()[1] << " " << bbox.min()[2] << "\n";
-        // std::cout << bbox.max()[0] << " " << bbox.max()[1] << " " << bbox.max()[2] << "\n";
-        // std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
-        // translation = glm::vec3();
-        // rotation = glm::quat();
+        center();
     }
     if (action == GLFW_PRESS && key == GLFW_KEY_T) {
         rotation = glm::quat();

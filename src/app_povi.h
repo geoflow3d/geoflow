@@ -94,4 +94,6 @@ void update_projection_matrix();
 void update_view_matrix();
 inline xy_pos screen2view(xy_pos p);
 
+void center();
+
 };
