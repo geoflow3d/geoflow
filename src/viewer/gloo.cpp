@@ -42,7 +42,7 @@ void Shader::bind(unsigned int location, glm::vec4 const & vector)
 Shader & Shader::attach(std::string const & filename)
 {
     // Load GLSL Shader Source from File
-    std::string path = PROJECT_SOURCE_DIR "/shaders/";
+    std::string path = PROJECT_SOURCE_DIR "/src/viewer/shaders/";
     path += filename;
     sources.push_back(path);
     return *this;
