@@ -59,6 +59,12 @@ add_library(viewer STATIC
 )
 target_link_libraries(viewer ${GLFW_LIBS})
 
+add_library(flowchart STATIC
+  src/flowchart/nodes.cpp 
+  src/flowchart/geoflow.cpp
+)
+target_link_libraries(flowchart viewer)
+
 add_executable(
   viewer-test 
   src/viewer/main.cpp 
@@ -71,7 +77,5 @@ target_link_libraries(basic viewer)
 add_executable(
   gui 
   examples/gui.cpp 
-  src/flowchart/nodes.cpp 
-  src/flowchart/geoflow.cpp
 )
-target_link_libraries(gui viewer)
+target_link_libraries(gui flowchart)
