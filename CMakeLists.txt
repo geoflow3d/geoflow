@@ -54,6 +54,7 @@ add_library(viewer STATIC
   thirdparty/imgui/imgui.cpp
   thirdparty/imgui/imgui_demo.cpp
   thirdparty/imgui/imgui_draw.cpp
+  thirdparty/imgui/imgui_widgets.cpp
   thirdparty/imgui/examples/imgui_impl_glfw.cpp
   thirdparty/imgui/examples/imgui_impl_opengl3.cpp
 )
