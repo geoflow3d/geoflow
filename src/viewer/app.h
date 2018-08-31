@@ -28,6 +28,7 @@ public:
    virtual void on_scroll(double xoffset, double yoffset){};
    virtual void on_mouse_press(int button, int action, int mods){};
    virtual void on_mouse_move(double xpos, double ypos){};
+   virtual void on_drop(int count, const char** paths){};
 
   int width, height;
   int viewport_width, viewport_height;
@@ -41,6 +42,7 @@ protected:
   static void window_size_callback(GLFWwindow* window, int new_width, int new_height);
   static void error_callback(int error, const char* description);
   static void char_callback(GLFWwindow*, unsigned int c);
+  static void drop_callback(GLFWwindow* window, int count, const char** paths);
 
   GLFWwindow* window;
 };

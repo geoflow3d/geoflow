@@ -76,7 +76,7 @@ App::App(int width, int height, std::string title)
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetCharCallback(window, char_callback);
-
+    glfwSetDropCallback(window, drop_callback);
 }
 
 
@@ -157,7 +157,6 @@ void App::key_callback(
 
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
-
     a->on_key_press(key, action, mods);
 }
 
@@ -168,7 +167,6 @@ void App::cursor_pos_callback(
     
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
-
     a->on_mouse_move(xpos, ypos);
 }
 
@@ -182,7 +180,6 @@ void App::mouse_button_callback(
 
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
-
     a->on_mouse_press(button, action, mods);
 }
 
@@ -194,7 +191,6 @@ void App::scroll_callback(
 
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
-
     a->on_scroll(xoffset, yoffset);
 }
 
@@ -208,12 +204,20 @@ void App::window_size_callback(
 	GLFWwindow* window, int width, int height
 	){
 
-    void *data = glfwGetWindowUserPointer(window);  
+    void *data = glfwGetWindowUserPointer(window);
     App *a = static_cast<App *>(data);
-
     a->on_resize(width, height);
 }
 
 void App::error_callback(int error, const char* description) {
 	std::cerr << error << " " << description;
+}
+
+void App::drop_callback(GLFWwindow* window, int count, const char** paths) {
+    for (int i = 0;  i < count;  i++)
+	    std::cout << paths[i] << "\n";
+
+    void *data = glfwGetWindowUserPointer(window);
+    App *a = static_cast<App *>(data);
+    a->on_drop(count, paths);
 }
