@@ -18,7 +18,11 @@ namespace geoflow {
   class Node;
   class NodeManager;
 
+
   typedef std::vector<std::array<float,3>> vec3f;
+  typedef std::vector<std::array<float,2>> vec2f;
+  typedef std::vector<float> vec1f;
+  typedef std::vector<size_t> vec1ui;
   
   enum TerminalType : uint32_t{
     TT_any = 0,
@@ -27,7 +31,8 @@ namespace geoflow {
     TT_vec1f,
     TT_vec3f,
     TT_vec6f,
-    TT_vec_float
+    TT_vec_float,
+    TT_colmap
   };
   class Terminal {
     public:
