@@ -5,8 +5,53 @@
 #include "imgui.h"
 #include "gloo.h"
 #include "app_povi.h"
+#include "imgui_color_gradient.h"
+#include <algorithm>
 
 using namespace geoflow;
+
+class ColorMapperNode:public Node {
+  std::shared_ptr<Sampler> sampler;
+
+  ImGradient gradient;
+  ImGradientMark* draggingMark = nullptr;
+  ImGradientMark* selectedMark = nullptr;
+
+  size_t n_bins=10;
+  float min, max, bin_width;
+  vec1f histogram;
+
+  public:
+  ColorMapperNode(NodeManager& manager):Node(manager, "ColorMapper") {
+    add_input("values", TT_vec1f);
+    add_output("colormap", TT_colmap);
+  }
+
+  void on_push(InputTerminal& t) {
+    if(inputTerminals["values"].get() == &t) {
+      auto& d = std::any_cast<vec1f&>(t.cdata);
+      min = *std::min_element(d.begin(), d.end());
+      max = *std::max_element(d.begin(), d.end());
+      histogram.clear();
+      histogram.resize(n_bins,0);
+      bin_width = (max-min)/(n_bins-1);
+      for(auto& val : d) {
+        auto bin = std::floor((val-min)/bin_width);
+        histogram[bin]++;
+      }
+      auto max_bin_count = *std::max_element(histogram.begin(), histogram.end());
+      for(auto &bin : histogram) bin /= max_bin_count;
+    }
+  }
+
+  void gui(){
+    ImGui::PlotHistogram("Histogram", histogram.data(), histogram.size(), 0, NULL, 0.0f, 1.0f, ImVec2(200,80));
+    if(ImGui::GradientEditor("Colormap", &gradient, draggingMark, selectedMark, ImVec2(200,80))){
+      
+    }
+
+  }
+};
 
 class PoviPainterNode:public Node {
   std::shared_ptr<Painter> painter;
@@ -66,10 +111,12 @@ class TriangleNode:public Node {
     {0.0f, 1.0f, 0.0f},
     {0.0f, 0.0f, 1.0f}
   };
+  vec1f attr = {1.0,6.0,6.0, 6.5, 9.0,10.0};
 
   TriangleNode(NodeManager& manager):Node(manager, "Triangle") {
     add_output("vertices", TT_vec3f);
     add_output("colors", TT_vec3f);
+    add_output("attr", TT_vec1f);
   }
 
   void gui(){
@@ -81,5 +128,6 @@ class TriangleNode:public Node {
   void process(){
     set_value("vertices", vertices);
     set_value("colors", colors);
+    set_value("attr", attr);
   }
 };

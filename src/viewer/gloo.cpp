@@ -102,7 +102,24 @@ Shader & Shader::link()
     return *this;
 }
 
+void Sampler::bind() {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_1D, mTexture);
+}
+void Sampler::init(){
+    glGenTextures(1, &mTexture);
+    bind();
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    self.create()
+}
+void Sampler::setImage(){
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glBindTexture(GL_TEXTURE_1D, 0);
+}
 
 void Buffer::init()
 {   

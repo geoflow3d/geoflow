@@ -1,10 +1,14 @@
 #version 330 core
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 color;
+layout (location = 2) in vec1 value;
 
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_projection;
+
+uniform float value_max;
+uniform float value_min;
 
 uniform float u_pointsize;
 uniform vec4 u_color;

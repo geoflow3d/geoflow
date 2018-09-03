@@ -63,6 +63,7 @@ target_link_libraries(viewer ${GLFW_LIBS})
 add_library(flowchart STATIC
   src/flowchart/nodes.cpp 
   src/flowchart/geoflow.cpp
+  src/flowchart/imgui_color_gradient.cpp
 )
 target_link_libraries(flowchart viewer)
 

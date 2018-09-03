@@ -103,6 +103,23 @@ private:
     bool initialised=false;
 };
 
+class Sampler
+{
+    Sampler(){}
+    ~Sampler(){
+        glDeleteTextures(1, &mTexture);
+    }
+    void bind();
+    void init();
+    bool is_initialised(){ return initialised;};
+    void set_image(image, width);
+
+    private:
+    // GLint width;
+    GLint mTexture;
+    bool initialised=false;
+};
+
 class Uniform
 {
     protected:
