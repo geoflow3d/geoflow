@@ -112,11 +112,11 @@ class Sampler
     void bind();
     void init();
     bool is_initialised(){ return initialised;};
-    void set_image(image, width);
+    // void set_image(image, width);
 
     private:
     // GLint width;
-    GLint mTexture;
+    GLuint mTexture;
     bool initialised=false;
 };
 

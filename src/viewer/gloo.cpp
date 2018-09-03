@@ -113,7 +113,7 @@ void Sampler::init(){
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    self.create()
+    // self.create()
 }
 void Sampler::setImage(){
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

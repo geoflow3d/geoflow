@@ -18,7 +18,9 @@ namespace geoflow {
   class Node;
   class NodeManager;
 
+
   typedef std::vector<std::array<float,3>> vec3f;
+  typedef std::vector<std::array<float,2>> vec2f;
   typedef std::vector<float> vec1f;
   typedef std::vector<size_t> vec1ui;
   
