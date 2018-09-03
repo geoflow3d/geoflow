@@ -29,6 +29,7 @@ namespace geoflow {
     TT_float,
     TT_int,
     TT_vec1f,
+    TT_vec2f,
     TT_vec3f,
     TT_vec6f,
     TT_vec_float,
