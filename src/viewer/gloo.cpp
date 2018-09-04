@@ -102,23 +102,23 @@ Shader & Shader::link()
     return *this;
 }
 
-void Sampler::bind() {
+void Texture1D::activate() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, mTexture);
 }
-void Sampler::init(){
+void Texture1D::init(){
     glGenTextures(1, &mTexture);
-    bind();
+    activate();
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // self.create()
+    initialised = true;
 }
-void Sampler::setImage(){
+void Texture1D::set_data(unsigned char * image, int width){
+    activate();
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glBindTexture(GL_TEXTURE_1D, 0);
+    // glBindTexture(GL_TEXTURE_1D, 0);
 }
 
 void Buffer::init()
@@ -173,7 +173,11 @@ Painter::Painter() {
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize")));
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4fv("u_color")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_min")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_max")));
     attributes["position"] = std::make_unique<Buffer>();
+    attributes["value"] = std::make_unique<Buffer>();
+    textures.push_back(std::make_unique<Texture1D>());
 }
 
 void Painter::init()
@@ -214,6 +218,10 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::init
         std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
     }
     attributes[name]->set_data(data, n, dims);
+}
+
+void Painter::set_texture(unsigned char * image, int width) {
+    textures[0]->set_data(image, width);
 }
 
 void Painter::setup_VertexArray()

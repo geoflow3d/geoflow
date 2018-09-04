@@ -103,16 +103,17 @@ private:
     bool initialised=false;
 };
 
-class Sampler
+class Texture1D
 {
-    Sampler(){}
-    ~Sampler(){
+    public:
+    Texture1D(){}
+    ~Texture1D(){
         glDeleteTextures(1, &mTexture);
     }
-    void bind();
+    void activate();
     void init();
     bool is_initialised(){ return initialised;};
-    // void set_image(image, width);
+    void set_data(unsigned char * image, int width);
 
     private:
     // GLint width;
@@ -132,6 +133,8 @@ class Uniform
 
     const std::string& get_name(){return name;};
 };
+
+// need to create trait-based solution for setting value of uniform (it should cast base uniform to specific one for datatype)
 
 class Uniform1f:public Uniform
 {
@@ -154,7 +157,7 @@ class Uniform1i:public Uniform
     using Uniform::Uniform;
     void gui(){
         ImGui::PushID(this);
-        ImGui::SliderInt(name.c_str(), &value, 0, 1);
+        ImGui::SliderInt(name.c_str(), &value, 0, 2);
         ImGui::PopID();
     }
     virtual void bind(Shader &s){
@@ -242,6 +245,7 @@ public:
     void attach_shader(std::string const & filename);
     // void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
     void set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims);
+    void set_texture(unsigned char * image, int width);
     // void set_uniform(std::string const & name, GLfloat value);
     // float * get_uniform(std::string const & name);
     void set_drawmode(int dm) {draw_mode = dm;}
@@ -269,6 +273,7 @@ private:
     // std::unordered_<std::string,float> uniforms;
     std::vector<std::unique_ptr<Uniform>> uniforms;
     std::unordered_map<std::string, std::unique_ptr<Buffer>> attributes;
+    std::vector<std::unique_ptr<Texture1D>> textures;
 
     Box bbox;
 

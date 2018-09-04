@@ -10,19 +10,26 @@
 
 using namespace geoflow;
 
+struct ColorMap {
+  float valmax,valmin;
+  int width = 256;
+  unsigned char * image;
+};
 class ColorMapperNode:public Node {
-  std::shared_ptr<Sampler> sampler;
+  std::shared_ptr<Texture1D> texture1D;
+  unsigned char tex[256];
 
   ImGradient gradient;
   ImGradientMark* draggingMark = nullptr;
   ImGradientMark* selectedMark = nullptr;
 
   size_t n_bins=10;
-  float min, max, bin_width;
+  float minval, maxval, bin_width;
   vec1f histogram;
 
   public:
   ColorMapperNode(NodeManager& manager):Node(manager, "ColorMapper") {
+    gradient = ImGradient();
     add_input("values", TT_vec1f);
     add_output("colormap", TT_colmap);
   }
@@ -30,13 +37,13 @@ class ColorMapperNode:public Node {
   void on_push(InputTerminal& t) {
     if(inputTerminals["values"].get() == &t) {
       auto& d = std::any_cast<vec1f&>(t.cdata);
-      min = *std::min_element(d.begin(), d.end());
-      max = *std::max_element(d.begin(), d.end());
+      minval = *std::min_element(d.begin(), d.end());
+      maxval = *std::max_element(d.begin(), d.end());
       histogram.clear();
       histogram.resize(n_bins,0);
-      bin_width = (max-min)/(n_bins-1);
+      bin_width = (maxval-minval)/(n_bins-1);
       for(auto& val : d) {
-        auto bin = std::floor((val-min)/bin_width);
+        auto bin = std::floor((val-minval)/bin_width);
         histogram[bin]++;
       }
       auto max_bin_count = *std::max_element(histogram.begin(), histogram.end());
@@ -47,7 +54,12 @@ class ColorMapperNode:public Node {
   void gui(){
     ImGui::PlotHistogram("Histogram", histogram.data(), histogram.size(), 0, NULL, 0.0f, 1.0f, ImVec2(200,80));
     if(ImGui::GradientEditor("Colormap", &gradient, draggingMark, selectedMark, ImVec2(200,80))){
-      
+      ColorMap colormap;
+      gradient.getTexture(tex);
+      colormap.image = tex;
+      colormap.valmax = maxval;
+      colormap.valmin = minval;
+      set_value("colormap", colormap);
     }
 
   }
@@ -67,6 +79,7 @@ class PoviPainterNode:public Node {
     painter->set_drawmode(GL_TRIANGLES);
     // a.add_painter(painter, "mypainter");
     add_input("vertices", TT_vec3f);
+    add_input("colormap", TT_colmap);
   }
   ~PoviPainterNode(){
     // note: this assumes we have only attached this painter to one poviapp
@@ -83,8 +96,14 @@ class PoviPainterNode:public Node {
 
   void on_push(InputTerminal& t) {
     // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
-    auto& d = std::any_cast<vec3f&>(t.cdata);
-    painter->set_attribute("position", d[0].data(), d.size()*3, {3});
+    if(inputTerminals["vertices"].get() == &t) {
+      auto& d = std::any_cast<vec3f&>(t.cdata);
+      painter->set_attribute("position", d[0].data(), d.size()*3, {3});
+    } else if(inputTerminals["colormap"].get() == &t) {
+      auto cmap = std::any_cast<ColorMap>(t.cdata);
+      // painter->set
+      painter->set_texture(cmap.image, cmap.width);
+    }
   }
   void on_clear(InputTerminal& t) {
     painter->set_attribute("position", nullptr, 0, {3}); // put empty array
