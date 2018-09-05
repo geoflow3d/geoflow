@@ -1,7 +1,7 @@
 #version 330 core
 in vec3 ourColor;
 in float texCoord;
-in int colorMode;
+flat in int colorMode;
 
 out vec4 color;
 

@@ -19,7 +19,58 @@
 
 #include <imgui.h>
 
-// Define Namespace
+class Box {
+    private:
+    std::array<float,3> pmin, pmax;
+    bool just_cleared;
+    public:
+    Box(){
+        std::cout << "CCC\n";
+        clear();
+    }
+    void add(float p[]){
+        if(just_cleared){
+            pmin[0] = p[0];
+            pmin[1] = p[1];
+            pmin[2] = p[2];
+            pmax[0] = p[0];
+            pmax[1] = p[1];
+            pmax[2] = p[2];
+            just_cleared = false;
+        }
+        pmin[0] = std::min(p[0], pmin[0]);
+        pmin[1] = std::min(p[1], pmin[1]);
+        pmin[2] = std::min(p[2], pmin[2]);
+        pmax[0] = std::max(p[0], pmax[0]);
+        pmax[1] = std::max(p[1], pmax[1]);
+        pmax[2] = std::max(p[2], pmax[2]);
+        // std::cout << "adding point p = " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
+        // std::cout << "bb min = " << pmin[0] << ", " << pmin[1] << ", " << pmin[2] << "\n";
+        // std::cout << "bb max = " << pmax[0] << ", " << pmax[1] << ", " << pmax[2] << "\n";
+    }
+    void add(Box& otherBox){
+        add(otherBox.min().data());
+        add(otherBox.max().data());
+    }
+    void clear(){
+        pmin.fill(0);
+        pmax.fill(0);
+        just_cleared = true;
+    }
+    bool isEmpty(){
+        return just_cleared;
+    }
+    glm::vec3 center(){
+        return {(pmax[0]+pmin[0])/2, (pmax[1]+pmin[1])/2, (pmax[2]+pmin[2])/2};
+    }
+    std::array<float,3> min(){
+        return pmin;
+    }
+    std::array<float,3> max(){
+        return pmax;
+    }
+};
+
 class Shader
 {
 public:
@@ -83,6 +134,7 @@ public:
     void init();
     bool is_initialised(){ return initialised;};
     void activate();
+    void deactivate();
     GLuint get() { return mBuffer; }
     size_t element_bytesize() { return element_size; }
 
@@ -96,11 +148,12 @@ public:
 private:
     GLfloat* data;
     GLuint mBuffer=0;
-    size_t element_size, length, stride=0;
+    size_t element_size, length=0, stride=0;
     // name, type, dim
     std::vector<size_t> data_fields;
 
     bool initialised=false;
+    bool has_data=false;
 };
 
 class Texture1D
@@ -146,6 +199,7 @@ class Uniform1f:public Uniform
         ImGui::SliderFloat(name.c_str(), &value, 1, 30);
         ImGui::PopID();
     }
+    void set_value(float v) {value = v;};
     virtual void bind(Shader &s){
         s.bind(name, value);
     }
@@ -179,58 +233,6 @@ class Uniform4fv:public Uniform
         s.bind(name, value);
     }
 };
-class Box;
-class Box {
-    private:
-    std::array<float,3> pmin, pmax;
-    bool just_cleared;
-    public:
-    Box(){
-        std::cout << "CCC\n";
-        clear();
-    }
-    void add(float p[]){
-        if(just_cleared){
-            pmin[0] = p[0];
-            pmin[1] = p[1];
-            pmin[2] = p[2];
-            pmax[0] = p[0];
-            pmax[1] = p[1];
-            pmax[2] = p[2];
-            just_cleared = false;
-        }
-        pmin[0] = std::min(p[0], pmin[0]);
-        pmin[1] = std::min(p[1], pmin[1]);
-        pmin[2] = std::min(p[2], pmin[2]);
-        pmax[0] = std::max(p[0], pmax[0]);
-        pmax[1] = std::max(p[1], pmax[1]);
-        pmax[2] = std::max(p[2], pmax[2]);
-        // std::cout << "adding point p = " << p[0] << ", " << p[1] << ", " << p[2] << "\n";
-        // std::cout << "bb min = " << pmin[0] << ", " << pmin[1] << ", " << pmin[2] << "\n";
-        // std::cout << "bb max = " << pmax[0] << ", " << pmax[1] << ", " << pmax[2] << "\n";
-    }
-    void add(Box& otherBox){
-        add(otherBox.min().data());
-        add(otherBox.max().data());
-    }
-    void clear(){
-        pmin.fill(0);
-        pmax.fill(0);
-        just_cleared = true;
-    }
-    bool isEmpty(){
-        return just_cleared;
-    }
-    glm::vec3 center(){
-        return {(pmax[0]+pmin[0])/2, (pmax[1]+pmin[1])/2, (pmax[2]+pmin[2])/2};
-    }
-    std::array<float,3> min(){
-        return pmin;
-    }
-    std::array<float,3> max(){
-        return pmax;
-    }
-};
 
 class Painter
 {
@@ -245,7 +247,13 @@ public:
     void attach_shader(std::string const & filename);
     // void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
     void set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims);
-    void set_texture(unsigned char * image, int width);
+    void enable_attribute(const std::string name);
+
+    void set_texture(std::weak_ptr<Texture1D> tex);
+    void add_uniform(std::weak_ptr<Uniform> uniform);
+    void remove_texture(std::weak_ptr<Texture1D> tex);
+    void clear_uniforms();
+    // void set_texture(unsigned char * image, int width);
     // void set_uniform(std::string const & name, GLfloat value);
     // float * get_uniform(std::string const & name);
     void set_drawmode(int dm) {draw_mode = dm;}
@@ -272,8 +280,9 @@ private:
     std::unique_ptr<Shader> shader = std::make_unique<Shader>();
     // std::unordered_<std::string,float> uniforms;
     std::vector<std::unique_ptr<Uniform>> uniforms;
+    std::vector<std::weak_ptr<Uniform>> uniforms_external;
     std::unordered_map<std::string, std::unique_ptr<Buffer>> attributes;
-    std::vector<std::unique_ptr<Texture1D>> textures;
+    std::weak_ptr<Texture1D> texture;
 
     Box bbox;
 

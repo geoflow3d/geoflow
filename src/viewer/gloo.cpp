@@ -116,6 +116,9 @@ void Texture1D::init(){
 }
 void Texture1D::set_data(unsigned char * image, int width){
     activate();
+    for (int i=0; i<width; i++) {
+        std::cout << "val i:" <<i<< " " << float(image[i*3+0]) << " " << float(image[i*3+1]) << " " << float(image[i*3+2]) << "\n";
+    }
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     // glBindTexture(GL_TEXTURE_1D, 0);
@@ -126,14 +129,16 @@ void Buffer::init()
     if (mBuffer==0)
         glGenBuffers(1, &mBuffer);
     activate();
-    glBufferData(GL_ARRAY_BUFFER, element_size*length, data, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     initialised = true;
 }
 
 void Buffer::activate()
 {
     glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
+}
+void Buffer::deactivate()
+{
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 // void Buffer::add_field(size_t dim) {
@@ -154,7 +159,6 @@ size_t Buffer::get_length() {
 
 template<typename T> void Buffer::set_data(T* d, size_t n, std::initializer_list<int> dims)
 {
-    data = d;
     element_size = sizeof(T);
     length = n;
     
@@ -164,20 +168,16 @@ template<typename T> void Buffer::set_data(T* d, size_t n, std::initializer_list
         data_fields.push_back(dim);
         stride += dim;
     }
-    initialised = false;
+    activate();
+    glBufferData(GL_ARRAY_BUFFER, element_size*length, d, GL_DYNAMIC_DRAW);
+    deactivate();
+    has_data = true;
 }
 template void Buffer::set_data(GLfloat*, size_t, std::initializer_list<int>);
 // template void Buffer::set_data(double*, size_t);
 
 Painter::Painter() {
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4fv("u_color")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_min")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_max")));
-    attributes["position"] = std::make_unique<Buffer>();
-    attributes["value"] = std::make_unique<Buffer>();
-    textures.push_back(std::make_unique<Texture1D>());
+
 }
 
 void Painter::init()
@@ -188,6 +188,22 @@ void Painter::init()
     // if (buffer->is_initialised && shader->is_initialised)
     // if (draw_mode==GL_POINTS)
     //     set_uniform("u_pointsize",1.0);
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4fv("u_color")));
+    // uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_min")));
+    // uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_max")));
+    attributes["position"] = std::make_unique<Buffer>();
+    attributes["value"] = std::make_unique<Buffer>();
+    // textures.push_back(std::make_unique<Texture1D>());
+
+    for(auto& a : attributes) {
+        if(!a.second->is_initialised()) {
+            a.second->init();
+        }
+    }
+    setup_VertexArray();
+
     initialised = true;
 }
 
@@ -195,19 +211,6 @@ void Painter::attach_shader(std::string const & filename)
 {
     shader->attach(filename);
 }
-// void Painter::set_data(GLfloat* data, size_t n, std::initializer_list<int> dims)
-// {
-//     buffer->set_data(data, n, dims);
-// }
-
-// void Painter::set_buffer(std::unique_ptr<Buffer> b)
-// {
-//     buffer.swap(b);
-// }
-// void Painter::set_program(std::unique_ptr<Shader> s)
-// {
-//     shader.swap(s);
-// }
 
 void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims) {
     if(name == "position") {
@@ -217,11 +220,33 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::init
         }
         std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
     }
+
     attributes[name]->set_data(data, n, dims);
+    enable_attribute(name);
 }
 
-void Painter::set_texture(unsigned char * image, int width) {
-    textures[0]->set_data(image, width);
+void Painter::set_texture(std::weak_ptr<Texture1D> tex) {
+    texture = tex;
+}
+void Painter::add_uniform(std::weak_ptr<Uniform> uniform) {
+    uniforms_external.push_back(uniform);
+}
+void Painter::remove_texture(std::weak_ptr<Texture1D> tex) {
+    texture.reset();
+}
+void Painter::clear_uniforms() {
+    uniforms_external.clear();
+}
+
+// void Painter::set_texture(unsigned char * image, int width) {
+//     textures[0]->set_data(image, width);
+// }
+
+void Painter::enable_attribute(const std::string name) {
+    setup_VertexArray();
+    glBindVertexArray(mVertexArray);
+    auto loc = glGetAttribLocation(shader->get(), name.c_str());
+    glEnableVertexAttribArray(loc);
 }
 
 void Painter::setup_VertexArray()
@@ -236,7 +261,8 @@ void Painter::setup_VertexArray()
         auto stride = buffer->get_stride();
         auto loc = glGetAttribLocation(shader->get(), name.c_str());
         glVertexAttribPointer(loc, stride, GL_FLOAT, GL_FALSE, stride * buffer->element_bytesize(), nullptr);
-        glEnableVertexAttribArray(loc);
+        a.second->deactivate();
+        // glEnableVertexAttribArray(loc);
     }
     // // Position attribute
     // int start=0, i=0;
@@ -250,17 +276,45 @@ void Painter::setup_VertexArray()
     glBindVertexArray(0); // Unbind VAO
 }
 
-// void Painter::set_uniform(std::string const & name, GLfloat value) {
-//     uniforms[name] = value;
-// }
+void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
+{
+    if(!shader->is_initialised())
+        shader->init();
+    if(!initialised)
+        init();
 
-// float * Painter::get_uniform(std::string const & name) {
-//     return &uniforms[name];
-// }
+    if(auto t = texture.lock()) {
+        if(!t->is_initialised()) t->init();
+        t->activate();
+    }
+    shader->activate();
+
+    // note all shaders have these! eg crosshair painter
+    shader->bind("u_projection", projection);
+    shader->bind("u_view", view);
+    shader->bind("u_model", model);
+
+    for (auto &u: uniforms) {
+        u->bind(*shader);
+    }
+    for (auto u_ptr: uniforms_external) {
+        if (auto u = u_ptr.lock())
+            u->bind(*shader);
+    }
+
+    glBindVertexArray(mVertexArray);
+    size_t n = 0;
+    if (attributes["position"]->get_length()>0) {
+        n = attributes["position"]->get_length()/attributes["position"]->get_stride();
+        glDrawArrays(draw_mode, 0, n);
+    }   
+    glBindVertexArray(0);
+}
 
 void Painter::gui() {
     ImGui::PushID(this);
     auto c = bbox.center();
+    // ImGui::Text("Init: %d", is_initialised());
     ImGui::Text("[%.2f, %.2f, %.2f]", c.x, c.y, c.z);
 
     const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
@@ -299,35 +353,4 @@ void Painter::gui() {
             u->gui();
     }
     ImGui::PopID();
-}
-
-void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
-{
-    if(!shader->is_initialised())
-        shader->init();
-    if(!initialised)
-        init();
-    for(auto& a : attributes) {
-        if(!a.second->is_initialised()) {
-            a.second->init();
-            setup_VertexArray();
-        }
-    }
-    
-    shader->activate();
-
-    // note all shaders have these! eg crosshair painter
-    shader->bind("u_projection", projection);
-    shader->bind("u_view", view);
-    shader->bind("u_model", model);
-
-    for (auto &u: uniforms) {
-        u->bind(*shader);
-    }
-
-    glBindVertexArray(mVertexArray);
-    for(auto& a : attributes) {
-        glDrawArrays(draw_mode, 0, a.second->get_length()/a.second->get_stride());
-    }
-    glBindVertexArray(0);
 }

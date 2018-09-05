@@ -16,7 +16,7 @@ uniform int u_color_mode; // 2==texture, 1==uniform, 0==pervertex
 
 out vec3 ourColor;
 out float texCoord;
-out int colorMode;
+flat out int colorMode;
 
 void main()
 {
