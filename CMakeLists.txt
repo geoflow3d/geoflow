@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 2.6)
 project (Geoflow)
 
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++17> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
-set(CMAKE_CXX_FLAGS "-O2")
+# set(CMAKE_CXX_FLAGS "-O2")
 
 set(CMAKE_EXE_LINKER_FLAGS -Wl)
 set(CMAKE_MACOSX_RPATH 1)
@@ -63,6 +63,7 @@ target_link_libraries(viewer ${GLFW_LIBS})
 add_library(flowchart STATIC
   src/flowchart/nodes.cpp 
   src/flowchart/geoflow.cpp
+  src/flowchart/imgui_color_gradient.cpp
 )
 target_link_libraries(flowchart viewer)
 
