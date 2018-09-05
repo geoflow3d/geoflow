@@ -106,6 +106,10 @@ void Texture1D::activate() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, mTexture);
 }
+void Texture1D::deactivate() {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_1D, 0);
+}
 void Texture1D::init(){
     glGenTextures(1, &mTexture);
     activate();
@@ -116,9 +120,6 @@ void Texture1D::init(){
 }
 void Texture1D::set_data(unsigned char * image, int width){
     activate();
-    for (int i=0; i<width; i++) {
-        std::cout << "val i:" <<i<< " " << float(image[i*3+0]) << " " << float(image[i*3+1]) << " " << float(image[i*3+2]) << "\n";
-    }
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, width, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     // glBindTexture(GL_TEXTURE_1D, 0);
@@ -224,6 +225,9 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::init
     attributes[name]->set_data(data, n, dims);
     enable_attribute(name);
 }
+void Painter::clear_attribute(const std::string name) {
+    disable_attribute(name);
+}
 
 void Painter::set_texture(std::weak_ptr<Texture1D> tex) {
     texture = tex;
@@ -231,7 +235,10 @@ void Painter::set_texture(std::weak_ptr<Texture1D> tex) {
 void Painter::add_uniform(std::weak_ptr<Uniform> uniform) {
     uniforms_external.push_back(uniform);
 }
-void Painter::remove_texture(std::weak_ptr<Texture1D> tex) {
+void Painter::remove_texture() {
+    if (auto t = texture.lock()) {
+        t->deactivate();
+    }
     texture.reset();
 }
 void Painter::clear_uniforms() {
@@ -247,6 +254,11 @@ void Painter::enable_attribute(const std::string name) {
     glBindVertexArray(mVertexArray);
     auto loc = glGetAttribLocation(shader->get(), name.c_str());
     glEnableVertexAttribArray(loc);
+}
+void Painter::disable_attribute(const std::string name) {
+    glBindVertexArray(mVertexArray);
+    auto loc = glGetAttribLocation(shader->get(), name.c_str());
+    glDisableVertexAttribArray(loc);
 }
 
 void Painter::setup_VertexArray()

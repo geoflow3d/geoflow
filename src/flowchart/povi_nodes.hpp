@@ -24,7 +24,7 @@ class ColorMapperNode:public Node {
   ImGradientMark* draggingMark = nullptr;
   ImGradientMark* selectedMark = nullptr;
 
-  size_t n_bins=10;
+  size_t n_bins=100;
   float minval, maxval, bin_width;
   vec1f histogram;
 
@@ -35,7 +35,6 @@ class ColorMapperNode:public Node {
     texture = std::make_shared<Texture1D>();
     u_maxval = std::make_shared<Uniform1f>("u_value_max");
     u_minval = std::make_shared<Uniform1f>("u_value_min");
-    update_texture();
   }
 
   void update_texture(){
@@ -73,6 +72,7 @@ class ColorMapperNode:public Node {
   }
 
   void process(){
+    update_texture();
     colormap.tex = texture;
     colormap.u_valmax = u_maxval;
     colormap.u_valmin = u_minval;
@@ -125,7 +125,6 @@ class PoviPainterNode:public Node {
       } else if(inputTerminals["colormap"].get() == &t) {
         std::cout << "on_push: colormaps\n";
         auto& cmap = std::any_cast<ColorMap&>(t.cdata);
-        // connect uniforms vor min max values as well...
         painter->clear_uniforms();
         painter->add_uniform(cmap.u_valmax);
         painter->add_uniform(cmap.u_valmin);
@@ -136,6 +135,14 @@ class PoviPainterNode:public Node {
   void on_clear(InputTerminal& t) {
     // clear attributes...
     // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
+     if(inputTerminals["vertices"].get() == &t) {
+        painter->clear_attribute("position");
+      } else if(inputTerminals["values"].get() == &t) {
+        painter->clear_attribute("value");
+      } else if(inputTerminals["colormap"].get() == &t) {
+        painter->clear_uniforms();
+        painter->remove_texture();
+      }
   }
 
   void gui(){

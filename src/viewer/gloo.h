@@ -164,6 +164,7 @@ class Texture1D
         glDeleteTextures(1, &mTexture);
     }
     void activate();
+    void deactivate();
     void init();
     bool is_initialised(){ return initialised;};
     void set_data(unsigned char * image, int width);
@@ -248,10 +249,12 @@ public:
     // void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
     void set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims);
     void enable_attribute(const std::string name);
+    void disable_attribute(const std::string name);
+    void clear_attribute(const std::string name);
 
     void set_texture(std::weak_ptr<Texture1D> tex);
     void add_uniform(std::weak_ptr<Uniform> uniform);
-    void remove_texture(std::weak_ptr<Texture1D> tex);
+    void remove_texture();
     void clear_uniforms();
     // void set_texture(unsigned char * image, int width);
     // void set_uniform(std::string const & name, GLfloat value);
