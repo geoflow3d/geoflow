@@ -201,6 +201,7 @@ class Uniform1f:public Uniform
         ImGui::PopID();
     }
     void set_value(float v) {value = v;};
+    float get_value() {return value;};
     virtual void bind(Shader &s){
         s.bind(name, value);
     }

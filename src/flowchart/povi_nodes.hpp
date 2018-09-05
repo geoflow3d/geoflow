@@ -43,20 +43,25 @@ class ColorMapperNode:public Node {
       texture->set_data(tex, 256);
   }
 
+  void compute_histogram(float min, float max) {
+    auto data = std::any_cast<vec1f>(get_value("values"));
+    histogram.clear();
+    histogram.resize(n_bins,0);
+    bin_width = (max-min)/(n_bins-1);
+    for(auto& val : data) {
+      auto bin = std::floor((val-minval)/bin_width);
+      histogram[bin]++;
+    }
+    auto max_bin_count = *std::max_element(histogram.begin(), histogram.end());
+    for(auto &bin : histogram) bin /= max_bin_count;
+  }
+
   void on_push(InputTerminal& t) {
     if(inputTerminals["values"].get() == &t) {
       auto& d = std::any_cast<vec1f&>(t.cdata);
       minval = *std::min_element(d.begin(), d.end());
       maxval = *std::max_element(d.begin(), d.end());
-      histogram.clear();
-      histogram.resize(n_bins,0);
-      bin_width = (maxval-minval)/(n_bins-1);
-      for(auto& val : d) {
-        auto bin = std::floor((val-minval)/bin_width);
-        histogram[bin]++;
-      }
-      auto max_bin_count = *std::max_element(histogram.begin(), histogram.end());
-      for(auto &bin : histogram) bin /= max_bin_count;
+      compute_histogram(minval, maxval);
       u_maxval->set_value(maxval);
       u_minval->set_value(minval);
     }
@@ -65,6 +70,10 @@ class ColorMapperNode:public Node {
   void gui(){
     u_minval->gui();
     u_maxval->gui();
+    if(inputTerminals["values"]->cdata.has_value())
+      if(ImGui::Button("Rescale histogram")){
+        compute_histogram(u_minval->get_value(), u_maxval->get_value());
+      }
     ImGui::PlotHistogram("Histogram", histogram.data(), histogram.size(), 0, NULL, 0.0f, 1.0f, ImVec2(200,80));
     if(ImGui::GradientEditor("Colormap", &gradient, draggingMark, selectedMark, ImVec2(200,80))){
       update_texture();
