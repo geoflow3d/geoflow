@@ -36,7 +36,11 @@ App::App(int width, int height, std::string title)
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
+    // set some OpenGL parameters
     glEnable(GL_PROGRAM_POINT_SIZE);
+    // glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     glfwSwapInterval(1);
 

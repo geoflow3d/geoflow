@@ -46,6 +46,11 @@ void poviApp::on_draw(){
     // Render
     update_view_matrix();
     update_projection_matrix();
+    GLbitfield bits = 0;
+    bits |= GL_COLOR_BUFFER_BIT;
+    bits |= GL_DEPTH_BUFFER_BIT;
+    bits |= GL_STENCIL_BUFFER_BIT;
+    glClear(bits);
     for (auto &painter:painters){
         if (std::get<2>(painter))
             std::get<0>(painter)->render(model, view, projection);
