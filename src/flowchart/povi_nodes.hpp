@@ -109,6 +109,7 @@ class GradientMapperNode:public Node {
 
   size_t n_bins=100;
   float minval, maxval, bin_width;
+  size_t max_bin_count;
   vec1f histogram;
 
   public:
@@ -128,15 +129,17 @@ class GradientMapperNode:public Node {
 
   void compute_histogram(float min, float max) {
     auto data = std::any_cast<vec1f>(get_value("values"));
-    histogram.clear();
-    histogram.resize(n_bins,0);
+    histogram.resize(n_bins);
+    for(auto& el:histogram) {
+      el=0;
+    }
     bin_width = (max-min)/(n_bins-1);
     for(auto& val : data) {
+      if(val>max || val<min) continue;
       auto bin = std::floor((val-minval)/bin_width);
       histogram[bin]++;
     }
-    auto max_bin_count = *std::max_element(histogram.begin(), histogram.end());
-    for(auto &bin : histogram) bin /= max_bin_count;
+    max_bin_count = *std::max_element(histogram.begin(), histogram.end());
   }
 
   void on_push(InputTerminal& t) {
@@ -156,7 +159,7 @@ class GradientMapperNode:public Node {
       if(ImGui::Button("Rescale histogram")){
         compute_histogram(u_minval->get_value(), u_maxval->get_value());
       }
-    ImGui::PlotHistogram("Histogram", histogram.data(), histogram.size(), 0, NULL, 0.0f, 1.0f, ImVec2(200,80));
+    ImGui::PlotHistogram("Histogram", histogram.data(), histogram.size(), 0, NULL, 0.0f, (float)max_bin_count, ImVec2(200,80));
     if(ImGui::GradientEditor("Colormap", &gradient, draggingMark, selectedMark, ImVec2(200,80))){
       update_texture();
     }
