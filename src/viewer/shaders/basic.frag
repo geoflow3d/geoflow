@@ -9,7 +9,7 @@ uniform sampler1D u_sampler;
 
 void main()
 {
-    if(colorMode==2)
+    if(colorMode==2 || colorMode==3)
         color = texture(u_sampler, texCoord);
     else
         color = vec4(ourColor, 1.0f);

@@ -44,6 +44,7 @@ using namespace geoflow;
     }
   }
   void OutputTerminal::connect(InputTerminal& in) { 
+    parent.on_connect(*this);
     connections.insert(in.get_ptr());
     if (has_data()) {
       in.push(cdata);

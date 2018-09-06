@@ -21,6 +21,7 @@ namespace geoflow {
 
   typedef std::vector<std::array<float,3>> vec3f;
   typedef std::vector<std::array<float,2>> vec2f;
+  typedef std::vector<int> vec1i;
   typedef std::vector<float> vec1f;
   typedef std::vector<size_t> vec1ui;
   
@@ -28,6 +29,8 @@ namespace geoflow {
     TT_any = 0,
     TT_float,
     TT_int,
+    TT_vec1ui,
+    TT_vec1i,
     TT_vec1f,
     TT_vec2f,
     TT_vec3f,
@@ -130,6 +133,7 @@ namespace geoflow {
 
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
+    virtual void on_connect(OutputTerminal& ot){};
     virtual void process(){};
     virtual void gui(){};
 

@@ -105,6 +105,14 @@ Shader & Shader::link()
 void Texture1D::activate() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, mTexture);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    if(interpolation_nearest) {
+        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);    
+    } else {
+        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
 }
 void Texture1D::deactivate() {
     glActiveTexture(GL_TEXTURE0);
@@ -113,9 +121,6 @@ void Texture1D::deactivate() {
 void Texture1D::init(){
     glGenTextures(1, &mTexture);
     activate();
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     initialised = true;
 }
 void Texture1D::set_data(unsigned char * image, int width){
@@ -196,6 +201,7 @@ void Painter::init()
     // uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_max")));
     attributes["position"] = std::make_unique<Buffer>();
     attributes["value"] = std::make_unique<Buffer>();
+    attributes["identifier"] = std::make_unique<Buffer>();
     // textures.push_back(std::make_unique<Texture1D>());
 
     for(auto& a : attributes) {

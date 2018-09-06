@@ -168,9 +168,12 @@ class Texture1D
     void init();
     bool is_initialised(){ return initialised;};
     void set_data(unsigned char * image, int width);
+    void set_interpolation_nearest(){interpolation_nearest=true;};
+    void set_interpolation_linear(){interpolation_nearest=false;};
 
     private:
     // GLint width;
+    bool interpolation_nearest=false;
     GLuint mTexture;
     bool initialised=false;
 };
@@ -197,11 +200,11 @@ class Uniform1f:public Uniform
     using Uniform::Uniform;
     void gui(){
         ImGui::PushID(this);
-        ImGui::SliderFloat(name.c_str(), &value, 1, 30);
+        ImGui::DragFloat(name.c_str(), &value);
         ImGui::PopID();
     }
     void set_value(float v) {value = v;};
-    float get_value() {return value;};
+    float& get_value() {return value;};
     virtual void bind(Shader &s){
         s.bind(name, value);
     }
@@ -213,7 +216,7 @@ class Uniform1i:public Uniform
     using Uniform::Uniform;
     void gui(){
         ImGui::PushID(this);
-        ImGui::SliderInt(name.c_str(), &value, 0, 2);
+        ImGui::SliderInt(name.c_str(), &value, 0, 3);
         ImGui::PopID();
     }
     virtual void bind(Shader &s){
