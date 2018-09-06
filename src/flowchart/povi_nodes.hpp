@@ -139,12 +139,6 @@ class GradientMapperNode:public Node {
     for(auto &bin : histogram) bin /= max_bin_count;
   }
 
-  void on_connect(OutputTerminal& t) {
-    if(outputTerminals["colormap"].get() == &t) {
-      update_texture();
-    }
-  }
-
   void on_push(InputTerminal& t) {
     if(inputTerminals["values"].get() == &t) {
       auto& d = std::any_cast<vec1f&>(t.cdata);
