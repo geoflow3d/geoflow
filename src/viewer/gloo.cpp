@@ -232,6 +232,8 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::init
     enable_attribute(name);
 }
 void Painter::clear_attribute(const std::string name) {
+    if(name == "position")
+        bbox.clear();
     disable_attribute(name);
 }
 
