@@ -283,6 +283,7 @@ private:
     void setup_VertexArray();
     GLuint mVertexArray=0;
     int draw_mode;
+    int polygon_mode = GL_FILL;
     // std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
     std::unique_ptr<Shader> shader = std::make_unique<Shader>();
     // std::unordered_<std::string,float> uniforms;

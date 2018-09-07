@@ -319,11 +319,12 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
         if (auto u = u_ptr.lock())
             u->bind(*shader);
     }
+    if (draw_mode==GL_TRIANGLES)
+        glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
 
     glBindVertexArray(mVertexArray);
-    size_t n = 0;
     if (attributes["position"]->get_length()>0) {
-        n = attributes["position"]->get_length()/attributes["position"]->get_stride();
+        auto n = attributes["position"]->get_length()/attributes["position"]->get_stride();
         glDrawArrays(draw_mode, 0, n);
     }   
     glBindVertexArray(0);
@@ -335,37 +336,64 @@ void Painter::gui() {
     // ImGui::Text("Init: %d", is_initialised());
     ImGui::Text("[%.2f, %.2f, %.2f]", c.x, c.y, c.z);
 
-    const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
-    const char* item_current;
-    if(draw_mode==GL_POINTS) item_current=items[0];
-    else if(draw_mode==GL_LINES) item_current=items[1];
-    else if(draw_mode==GL_TRIANGLES) item_current=items[2];
-    else if(draw_mode==GL_LINE_STRIP) item_current=items[3];
-    else if(draw_mode==GL_LINE_LOOP) item_current=items[4];
-    
-    if (ImGui::BeginCombo("drawmode", item_current)) // The second parameter is the label previewed before opening the combo.
     {
-      for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-      {
-        bool is_selected = (item_current == items[n]);
-        if (ImGui::Selectable(items[n], is_selected))
-          item_current = items[n];
-          ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
-        if (item_current==items[0])
-          set_drawmode(GL_POINTS);
-        else if (item_current==items[1])
-          set_drawmode(GL_LINES);
-        else if (item_current==items[2])
-          set_drawmode(GL_TRIANGLES);
-        else if (item_current==items[3])
-          set_drawmode(GL_LINE_STRIP);
-        else if (item_current==items[4])
-          set_drawmode(GL_LINE_LOOP);
-      }
-        ImGui::EndCombo();
+        const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
+        const char* item_current;
+        if(draw_mode==GL_POINTS) item_current=items[0];
+        else if(draw_mode==GL_LINES) item_current=items[1];
+        else if(draw_mode==GL_TRIANGLES) item_current=items[2];
+        else if(draw_mode==GL_LINE_STRIP) item_current=items[3];
+        else if(draw_mode==GL_LINE_LOOP) item_current=items[4];
+        
+        if (ImGui::BeginCombo("drawmode", item_current)) // The second parameter is the label previewed before opening the combo.
+        {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+        {
+            bool is_selected = (item_current == items[n]);
+            if (ImGui::Selectable(items[n], is_selected))
+            item_current = items[n];
+            ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+            if (item_current==items[0])
+            set_drawmode(GL_POINTS);
+            else if (item_current==items[1])
+            set_drawmode(GL_LINES);
+            else if (item_current==items[2])
+            set_drawmode(GL_TRIANGLES);
+            else if (item_current==items[3])
+            set_drawmode(GL_LINE_STRIP);
+            else if (item_current==items[4])
+            set_drawmode(GL_LINE_LOOP);
+        }
+            ImGui::EndCombo();
+        }
+    }
+    if(draw_mode==GL_TRIANGLES) {
+        const char* items[] = { "GL_POINT", "GL_LINE", "GL_FILL" };
+        const char* item_current;
+        if(polygon_mode==GL_POINT) item_current=items[0];
+        else if(polygon_mode==GL_LINE) item_current=items[1];
+        else if(polygon_mode==GL_FILL) item_current=items[2];
+        
+        if (ImGui::BeginCombo("polygonmode", item_current)) // The second parameter is the label previewed before opening the combo.
+        {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+        {
+            bool is_selected = (item_current == items[n]);
+            if (ImGui::Selectable(items[n], is_selected))
+            item_current = items[n];
+            ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+            if (item_current==items[0])
+            polygon_mode = GL_POINT;
+            else if (item_current==items[1])
+            polygon_mode = GL_LINE;
+            else if (item_current==items[2])
+            polygon_mode = GL_FILL;
+        }
+            ImGui::EndCombo();
+        }
     }
     for (auto &u: uniforms) {
-        if(u->get_name()=="u_pointsize" && get_drawmode()!=GL_POINTS)
+        if(u->get_name()=="u_pointsize" && !(get_drawmode()==GL_POINTS || (get_drawmode()==GL_TRIANGLES && polygon_mode==GL_POINT)))
             continue;
         else
             u->gui();
