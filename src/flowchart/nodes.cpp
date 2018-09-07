@@ -1095,6 +1095,11 @@ namespace ImGui
 		ImGui::PopID();
 	}
 
+	void Nodes::PreloadNodes(NodeStore nodes){
+		nodestore = nodes;
+		// CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, "PoviPainter");
+	}
+
 	void Nodes::ProcessNodes()
 	{
 		////////////////////////////////////////////////////////////////////////////////
@@ -1151,6 +1156,12 @@ namespace ImGui
 			draw_list->AddRect(element_.rect_.Min, element_.rect_.Max, ImColor(200.0f, 200.0f, 0.0f, 0.5f));
 		}
 
+		if(!nodestore_is_added) {
+			for(auto& n : nodestore){
+				CreateNodeFromType(n.second, n.first);
+			}
+			nodestore_is_added = true;
+		}
 		////////////////////////////////////////////////////////////////////////////////
 		// context menu
 		{

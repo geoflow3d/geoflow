@@ -131,6 +131,8 @@ namespace ImGui
 
 	////////////////////////////////////////////////////////////////////////////////
 
+	typedef std::vector<std::pair<std::string, ImVec2>> NodeStore;
+
 	class Nodes final
 	{
 	private:	
@@ -369,10 +371,14 @@ namespace ImGui
 
 		Nodes::Node*  CreateNodeFromType(ImVec2 pos, std::string type);
 
+		NodeStore nodestore;
+		bool nodestore_is_added = false;
+
 	public:
 		explicit Nodes(geoflow::NodeManager& nm, poviApp& a);
 		~Nodes();
 
 		void ProcessNodes();
+		void PreloadNodes(NodeStore nodes);
 	};
 }
