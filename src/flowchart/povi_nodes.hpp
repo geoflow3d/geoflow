@@ -46,6 +46,7 @@ class ColorMapperNode:public Node {
   }
 
   void count_values() {
+    value_counts.clear();
     auto data = std::any_cast<vec1i>(get_value("values"));
     for(auto& val : data) {
       value_counts[val]++;
