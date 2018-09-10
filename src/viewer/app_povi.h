@@ -73,14 +73,13 @@ Box bbox;
 
 float fov = 60;
 float clip_near = 0.01;
-float clip_far = 100;
+float clip_far = 500;
+std::shared_ptr<Uniform1f> cam_pos;
 std::shared_ptr<Uniform3f> light_direction;
 std::shared_ptr<Uniform4f> light_color;
 
 hudPainter ch_painter;
 
-float cam_pos = -10;
-float scale = 0.05;
 glm::vec3 translation, center_point;
 glm::vec3 translation_ondrag;
 glm::quat rotation;

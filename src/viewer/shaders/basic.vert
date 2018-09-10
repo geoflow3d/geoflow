@@ -11,6 +11,8 @@ uniform mat4 u_projection;
 uniform mat4 u_mvp;
 uniform mat3 u_mv_normal;
 
+uniform float u_cam_pos;
+
 uniform float u_value_max;
 uniform float u_value_min;
 
@@ -20,6 +22,7 @@ uniform int u_color_mode; // 3==texture-direct 2==texture-gradient, 1==uniform, 
 
 uniform float u_ambient;
 uniform float u_diffuse;
+uniform float u_specular;
 uniform vec3 u_light_direction;
 uniform vec4 u_light_color;
 
@@ -30,12 +33,18 @@ flat out int colorMode;
 
 void main()
 {
-    gl_Position = u_mvp * vec4(position, 1.0);
+    vec4 pos = u_mvp * vec4(position, 1.0);
+    gl_Position = pos;
     
     vec3 n = normalize(u_mv_normal * normal); 
 
     float diffuse = u_diffuse*max(dot(n, normalize(-u_light_direction)), 0.0);
-    lightFactor = (u_ambient + diffuse) * u_light_color.xyz;
+    
+    vec3 viewDir = normalize(vec3(0,0,u_cam_pos) - pos.xyz);
+    vec3 reflectDir = reflect(-u_light_direction, n);
+    float specular = u_specular*pow(max(dot(viewDir, reflectDir), 0.0), 4);
+    
+    lightFactor = (u_ambient + diffuse + specular) * u_light_color.xyz;
 
     colorMode = u_color_mode;
     if(u_color_mode==1)

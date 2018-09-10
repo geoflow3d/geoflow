@@ -6,6 +6,7 @@ void poviApp::on_initialise(){
 
     light_direction = std::make_shared<Uniform3f>("u_light_direction", glm::vec3(0.5,0.5,-1.0));
     light_color = std::make_shared<Uniform4f>("u_light_color");
+    cam_pos = std::make_shared<Uniform1f>("u_cam_pos", -15);
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
@@ -65,7 +66,8 @@ void poviApp::on_draw(){
     ImGui::SliderFloat("Field of view", &fov, 1, 180);
     ImGui::SliderFloat("Clip near", &clip_near, 0.01, 100);
     ImGui::SliderFloat("Clip far", &clip_far, 1, 1000);
-    ImGui::SliderFloat("Camera position", &cam_pos, -20, -1);
+    // ImGui::SliderFloat("Camera position", &cam_pos, -200, -1);
+    cam_pos->gui();
     light_color->gui();
     light_direction->gui();
     // ImGui::SliderFloat("Scale", &scale, 0.01, 100);
@@ -126,7 +128,7 @@ void poviApp::on_mouse_move(double xpos, double ypos) {
     if (drag==TRANSLATE) {
         xy_pos delta = { xpos-drag_init_pos.x, ypos-drag_init_pos.y };
 
-        double scale_ = -cam_pos * 2* std::tan(glm::radians(fov/2.));
+        double scale_ = -cam_pos->get_value() * 2* std::tan(glm::radians(fov/2.));
         // multiply with inverse view matrix and apply translation in world coordinates
         double radius = std::min(width, height);
         glm::vec4 t_screen = glm::vec4(scale_*delta.x/radius, scale_*-delta.y/radius, 0., 0.);
@@ -145,15 +147,12 @@ void poviApp::on_mouse_move(double xpos, double ypos) {
     last_mouse_pos.y = ypos;
 }
 void poviApp::on_scroll(double xoffset, double yoffset){
-    // scale *= yoffset/50 + 1;
-    cam_pos += yoffset/10;
-    // update_view_matrix();
+    cam_pos->get_value() += yoffset/10;
 }
 
 void poviApp::update_view_matrix(){
     auto t = glm::mat4();
-    t = glm::translate(t, glm::vec3(0.0f,0.0f,cam_pos));
-    // t = glm::scale(t, glm::vec3(scale));
+    t = glm::translate(t, glm::vec3(0.0f,0.0f,cam_pos->get_value()));
     t = t * glm::mat4_cast(rotation);
     t = glm::translate(t, translation);
     t = glm::translate(t, translation_ondrag);
