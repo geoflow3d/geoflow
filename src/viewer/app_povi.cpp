@@ -151,7 +151,7 @@ void poviApp::on_scroll(double xoffset, double yoffset){
 }
 
 void poviApp::update_view_matrix(){
-    auto t = glm::mat4();
+    auto t = glm::mat4(1.0);
     t = glm::translate(t, glm::vec3(0.0f,0.0f,cam_pos->get_value()));
     t = t * glm::mat4_cast(rotation);
     t = glm::translate(t, translation);

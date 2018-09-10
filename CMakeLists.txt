@@ -38,12 +38,13 @@ include_directories(
   thirdparty/glad/include 
   thirdparty/imgui
   thirdparty/imgui/examples
-  /usr/local/include)
+  thirdparty/glm)
 
 add_definitions(
   -DGLFW_INCLUDE_NONE 
   -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\"
   -DIMGUI_IMPL_OPENGL_LOADER_GLAD
+  -DGLM_FORCE_CTOR_INIT
   )
 
 add_library(viewer STATIC 
