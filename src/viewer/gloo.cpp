@@ -34,9 +34,17 @@ void Shader::bind(unsigned int location, glm::mat4 const & matrix)
 { 
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
 }
+void Shader::bind(unsigned int location, glm::mat3 const & matrix)
+{ 
+    glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
+}
 void Shader::bind(unsigned int location, glm::vec4 const & vector)
 { 
     glUniform4fv(location, 1, glm::value_ptr(vector)); 
+}
+void Shader::bind(unsigned int location, glm::vec3 const & vector)
+{ 
+    glUniform3fv(location, 1, glm::value_ptr(vector)); 
 }
 
 Shader & Shader::attach(std::string const & filename)
@@ -182,94 +190,43 @@ template<typename T> void Buffer::set_data(T* d, size_t n, std::initializer_list
 template void Buffer::set_data(GLfloat*, size_t, std::initializer_list<int>);
 // template void Buffer::set_data(double*, size_t);
 
-Painter::Painter() {
 
-}
-
-void Painter::init()
+void BasePainter::init()
 {
     if(mVertexArray==0)
         glGenVertexArrays(1, &mVertexArray);
-    // setup_VertexArray();
-    // if (buffer->is_initialised && shader->is_initialised)
-    // if (draw_mode==GL_POINTS)
-    //     set_uniform("u_pointsize",1.0);
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4fv("u_color")));
-    // uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_min")));
-    // uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_value_max")));
-    attributes["position"] = std::make_unique<Buffer>();
-    attributes["value"] = std::make_unique<Buffer>();
-    attributes["identifier"] = std::make_unique<Buffer>();
-    // textures.push_back(std::make_unique<Texture1D>());
 
-    for(auto& a : attributes) {
-        if(!a.second->is_initialised()) {
-            a.second->init();
-        }
-    }
     setup_VertexArray();
 
     initialised = true;
 }
 
-void Painter::attach_shader(std::string const & filename)
+void BasePainter::attach_shader(std::string const & filename)
 {
     shader->attach(filename);
 }
 
-void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims) {
-    if(name == "position") {
-        bbox.clear();
-        for(size_t i=0; i<n/3; i++) {
-            bbox.add(&data[i*3]);
-        }
-        std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
-    }
-
+void BasePainter::set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims) {
     attributes[name]->set_data(data, n, dims);
     enable_attribute(name);
 }
-void Painter::clear_attribute(const std::string name) {
-    if(name == "position")
-        bbox.clear();
-    disable_attribute(name);
-}
-
-void Painter::set_texture(std::weak_ptr<Texture1D> tex) {
-    texture = tex;
-}
-void Painter::add_uniform(std::weak_ptr<Uniform> uniform) {
-    uniforms_external.push_back(uniform);
-}
-void Painter::remove_texture() {
-    if (auto t = texture.lock()) {
-        t->deactivate();
-    }
-    texture.reset();
-}
-void Painter::clear_uniforms() {
-    uniforms_external.clear();
-}
-
-// void Painter::set_texture(unsigned char * image, int width) {
+// void BasePainter::set_texture(unsigned char * image, int width) {
 //     textures[0]->set_data(image, width);
 // }
 
-void Painter::enable_attribute(const std::string name) {
+void BasePainter::enable_attribute(const std::string name) {
     setup_VertexArray();
     glBindVertexArray(mVertexArray);
     auto loc = glGetAttribLocation(shader->get(), name.c_str());
     glEnableVertexAttribArray(loc);
 }
-void Painter::disable_attribute(const std::string name) {
+void BasePainter::disable_attribute(const std::string name) {
     glBindVertexArray(mVertexArray);
     auto loc = glGetAttribLocation(shader->get(), name.c_str());
     glDisableVertexAttribArray(loc);
 }
 
-void Painter::setup_VertexArray()
+void BasePainter::setup_VertexArray()
 {
     glBindVertexArray(mVertexArray);
 
@@ -296,33 +253,33 @@ void Painter::setup_VertexArray()
     glBindVertexArray(0); // Unbind VAO
 }
 
-void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
-{
-    if(!shader->is_initialised())
-        shader->init();
-    if(!initialised)
-        init();
+hudPainter::hudPainter() {
 
-    if(auto t = texture.lock()) {
-        if(!t->is_initialised()) t->init();
-        t->activate();
+}
+
+void hudPainter::init() {
+    std::array<GLfloat,8> crosshair_lines = {
+        -1, 0,
+        1,  0,
+        0, -1,
+        0,  1
+    };
+    attributes["position"] = std::make_unique<Buffer>();
+    set_attribute("position", crosshair_lines.data(), crosshair_lines.size(), {2});
+    set_drawmode(GL_LINES);
+    BasePainter::init();
+}
+
+void hudPainter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection){
+    if(!shader->is_initialised()){
+        attach_shader("crosshair.vert");
+        attach_shader("crosshair.frag");
+        shader->init();
+    }
+    if(!initialised){
+        init();
     }
     shader->activate();
-
-    // note all shaders have these! eg crosshair painter
-    shader->bind("u_projection", projection);
-    shader->bind("u_view", view);
-    shader->bind("u_model", model);
-
-    for (auto &u: uniforms) {
-        u->bind(*shader);
-    }
-    for (auto u_ptr: uniforms_external) {
-        if (auto u = u_ptr.lock())
-            u->bind(*shader);
-    }
-    if (draw_mode==GL_TRIANGLES)
-        glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
 
     glBindVertexArray(mVertexArray);
     if (attributes["position"]->get_length()>0) {
@@ -330,6 +287,45 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
         glDrawArrays(draw_mode, 0, n);
     }   
     glBindVertexArray(0);
+}
+
+
+void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims) {
+    if(name == "position") {
+        bbox.clear();
+        for(size_t i=0; i<n/3; i++) {
+            bbox.add(&data[i*3]);
+        }
+        std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
+    }
+
+    attributes[name]->set_data(data, n, dims);
+    enable_attribute(name);
+}
+
+void Painter::clear_attribute(const std::string name) {
+    if(name == "position")
+        bbox.clear();
+    disable_attribute(name);
+}
+
+void Painter::set_texture(std::weak_ptr<Texture1D> tex) {
+    texture = tex;
+}
+void Painter::register_uniform(std::shared_ptr<Uniform> uniform) {
+    uniforms_external[uniform] = uniform;
+}
+void Painter::unregister_uniform(std::shared_ptr<Uniform> uniform) {
+    uniforms_external.erase(uniform);
+}
+void Painter::remove_texture() {
+    if (auto t = texture.lock()) {
+        t->deactivate();
+    }
+    texture.reset();
+}
+void Painter::clear_uniforms() {
+    uniforms_external.clear();
 }
 
 void Painter::gui() {
@@ -356,15 +352,15 @@ void Painter::gui() {
             item_current = items[n];
             ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
             if (item_current==items[0])
-            set_drawmode(GL_POINTS);
+                set_drawmode(GL_POINTS);
             else if (item_current==items[1])
-            set_drawmode(GL_LINES);
+                set_drawmode(GL_LINES);
             else if (item_current==items[2])
-            set_drawmode(GL_TRIANGLES);
+                set_drawmode(GL_TRIANGLES);
             else if (item_current==items[3])
-            set_drawmode(GL_LINE_STRIP);
+                set_drawmode(GL_LINE_STRIP);
             else if (item_current==items[4])
-            set_drawmode(GL_LINE_LOOP);
+                set_drawmode(GL_LINE_LOOP);
         }
             ImGui::EndCombo();
         }
@@ -385,11 +381,11 @@ void Painter::gui() {
             item_current = items[n];
             ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
             if (item_current==items[0])
-            polygon_mode = GL_POINT;
+                polygon_mode = GL_POINT;
             else if (item_current==items[1])
-            polygon_mode = GL_LINE;
+                polygon_mode = GL_LINE;
             else if (item_current==items[2])
-            polygon_mode = GL_FILL;
+                polygon_mode = GL_FILL;
         }
             ImGui::EndCombo();
         }
@@ -401,4 +397,62 @@ void Painter::gui() {
             u->gui();
     }
     ImGui::PopID();
+}
+
+void Painter::init() {
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize", 2,0,20)));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4f("u_color")));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_ambient", 0.65,0,1)));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_diffuse", 1.0,0,1)));
+    attributes["position"] = std::make_unique<Buffer>();
+    attributes["normal"] = std::make_unique<Buffer>();
+    attributes["value"] = std::make_unique<Buffer>();
+    attributes["identifier"] = std::make_unique<Buffer>();
+
+    for(auto& a : attributes) {
+        if(!a.second->is_initialised()) {
+            a.second->init();
+        }
+    }
+
+    BasePainter::init();
+}
+
+void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection)
+{
+    if(!shader->is_initialised())
+        shader->init();
+    if(!initialised)
+        init();
+
+    if(auto t = texture.lock()) {
+        if(!t->is_initialised()) t->init();
+        t->activate();
+    }
+    shader->activate();
+
+    // note all shaders have these! eg crosshair painter
+    auto mvp = projection*view*model;
+    shader->bind("u_mvp", mvp);
+    shader->bind("u_mv_normal", glm::mat3(glm::transpose(glm::inverse(view*model))));
+    // shader->bind("u_projection", projection);
+    // shader->bind("u_view", view);
+    // shader->bind("u_model", model);
+
+    for (auto &u: uniforms) {
+        u->bind(*shader);
+    }
+    for (auto u_ptr: uniforms_external) {
+        u_ptr.second->bind(*shader);
+    }
+    if (draw_mode==GL_TRIANGLES)
+        glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
+
+    glBindVertexArray(mVertexArray);
+    if (attributes["position"]->get_length()>0) {
+        auto n = attributes["position"]->get_length()/attributes["position"]->get_stride();
+        glDrawArrays(draw_mode, 0, n);
+    }   
+    glBindVertexArray(0);
 }

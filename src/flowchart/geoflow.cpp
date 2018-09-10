@@ -9,9 +9,9 @@ using namespace geoflow;
     parent.on_push(*this);
   }
   void InputTerminal::clear() {
+    parent.on_clear(*this);
     cdata.reset();
     parent.status = WAITING;
-    parent.on_clear(*this);
   }
 
   OutputTerminal::~OutputTerminal() {

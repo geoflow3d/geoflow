@@ -11,7 +11,7 @@
 
 using namespace geoflow;
 struct ColorMap {
-  std::weak_ptr<Uniform> u_valmax, u_valmin;
+  std::shared_ptr<Uniform> u_valmax, u_valmin;
   bool is_gradient=false;
   std::weak_ptr<Texture1D> tex;
   std::unordered_map<int,int> mapping;
@@ -191,11 +191,12 @@ class PoviPainterNode:public Node {
     painter->set_drawmode(GL_TRIANGLES);
     // a.add_painter(painter, "mypainter");
     add_input("vertices", TT_vec3f);
+    add_input("normals", TT_vec3f);
     add_input("colormap", TT_colmap);
     add_input("values", TT_vec1f);
     add_input("identifiers", TT_vec1i);
   }
-  ~PoviPainterNode(){
+  ~PoviPainterNode() {
     // note: this assumes we have only attached this painter to one poviapp
     if (auto a = pv_app.lock()) {
       std::cout << "remove painter\n";
@@ -208,7 +209,7 @@ class PoviPainterNode:public Node {
     pv_app = a.get_ptr();
   }
 
-  void map_identifiers(){
+  void map_identifiers() {
     if (get_value("identifiers").has_value() && get_value("colormap").has_value()) {
       auto cmap = std::any_cast<ColorMap>(get_value("colormap"));
       if (cmap.is_gradient) return;
@@ -227,6 +228,9 @@ class PoviPainterNode:public Node {
       if(inputTerminals["vertices"].get() == &t) {
         auto& d = std::any_cast<vec3f&>(t.cdata);
         painter->set_attribute("position", d[0].data(), d.size()*3, {3});
+      } else if(inputTerminals["normals"].get() == &t) {
+        auto& d = std::any_cast<vec3f&>(t.cdata);
+        painter->set_attribute("normal", d[0].data(), d.size()*3, {3});
       } else if(inputTerminals["values"].get() == &t) {
         auto& d = std::any_cast<vec1f&>(t.cdata);
         painter->set_attribute("value", d.data(), d.size(), {1});
@@ -234,10 +238,9 @@ class PoviPainterNode:public Node {
         map_identifiers();
       } else if(inputTerminals["colormap"].get() == &t) {
         auto& cmap = std::any_cast<ColorMap&>(t.cdata);
-        painter->clear_uniforms();
         if(cmap.is_gradient) {
-          painter->add_uniform(cmap.u_valmax);
-          painter->add_uniform(cmap.u_valmin);
+          painter->register_uniform(cmap.u_valmax);
+          painter->register_uniform(cmap.u_valmin);
         } else {
           map_identifiers();
         }
@@ -253,7 +256,9 @@ class PoviPainterNode:public Node {
       } else if(inputTerminals["values"].get() == &t) {
         painter->clear_attribute("value");
       } else if(inputTerminals["colormap"].get() == &t) {
-        painter->clear_uniforms();
+        auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+        painter->unregister_uniform(cmap.u_valmax);
+        painter->unregister_uniform(cmap.u_valmin);
         painter->remove_texture();
       }
   }
@@ -301,5 +306,52 @@ class TriangleNode:public Node {
     set_value("attrf", attrf);
     set_value("attrf", attrf);
     set_value("attri", attri);
+  }
+};
+class CubeNode:public Node {
+  public:
+  CubeNode(NodeManager& manager):Node(manager, "Triangle") {
+    add_output("vertices", TT_vec3f);
+    add_output("normals", TT_vec3f);
+  }
+
+  void gui(){
+  }
+
+  void process(){
+    typedef std::array<float, 3> point;
+    point p0 = {-1.0f, -1.0f, -1.0f};
+    point p1 = {1.0f, -1.0f, -1.0f};
+    point p2 = {1.0f, 1.0f, -1.0f};
+    point p3 = {-1.0f, 1.0f, -1.0f};
+
+    point p4 = {-1.0f, -1.0f, 1.0f};
+    point p5 = {1.0f, -1.0f, 1.0f};
+    point p6 = {1.0f, 1.0f, 1.0f};
+    point p7 = {-1.0f, 1.0f, 1.0f};
+
+    vec3f vertices = {
+      p2,p1,p0, p0,p3,p2,
+      p4,p5,p6, p6,p7,p4,
+      p0,p1,p5, p5,p4,p0,
+      p1,p2,p6, p6,p5,p1,
+      p2,p3,p7, p7,p6,p2,
+      p3,p0,p4, p4,p7,p3
+    };
+
+    vec3f normals;
+    //counter-clockwise winding order
+    for(int i=0; i<vertices.size()/3; i++){
+      auto a = glm::make_vec3(vertices[i*3+0].data());
+      auto b = glm::make_vec3(vertices[i*3+1].data());
+      auto c = glm::make_vec3(vertices[i*3+2].data());
+      auto n = glm::cross(b-a, c-b);
+
+      normals.push_back({n.x,n.y,n.z});
+      normals.push_back({n.x,n.y,n.z});
+      normals.push_back({n.x,n.y,n.z});
+    }
+    set_value("vertices", vertices);
+    set_value("normals", normals);
   }
 };

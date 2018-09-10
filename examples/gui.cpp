@@ -23,6 +23,7 @@ void on_draw() {
 int main(int ac, const char * av[])
 {
     N.register_node<TriangleNode>("Triangle");
+    N.register_node<CubeNode>("Cube");
     N.register_node<ColorMapperNode>("ColorMapper");
     N.register_node<GradientMapperNode>("GradientMapper");
     N.register_node<AdderNode>("Adder");

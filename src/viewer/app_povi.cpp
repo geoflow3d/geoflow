@@ -2,19 +2,12 @@
 
 void poviApp::on_initialise(){
 
-    model = glm::mat4();
-    // ch_painter = Painter();
+    model = glm::mat4(1.0f);
 
-    // ch_painter.set_attribute("position", crosshair_lines.data(), crosshair_lines.size(), {2});
-    // ch_painter.attach_shader("crosshair.vert");
-    // ch_painter.attach_shader("crosshair.frag");
-    // ch_painter.set_drawmode(GL_LINES);
-
-    // painters.push_back(std::move(ch_painter));
+    light_direction = std::make_shared<Uniform3f>("u_light_direction", glm::vec3(0.5,0.5,-1.0));
+    light_color = std::make_shared<Uniform4f>("u_light_color");
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
-
-    // std::cout << "prog." << shader.get() << std::endl;
 }
 
 void poviApp::center(float x, float y, float z) {
@@ -23,6 +16,8 @@ void poviApp::center(float x, float y, float z) {
 
 void poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
 {
+    painter->register_uniform(light_color);
+    painter->register_uniform(light_direction);
     painters.push_back(std::make_tuple(painter, name, visible));
 }
 
@@ -30,6 +25,8 @@ void poviApp::remove_painter(std::shared_ptr<Painter> painter)
 {
     for (auto t=painters.begin(); t!=painters.end(); ) {
         if (std::get<0>(*t) == painter) {
+            painter->unregister_uniform(light_color);
+            painter->unregister_uniform(light_direction);
             t = painters.erase(t);
         } else {
             t++;
@@ -55,21 +52,23 @@ void poviApp::on_draw(){
         if (std::get<2>(painter))
             std::get<0>(painter)->render(model, view, projection);
     }
-    // if (drag != NO_DRAG)
-    //     ch_painter.render(model, view, projection);
+    if (drag != NO_DRAG)
+        ch_painter.render(model, view, projection);
 
     if (drawthis_func)
         drawthis_func();
 
     // ImGui::Begin("View parameters");
-    xy_pos p0 = screen2view(last_mouse_pos);
+    // xy_pos p0 = screen2view(last_mouse_pos);
     // ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);
     // ImGui::Text("Mouse pos [view]: (%g, %g)", p0.x, p0.y);
     ImGui::SliderFloat("Field of view", &fov, 1, 180);
     ImGui::SliderFloat("Clip near", &clip_near, 0.01, 100);
     ImGui::SliderFloat("Clip far", &clip_far, 1, 1000);
     ImGui::SliderFloat("Camera position", &cam_pos, -20, -1);
-    ImGui::SliderFloat("Scale", &scale, 0.01, 100);
+    light_color->gui();
+    light_direction->gui();
+    // ImGui::SliderFloat("Scale", &scale, 0.01, 100);
     // ImGui::End();
 
     ImGui::Begin("Painters");
@@ -146,14 +145,15 @@ void poviApp::on_mouse_move(double xpos, double ypos) {
     last_mouse_pos.y = ypos;
 }
 void poviApp::on_scroll(double xoffset, double yoffset){
-    scale *= yoffset/50 + 1;
+    // scale *= yoffset/50 + 1;
+    cam_pos += yoffset/10;
     // update_view_matrix();
 }
 
 void poviApp::update_view_matrix(){
     auto t = glm::mat4();
     t = glm::translate(t, glm::vec3(0.0f,0.0f,cam_pos));
-    t = glm::scale(t, glm::vec3(scale));
+    // t = glm::scale(t, glm::vec3(scale));
     t = t * glm::mat4_cast(rotation);
     t = glm::translate(t, translation);
     t = glm::translate(t, translation_ondrag);

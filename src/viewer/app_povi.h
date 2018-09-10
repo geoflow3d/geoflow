@@ -74,16 +74,12 @@ Box bbox;
 float fov = 60;
 float clip_near = 0.01;
 float clip_far = 100;
+std::shared_ptr<Uniform3f> light_direction;
+std::shared_ptr<Uniform4f> light_color;
 
-// Painter ch_painter;
-// std::array<GLfloat,8> crosshair_lines = {
-// 	-1,  0,
-// 	1,  0,
-// 	0, -1,
-// 	0,  1
-// };
+hudPainter ch_painter;
 
-float cam_pos = -2;
+float cam_pos = -10;
 float scale = 0.05;
 glm::vec3 translation, center_point;
 glm::vec3 translation_ondrag;
