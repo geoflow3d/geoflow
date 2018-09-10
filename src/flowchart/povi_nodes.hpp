@@ -256,9 +256,11 @@ class PoviPainterNode:public Node {
       } else if(inputTerminals["values"].get() == &t) {
         painter->clear_attribute("value");
       } else if(inputTerminals["colormap"].get() == &t) {
-        auto& cmap = std::any_cast<ColorMap&>(t.cdata);
-        painter->unregister_uniform(cmap.u_valmax);
-        painter->unregister_uniform(cmap.u_valmin);
+        if(t.cdata.has_value()) {
+          auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+          painter->unregister_uniform(cmap.u_valmax);
+          painter->unregister_uniform(cmap.u_valmin);
+        }
         painter->remove_texture();
       }
   }
