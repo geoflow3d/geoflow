@@ -274,6 +274,36 @@ class PoviPainterNode:public Node {
   }
 };
 
+class Vec3SplitterNode:public Node {
+  public:
+
+  Vec3SplitterNode(NodeManager& manager):Node(manager, "Vec3Splitter") {
+    add_input("vec3f", TT_vec3f);
+    add_output("x", TT_vec1f);
+    add_output("y", TT_vec1f);
+    add_output("z", TT_vec1f);
+  }
+
+  void gui(){
+  }
+
+  void process(){
+    auto v = std::any_cast<vec3f>(get_value("vec3f"));
+    vec1f x,y,z;
+    const size_t size = v.size();
+    x.reserve(size);
+    y.reserve(size);
+    z.reserve(size);
+    for (auto& el : v) {
+      x.push_back(el[0]);
+      y.push_back(el[1]);
+      z.push_back(el[2]);
+    }
+    set_value("x", x);
+    set_value("y", y);
+    set_value("z", z);
+  }
+};
 class TriangleNode:public Node {
   public:
   vec3f vertices = {

@@ -4,10 +4,6 @@ void poviApp::on_initialise(){
 
     model = glm::mat4(1.0f);
 
-    light_direction = std::make_shared<Uniform3f>("u_light_direction", glm::vec3(0.5,0.5,-1.0));
-    light_color = std::make_shared<Uniform4f>("u_light_color");
-    cam_pos = std::make_shared<Uniform1f>("u_cam_pos", -15);
-
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 }
 

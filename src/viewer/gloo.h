@@ -90,12 +90,37 @@ public:
     Shader & link();
 
     // Wrap Calls to glUniform
-    void bind(unsigned int location, float value);
-    void bind(unsigned int location, int value);
-    void bind(unsigned int location, glm::mat3 const & matrix);
-    void bind(unsigned int location, glm::mat4 const & matrix);
-    void bind(unsigned int location, glm::vec4 const & vector);
-    void bind(unsigned int location, glm::vec3 const & vector);
+    // void bind(unsigned int location, float value);
+    // void bind(unsigned int location, int value);
+    // void bind(unsigned int location, glm::mat3 const & matrix);
+    // void bind(unsigned int location, glm::mat4 const & matrix);
+    // void bind(unsigned int location, glm::vec4 const & vector);
+    // void bind(unsigned int location, glm::vec3 const & vector);
+
+    void bind(unsigned int location, float value) 
+    { 
+        glUniform1f(location, value); 
+    }
+    void bind(unsigned int location, int value) 
+    { 
+        glUniform1i(location, value); 
+    }
+    void bind(unsigned int location, glm::mat4 const & matrix)
+    { 
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
+    }
+    void bind(unsigned int location, glm::mat3 const & matrix)
+    { 
+        glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
+    }
+    void bind(unsigned int location, glm::vec4 const & vector)
+    { 
+        glUniform4fv(location, 1, glm::value_ptr(vector)); 
+    }
+    void bind(unsigned int location, glm::vec3 const & vector)
+    { 
+        glUniform3fv(location, 1, glm::value_ptr(vector)); 
+    }
     template<typename T> Shader & bind(std::string const & name, T&& value)
     {
         int location = glGetUniformLocation(mProgram, name.c_str());

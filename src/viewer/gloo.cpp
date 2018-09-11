@@ -22,31 +22,6 @@ Shader & Shader::activate()
     return *this;
 }
 
-void Shader::bind(unsigned int location, float value) 
-{ 
-    glUniform1f(location, value); 
-}
-void Shader::bind(unsigned int location, int value) 
-{ 
-    glUniform1i(location, value); 
-}
-void Shader::bind(unsigned int location, glm::mat4 const & matrix)
-{ 
-    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
-}
-void Shader::bind(unsigned int location, glm::mat3 const & matrix)
-{ 
-    glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix)); 
-}
-void Shader::bind(unsigned int location, glm::vec4 const & vector)
-{ 
-    glUniform4fv(location, 1, glm::value_ptr(vector)); 
-}
-void Shader::bind(unsigned int location, glm::vec3 const & vector)
-{ 
-    glUniform3fv(location, 1, glm::value_ptr(vector)); 
-}
-
 Shader & Shader::attach(std::string const & filename)
 {
     // Load GLSL Shader Source from File
