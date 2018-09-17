@@ -138,7 +138,8 @@ class GradientMapperNode:public Node {
     for(auto& val : data) {
       if(val>max || val<min) continue;
       auto bin = std::floor((val-minval)/bin_width);
-      histogram[bin]++;
+      if(bin>=0 && bin<n_bins)
+        histogram[bin]++;
     }
     max_bin_count = *std::max_element(histogram.begin(), histogram.end());
   }

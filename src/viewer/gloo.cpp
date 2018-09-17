@@ -88,7 +88,7 @@ Shader & Shader::link()
 void Texture1D::activate() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, mTexture);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     if(interpolation_nearest) {
         glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);    
@@ -308,7 +308,12 @@ void Painter::gui() {
     auto c = bbox.center();
     // ImGui::Text("Init: %d", is_initialised());
     ImGui::Text("[%.2f, %.2f, %.2f]", c.x, c.y, c.z);
-
+    if(is_initialised()) {
+        size_t n = 0;
+        if (attributes["position"]->get_length()>0)
+            n = attributes["position"]->get_length()/attributes["position"]->get_stride();
+        ImGui::Text("[%zu vertices]", n);
+    }
     {
         const char* items[] = { "GL_POINTS", "GL_LINES", "GL_TRIANGLES", "GL_LINE_STRIP", "GL_LINE_LOOP" };
         const char* item_current;
