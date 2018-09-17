@@ -61,12 +61,19 @@ add_library(viewer STATIC
 )
 target_link_libraries(viewer ${GLFW_LIBS})
 
-add_library(flowchart STATIC
+add_library(flowchart-core STATIC
+  src/flowchart/geoflow.cpp
+  thirdparty/imgui/imgui.cpp
+  thirdparty/imgui/imgui_draw.cpp
+  thirdparty/imgui/imgui_widgets.cpp
+)
+
+add_library(flowchart-gui STATIC
   src/flowchart/nodes.cpp 
   src/flowchart/geoflow.cpp
   src/flowchart/imgui_color_gradient.cpp
 )
-target_link_libraries(flowchart viewer)
+target_link_libraries(flowchart-gui viewer)
 
 add_executable(
   viewer-test 
@@ -74,11 +81,11 @@ add_executable(
 )
 target_link_libraries(viewer-test viewer)
 
-add_executable(basic examples/basic.cpp src/flowchart/geoflow.cpp)
-target_link_libraries(basic viewer)
+add_executable(basic examples/basic.cpp)
+target_link_libraries(basic flowchart-core)
 
 add_executable(
   gui 
   examples/gui.cpp 
 )
-target_link_libraries(gui flowchart)
+target_link_libraries(gui flowchart-gui)
