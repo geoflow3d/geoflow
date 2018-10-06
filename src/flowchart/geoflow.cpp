@@ -114,7 +114,6 @@ using namespace geoflow;
       case READY: s << "READY"; break;
       case PROCESSING: s << "PROCESSING"; break;
       case DONE: s << "DONE"; break;
-      case ERROR: s << "ERROR"; break;
       default: s << "UNKNOWN"; break;
     }
     s << "\n";

@@ -1,21 +1,34 @@
-set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
-set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
-cmake_minimum_required (VERSION 2.6)
+
+cmake_minimum_required (VERSION 3.10)
 project (Geoflow)
 
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++17> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
-# set(CMAKE_CXX_FLAGS "-O2")
 
+if (MSVC_VERSION GREATER_EQUAL "1900")
+    include(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("/std:c++latest" _cpp_latest_flag_supported)
+    if (_cpp_latest_flag_supported)
+        add_compile_options("/std:c++latest")
+    endif()
+else()
+set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
+set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++17> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
 set(CMAKE_EXE_LINKER_FLAGS -Wl)
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_INSTALL_RPATH "/usr/local/opt/llvm/lib")
 link_directories("/usr/local/opt/llvm/lib")
+endif()
+
+
+# set(CMAKE_CXX_FLAGS "-O2")
+
+
 
 # find system-installed glfw3 and link dynamically
 # find_package(PkgConfig REQUIRED)
 # pkg_search_module(GLFW REQUIRED glfw3)
 
-# GLFW3
+# GLFW
 if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
     execute_process(
             COMMAND             git submodule update --init --recursive
