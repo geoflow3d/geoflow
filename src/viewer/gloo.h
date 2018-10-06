@@ -19,9 +19,6 @@
 
 #include <imgui.h>
 
-#undef min
-#undef max
-
 class Box {
     private:
     std::array<float,3> pmin, pmax;
