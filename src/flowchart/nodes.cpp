@@ -7,6 +7,7 @@
 // @flix01 https://github.com/Flix01/imgui/blob/b248df2df98af13d4b7dbb70c92430afc47a038a/addons/imguinodegrapheditor/imguinodegrapheditor.cpp#L432
 
 #include "nodes.h"
+#include <tuple>
 
 namespace ImGui
 {
@@ -120,16 +121,19 @@ namespace ImGui
 		ImGui::SetWindowFontScale(1.0f);
 	}
 
-	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type)
+	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type) {
+		return CreateNodeFromType(pos, type, type+std::to_string(id_));
+	}
+	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type, std::string name)
 	{
 		std::shared_ptr<geoflow::Node> gf_node;
 		++id_;
 		if (type == "PoviPainter"){
 			auto painter_node = std::make_shared<PoviPainterNode>(gf_manager);
-			painter_node->add_to(pv_app, type + std::to_string(id_));
+			painter_node->add_to(pv_app, name);
 			gf_node = painter_node;
 		} else {
-		gf_node = gf_manager.create(type);
+			gf_node = gf_manager.create(type);
 		}
 		gf_manager.run(*gf_node);
 		auto node = std::make_unique<Node>(gf_node);
@@ -137,11 +141,11 @@ namespace ImGui
 		////////////////////////////////////////////////////////////////////////////////
 		
 		node->id_ = -id_;
-		node->name_ = type + std::to_string(id_);
+		node->name_ = name;
 		node->position_ = pos;
 
-		std::cout << "reading inputs from " << type <<  "\n";
-		std::cout << "\t has " << gf_node->inputTerminals.size() <<  " input terminals\n";
+		// std::cout << "reading inputs from " << type <<  "\n";
+		// std::cout << "\t has " << gf_node->inputTerminals.size() <<  " input terminals\n";
 		for (auto input : gf_node->inputTerminals){
 			std::cout << "&term " << input.second.get() << "\n";
 			auto connection = std::make_unique<Connection>(input.second);
@@ -923,7 +927,6 @@ namespace ImGui
 
 							if (!ImGui::IsMouseDown(0))
 							{
-								std::cout << "mdown!\n";
 								if (connection->input_)
 								{
 									connection->input_->connections_--;
@@ -1100,6 +1103,11 @@ namespace ImGui
 		// CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, "PoviPainter");
 	}
 
+	void Nodes::PreloadLinks(LinkStore links){
+		linkstore = links;
+		// CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, "PoviPainter");
+	}
+
 	void Nodes::ProcessNodes()
 	{
 		////////////////////////////////////////////////////////////////////////////////
@@ -1158,9 +1166,41 @@ namespace ImGui
 
 		if(!nodestore_is_added) {
 			for(auto& n : nodestore){
-				CreateNodeFromType(n.second, n.first);
+				CreateNodeFromType(std::get<2>(n), std::get<0>(n), std::get<1>(n));
 			}
 			nodestore_is_added = true;
+		}
+		if(!linkstore_is_added) {
+			// map all nodes and input/output ports
+			std::unordered_map<std::string, std::pair<Node*,Connection*>> node_input_map, node_output_map;
+			for(auto& node : nodes_) {
+				for(auto& conn : node->inputs_) {
+					node_input_map[node->name_+conn->name_] = std::make_pair(node.get(),conn.get());
+				}
+				for(auto& conn : node->outputs_) {
+					node_output_map[node->name_+conn->name_] = std::make_pair(node.get(),conn.get());
+				}
+			}
+			for(auto& link : linkstore){
+				auto source = std::get<0>(link)+std::get<2>(link);
+				auto target = std::get<1>(link)+std::get<3>(link);
+				Node *node_source, *node_target;
+				Connection *conn_source, *conn_target;
+				std::tie(node_source, conn_source) = node_output_map[source];
+				std::tie(node_target, conn_target) = node_input_map[target];
+				conn_source->target_ = node_target;
+				conn_source->input_ = conn_target;
+				conn_target->target_ = node_source;
+				conn_target->input_ = conn_source;
+				conn_source->connections_++;
+				conn_target->connections_++;
+
+				geoflow::connect(conn_source->gf_terminal.get(), conn_target->gf_terminal.get());
+				gf_manager.run(conn_target->gf_terminal->parent);
+
+				// CreateNodeFromType(n.second, n.first);
+			}
+			linkstore_is_added = true;
 		}
 		////////////////////////////////////////////////////////////////////////////////
 		// context menu

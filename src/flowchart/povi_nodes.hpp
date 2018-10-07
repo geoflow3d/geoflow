@@ -225,7 +225,7 @@ class PoviPainterNode:public Node {
 
   void on_push(InputTerminal& t) {
     // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
-    if(t.cdata.has_value()) {
+    if(t.cdata.has_value() && painter->is_initialised()) {
       if(inputTerminals["vertices"].get() == &t) {
         auto& d = std::any_cast<vec3f&>(t.cdata);
         painter->set_attribute("position", d[0].data(), d.size()*3, {3});

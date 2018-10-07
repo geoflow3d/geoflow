@@ -30,5 +30,16 @@ int main(int ac, const char * av[])
     N.register_node<NumberNode>("Number");
     N.register_node<NumberNodeI>("NumberI");
     a->draw_that(on_draw);
+
+    ImGui::NodeStore ns;
+    ns.push_back(std::make_tuple("Cube", "TheCube", ImVec2(75,75)));
+    ns.push_back(std::make_tuple("PoviPainter", "ThePoviPainter", ImVec2(300,75)));
+    nodes_.PreloadNodes(ns);
+    
+    ImGui::LinkStore ls;
+    ls.push_back(std::make_tuple("TheCube", "ThePoviPainter", "vertices", "vertices"));
+    ls.push_back(std::make_tuple("TheCube", "ThePoviPainter", "normals", "normals"));
+    nodes_.PreloadLinks(ls);
+
     a->run();
 }

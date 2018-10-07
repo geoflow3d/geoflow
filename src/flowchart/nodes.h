@@ -131,7 +131,8 @@ namespace ImGui
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	typedef std::vector<std::pair<std::string, ImVec2>> NodeStore;
+	typedef std::vector<std::tuple<std::string, std::string, ImVec2>> NodeStore; // type, name, position
+	typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> LinkStore; // sourceNode, targetNode, sourceTerminal, targetTerminal
 
 	class Nodes final
 	{
@@ -369,10 +370,13 @@ namespace ImGui
 
 		////////////////////////////////////////////////////////////////////////////////
 
-		Nodes::Node*  CreateNodeFromType(ImVec2 pos, std::string type);
+		Nodes::Node* CreateNodeFromType(ImVec2 pos, std::string type, std::string name);
+		Nodes::Node* CreateNodeFromType(ImVec2 pos, std::string type);
 
 		NodeStore nodestore;
 		bool nodestore_is_added = false;
+		LinkStore linkstore;
+		bool linkstore_is_added = false;
 
 	public:
 		explicit Nodes(geoflow::NodeManager& nm, poviApp& a);
@@ -380,5 +384,6 @@ namespace ImGui
 
 		void ProcessNodes();
 		void PreloadNodes(NodeStore nodes);
+		void PreloadLinks(LinkStore links);
 	};
 }
