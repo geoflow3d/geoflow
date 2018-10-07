@@ -1,0 +1,42 @@
+{
+  "nodes": {
+    "MyCube": {
+      "type": "Cube",
+      "parameters":{
+        "file_path": "some/path/to/ogr.dataset",
+        "layer": "thatone"
+      },
+      "canvas-pos":[0,75]
+    },
+    "MyTriangle": {
+      "type": "Triangle",
+      "parameters":{
+        "file_path": "some/path/to/ogr.dataset",
+        "layer": "thatone"
+      },
+      "canvas-pos":[0,-100]
+    },
+    "CubePainter": {
+      "type": "PoviPainter",
+      "parameters": {
+        "radius": 2,
+        "subdivision": 16
+      },
+      "canvas-pos":[300,75]
+    },
+    "TrianglePainter": {
+      "type": "PoviPainter",
+      "parameters": {
+        "radius": 2,
+        "subdivision": 16
+      },
+      "canvas-pos":[300,-100]
+    }
+  },
+
+  "links": [
+    {"source":"MyCube::vertices", "target":"CubePainter::vertices"},
+    {"source":"MyCube::normals", "target":"CubePainter::normals"},
+    {"source":"MyTriangle::vertices", "target":"TrianglePainter::vertices"}
+  ]
+}
