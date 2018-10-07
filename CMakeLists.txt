@@ -9,7 +9,7 @@ if(APPLE)
   link_directories("/usr/local/opt/llvm/lib")
 endif()
 
-project (Geoflow)
+project (Geoflow VERSION 0.0.1)
 
 # set_property(CXX_STANDARD_REQUIRED ON)
 
@@ -32,6 +32,10 @@ add_subdirectory(thirdparty/glfw)
 set(GLFW_LIBS glfw ${GLFW_LIBRARIES})
 include_directories(SYSTEM "thirdparty/glfw/include")
 
+# nlohmann's json
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+add_subdirectory(thirdparty/json)
+
 include_directories(
   src/viewer
   src/flowchart
@@ -39,6 +43,7 @@ include_directories(
   thirdparty/imgui
   thirdparty/imgui/examples
   thirdparty/glm
+  thirdparty/json/include
 )
 
 add_definitions(
@@ -71,6 +76,7 @@ add_library(flowchart-core STATIC
   thirdparty/imgui/imgui_draw.cpp
   thirdparty/imgui/imgui_widgets.cpp
 )
+target_link_libraries(flowchart-core STATIC nlohmann_json::nlohmann_json)
 
 add_library(flowchart-gui STATIC
   src/flowchart/nodes.cpp 

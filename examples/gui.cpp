@@ -8,6 +8,10 @@
 
 #include "basic_nodes.hpp"
 
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 // #include <boost/program_options.hpp>
 
 static auto a = std::make_shared<poviApp>(1280, 800, "Step edge detector");
@@ -31,14 +35,26 @@ int main(int ac, const char * av[])
     N.register_node<NumberNodeI>("NumberI");
     a->draw_that(on_draw);
 
+    std::ifstream i("../examples/basic.gf.json");
+    json j;
+    i >> j;
+
     ImGui::NodeStore ns;
-    ns.push_back(std::make_tuple("Cube", "TheCube", ImVec2(75,75)));
-    ns.push_back(std::make_tuple("PoviPainter", "ThePoviPainter", ImVec2(300,75)));
+    auto& nodes = j["nodes"];
+    for (json::iterator it = nodes.begin(); it != nodes.end(); ++it) {
+        auto node = it.value();
+        ns.push_back(std::make_tuple(node["type"], it.key(), ImVec2(node["canvas-pos"][0],node["canvas-pos"][1])));
+    }
     nodes_.PreloadNodes(ns);
     
     ImGui::LinkStore ls;
-    ls.push_back(std::make_tuple("TheCube", "ThePoviPainter", "vertices", "vertices"));
-    ls.push_back(std::make_tuple("TheCube", "ThePoviPainter", "normals", "normals"));
+    for (auto& link : j["links"]) {
+        std::string source=link["source"];
+        std::string target=link["target"];
+        auto ns = source.find("::");
+        auto nt = target.find("::");
+        ls.push_back(std::make_tuple(source.substr(0,ns), target.substr(0,nt), source.substr(ns+2), target.substr(nt+2)));
+    }
     nodes_.PreloadLinks(ls);
 
     a->run();
