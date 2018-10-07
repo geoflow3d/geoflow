@@ -1,21 +1,19 @@
-set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
-set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.10)
+
+if(APPLE)
+  set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
+  set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
+  set(CMAKE_EXE_LINKER_FLAGS -Wl)
+  set(CMAKE_MACOSX_RPATH 1)
+  set(CMAKE_INSTALL_RPATH "/usr/local/opt/llvm/lib")
+  link_directories("/usr/local/opt/llvm/lib")
+endif()
+
 project (Geoflow)
 
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++17> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
-# set(CMAKE_CXX_FLAGS "-O2")
+# set_property(CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_EXE_LINKER_FLAGS -Wl)
-set(CMAKE_MACOSX_RPATH 1)
-set(CMAKE_INSTALL_RPATH "/usr/local/opt/llvm/lib")
-link_directories("/usr/local/opt/llvm/lib")
-
-# find system-installed glfw3 and link dynamically
-# find_package(PkgConfig REQUIRED)
-# pkg_search_module(GLFW REQUIRED glfw3)
-
-# GLFW3
+# checkout submodules
 if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
     execute_process(
             COMMAND             git submodule update --init --recursive
@@ -24,6 +22,8 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
             ERROR_QUIET
     )
 endif()
+
+# configure GLFW
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation" FORCE)
@@ -38,14 +38,18 @@ include_directories(
   thirdparty/glad/include 
   thirdparty/imgui
   thirdparty/imgui/examples
-  thirdparty/glm)
+  thirdparty/glm
+)
 
 add_definitions(
   -DGLFW_INCLUDE_NONE 
   -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\"
   -DIMGUI_IMPL_OPENGL_LOADER_GLAD
   -DGLM_FORCE_CTOR_INIT
-  )
+)
+if(MSVC)
+  add_definitions(-DNOMINMAX)
+endif()
 
 add_library(viewer STATIC 
   src/viewer/app.cpp 
@@ -89,3 +93,13 @@ add_executable(
   examples/gui.cpp 
 )
 target_link_libraries(gui flowchart-gui)
+
+set_target_properties(
+  viewer
+  flowchart-core
+  flowchart-gui
+  viewer-test
+  basic
+  gui 
+  PROPERTIES CXX_STANDARD 17
+)

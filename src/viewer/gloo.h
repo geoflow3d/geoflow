@@ -28,6 +28,13 @@ class Box {
         std::cout << "CCC\n";
         clear();
     }
+
+	std::array<float, 3> min() {
+		return pmin;
+	}
+	std::array<float, 3> max() {
+		return pmax;
+	}
     void add(float p[]){
         if(just_cleared){
             pmin[0] = p[0];
@@ -62,12 +69,6 @@ class Box {
     }
     glm::vec3 center(){
         return {(pmax[0]+pmin[0])/2, (pmax[1]+pmin[1])/2, (pmax[2]+pmin[2])/2};
-    }
-    std::array<float,3> min(){
-        return pmin;
-    }
-    std::array<float,3> max(){
-        return pmax;
     }
 };
 
@@ -145,11 +146,6 @@ private:
 
     bool initialised=false;
 
-};
-
-enum DTYPE {
-    FLOAT,
-    DOUBLE
 };
 
 class Buffer
