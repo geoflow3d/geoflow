@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 #include <queue>
+#include <optional>
 
 #include <iostream>
 #include <sstream>
@@ -24,6 +25,17 @@ namespace geoflow {
   typedef std::vector<int> vec1i;
   typedef std::vector<float> vec1f;
   typedef std::vector<size_t> vec1ui;
+
+  enum gfGeometryType {points, lines, line_strip, line_loop, triangles};
+  enum gfGeometryFormat {simple, count, index_count};
+  struct gfGeometry3D {
+    gfGeometryType type;
+    gfGeometryFormat format;
+    vec3f vertices;
+    vec3f normals;
+    vec1ui indices;
+    vec1ui counts;
+  };
   
   enum TerminalType : uint32_t{
     TT_any = 0,
@@ -36,7 +48,8 @@ namespace geoflow {
     TT_vec3f,
     TT_vec6f,
     TT_vec_float,
-    TT_colmap
+    TT_colmap,
+    TT_geometry
   };
   class Terminal {
     public:
