@@ -14,6 +14,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "../viewer/box.hpp"
+
 namespace geoflow {
 
   class Node;
@@ -31,6 +33,7 @@ namespace geoflow {
   struct gfGeometry3D {
     gfGeometryType type;
     gfGeometryFormat format;
+    Box bounding_box;
     vec3f vertices;
     vec3f normals;
     vec1ui indices;
