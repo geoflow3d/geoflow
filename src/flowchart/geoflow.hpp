@@ -38,6 +38,7 @@ namespace geoflow {
     vec3f normals;
     vec1ui indices;
     vec1ui counts;
+    vec1ui firsts;
   };
   
   enum TerminalType : uint32_t{
