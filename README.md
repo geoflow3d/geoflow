@@ -14,3 +14,9 @@ cd build
 cmake ..
 make
 ```
+
+### Building without GUI
+Set the CMake variable `GF_BUILD_GUI` to `OFF`, eg:
+```
+cmake .. -DGF_BUILD_GUI=OFF
+```
