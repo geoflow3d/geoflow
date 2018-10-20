@@ -5,6 +5,44 @@ void poviApp::on_initialise(){
     model = glm::mat4(1.0f);
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
+
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    FramebufferName = 0;
+    glGenFramebuffers(1, &FramebufferName);
+    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+    
+    // Now we need to create the texture which will contain the RGB output of our shader. This code is very classic :
+
+    // The texture we're going to render to
+    glGenTextures(1, &renderedTexture);
+
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    
+    // We also need a depth buffer. This is optional, depending on what you actually need to draw in your texture; but since we’re going to render Suzanne, we need depth-testing.
+
+    // The depth buffer
+    glGenRenderbuffers(1, &depthrenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+    
+    // Finally, we configure our framebuffer
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+
+    // Set the list of draw buffers.
+    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+    // Something may have gone wrong during the process, depending on the capabilities of the GPU. This is how you check it :
+
+    // Always check that our framebuffer is ok
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cerr << "Error: something wrong with the framebuffer setup\n";
 }
 
 void poviApp::center(float x, float y, float z) {
@@ -32,25 +70,43 @@ void poviApp::remove_painter(std::shared_ptr<Painter> painter)
 }
 
 void poviApp::on_resize(int new_width, int new_height) {
-    width = new_width;
-    height = new_height;
+//     width = new_width;
+//     height = new_height;
 }
 
 void poviApp::on_draw(){
-    // Render
-    update_view_matrix();
-    update_projection_matrix();
-    GLbitfield bits = 0;
-    bits |= GL_COLOR_BUFFER_BIT;
-    bits |= GL_DEPTH_BUFFER_BIT;
-    bits |= GL_STENCIL_BUFFER_BIT;
-    glClear(bits);
-    for (auto &painter:painters){
-        if (std::get<2>(painter))
-            std::get<0>(painter)->render(model, view, projection);
-    }
-    if (drag != NO_DRAG)
-        ch_painter.render(model, view, projection);
+    // Render painters
+    // Render to framebuffer
+    ImGui::Begin("3D Viewer");
+        auto size = ImGui::GetContentRegionAvail();
+        width = size.x;
+        height = size.y;
+
+        glBindTexture(GL_TEXTURE_2D, renderedTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, size.x, size.y, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size.x, size.y);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+        glViewport(0,0,size.x,size.y); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+
+        update_view_matrix();
+        update_projection_matrix();
+        GLbitfield bits = 0;
+        bits |= GL_COLOR_BUFFER_BIT;
+        bits |= GL_DEPTH_BUFFER_BIT;
+        bits |= GL_STENCIL_BUFFER_BIT;
+        glClear(bits);
+        for (auto &painter:painters){
+            if (std::get<2>(painter))
+                std::get<0>(painter)->render(model, view, projection);
+        }
+        if (drag != NO_DRAG)
+            ch_painter.render(model, view, projection);
+
+        ImGui::Image((void*)(intptr_t)renderedTexture, size);
+    ImGui::End();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     if (drawthis_func)
         drawthis_func();

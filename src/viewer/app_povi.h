@@ -62,6 +62,8 @@ void on_mouse_press(int button, int action, int mods);
 // Shader shader;
 // Buffer buffer;
 private:
+GLuint FramebufferName, renderedTexture, depthrenderbuffer;
+
 std::vector< std::tuple<std::shared_ptr<Painter>,std::string,bool> > painters;
 void (*drawthis_func)();
 

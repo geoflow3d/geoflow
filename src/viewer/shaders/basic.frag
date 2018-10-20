@@ -4,7 +4,7 @@ in float texCoord;
 flat in int colorMode;
 in vec3 lightFactor;
 
-out vec4 color;
+layout(location=0) out vec4 color;
 uniform sampler1D u_sampler;
 
 void main()
