@@ -1,4 +1,7 @@
 #include "app.h"
+#include <chrono>
+#include <thread>
+using namespace std::chrono_literals;
 
 App::App(int width, int height, std::string title)
 	:width(width), height(height), clear_color(ImVec4(0.0f, 0.0f, 0.0f, 1.0f)) {
@@ -89,9 +92,11 @@ void App::run(){
 	on_initialise();
     bool show_demo_window = false;
 
+    // we'll try to make each iteration last at least this long, ie a limit on the FPS
+    auto target_frame_duration = 16.667ms; // ~60FPS
     while (!glfwWindowShouldClose(window))
     { 
- 
+        auto start = std::chrono::high_resolution_clock::now();
 
         glfwMakeContextCurrent(window);
         // get framebuffer size, which could be different from the window size in case of eg a retina display  
@@ -101,12 +106,10 @@ void App::run(){
         glClear(GL_COLOR_BUFFER_BIT);
 
         // process events:
-               // don't do anything if window not in focus
-        if(!glfwGetWindowAttrib(window, GLFW_FOCUSED))
-            glfwWaitEvents();
-        // glfwWaitEvents(); // and sleep until there is an event
-        else
-            glfwPollEvents(); // don't sleep, eg needed for animations
+        // if(!glfwGetWindowAttrib(window, GLFW_FOCUSED)) // don't do anything if window not in focus
+            glfwWaitEvents(); // sleep until there is an event
+        // else
+        //     glfwPollEvents(); // don't sleep, eg needed for animations
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -139,6 +142,12 @@ void App::run(){
         //     draw(); //second draw to ensure imgui is updated in case of glfwWaitEvents()
         //     // not very elegant this and problem with modals...
         // }
+
+        // sleep for the remainder of the rendering budget of this frame
+        auto duration = std::chrono::high_resolution_clock::now()-start;
+        if (duration < target_frame_duration){
+            std::this_thread::sleep_for(target_frame_duration-duration);
+        }
         
     }
     glfwDestroyWindow(window);
