@@ -121,7 +121,7 @@ void App::run(){
 
         // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
         // because it would be confusing to have two docking targets within each others.
-        ImGuiWindowFlags window_flags;
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking; //ImGuiWindowFlags_MenuBar
 
         ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
@@ -130,14 +130,14 @@ void App::run(){
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus ;
 
         // When using ImGuiDockNodeFlags_PassthruDockspace, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
-        ImGui::SetNextWindowBgAlpha(0.0f);
+        // ImGui::SetNextWindowBgAlpha(0.0f);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         bool p_open;
-        ImGui::Begin("DockSpace Demo", &p_open, window_flags);
+        ImGui::Begin("GeoflowDockSpace", &p_open, window_flags);
         ImGui::PopStyleVar();
 
         ImGui::PopStyleVar(2);
@@ -211,7 +211,7 @@ void App::cursor_pos_callback(
     
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
-    a->on_mouse_move(xpos, ypos);
+    // a->on_mouse_move(xpos, ypos);
 }
 
 void App::mouse_button_callback(

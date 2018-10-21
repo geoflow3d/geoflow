@@ -82,6 +82,31 @@ void poviApp::on_draw(){
         width = size.x;
         height = size.y;
 
+
+        if (ImGui::IsWindowHovered()) {
+            auto& io = ImGui::GetIO();
+            auto local_mouse_pos_x = io.MousePos.x - ImGui::GetWindowPos().x;
+            auto local_mouse_pos_y = io.MousePos.y - ImGui::GetWindowPos().y;
+            if (io.MouseWheel)
+                on_scroll(io.MouseWheelH, io.MouseWheel);
+
+            if (ImGui::IsMouseClicked(0)) {
+                if(io.KeyShift)
+                    drag = TRANSLATE;
+                else
+                    drag = ROTATE;
+                drag_init_pos.x = local_mouse_pos_x;
+                drag_init_pos.y = local_mouse_pos_y;
+            } else if (ImGui::IsMouseReleased(0)) {
+                if(drag==TRANSLATE){
+                    translation += translation_ondrag;
+                    translation_ondrag = glm::vec3(0);
+                }
+                drag = NO_DRAG;
+            }
+            on_mouse_move(local_mouse_pos_x, local_mouse_pos_y);
+        }
+
         glBindTexture(GL_TEXTURE_2D, renderedTexture);
         glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, size.x, size.y, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
@@ -104,7 +129,7 @@ void poviApp::on_draw(){
         if (drag != NO_DRAG)
             ch_painter.render(model, view, projection);
 
-        ImGui::Image((void*)(intptr_t)renderedTexture, size);
+        ImGui::Image((void*)(intptr_t)renderedTexture, size, ImVec2(0,1), ImVec2(1,0));
     ImGui::End();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -159,20 +184,20 @@ void poviApp::on_key_press(int key, int action, int mods) {
 
 void poviApp::on_mouse_press(int button, int action, int mods) {   
     
-    if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-        if(mods & GLFW_MOD_SHIFT)
-            drag = TRANSLATE;
-        else
-            drag = ROTATE;
+    // if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
+    //     if(mods & GLFW_MOD_SHIFT)
+    //         drag = TRANSLATE;
+    //     else
+    //         drag = ROTATE;
 
-        glfwGetCursorPos(window, &drag_init_pos.x, &drag_init_pos.y);
-    } else if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
-        if(drag==TRANSLATE){
-            translation += translation_ondrag;
-            translation_ondrag = glm::vec3(0);
-        }
-        drag = NO_DRAG;
-    }
+    //     glfwGetCursorPos(window, &drag_init_pos.x, &drag_init_pos.y);
+    // } else if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
+    //     if(drag==TRANSLATE){
+    //         translation += translation_ondrag;
+    //         translation_ondrag = glm::vec3(0);
+    //     }
+    //     drag = NO_DRAG;
+    // }
 }
 
 
