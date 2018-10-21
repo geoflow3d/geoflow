@@ -38,7 +38,7 @@ inline glm::quat arcball(xy_pos p){
 class poviApp: public std::enable_shared_from_this<poviApp>, public App {
 public:
 poviApp(int width, int height, std::string title):App(width, height, title){
-	light_direction = std::make_shared<Uniform3f>("u_light_direction", glm::vec3(0.5,0.5,-1.0));
+	light_direction = std::make_shared<Uniform3f>("u_light_direction", glm::vec3(0.5,-1.0,-1.0));
 	light_color = std::make_shared<Uniform4f>("u_light_color");
 	cam_pos = std::make_shared<Uniform1f>("u_cam_pos", -15);
 };

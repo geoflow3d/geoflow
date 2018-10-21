@@ -52,6 +52,7 @@ App::App(int width, int height, std::string title)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigDockingWithShift = true;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
@@ -100,6 +101,7 @@ void App::run(){
         auto start = std::chrono::high_resolution_clock::now();
         glfwWaitEvents(); // sleep until there is an event
 
+        // redraw a couple of times to make sure ImGui is able to draw everything, see https://github.com/ocornut/imgui/issues/1206
         for(int i=0; i<=redraw_counter; i++){
             if (redraw_counter > 0)
                 redraw_counter--;

@@ -1301,33 +1301,33 @@ namespace ImGui
 		
 			ImGui::Text("");
 		
-			ImGui::Text("Mouse: %.2f, %.2f", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
+			// ImGui::Text("Mouse: %.2f, %.2f", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
 			// ImGui::Text("Mouse delta: %.2f, %.2f", ImGui::GetIO().MouseDelta.x, ImGui::GetIO().MouseDelta.y);
 			// ImGui::Text("Offset: %.2f, %.2f", offset.x, offset.y);
 		
 			// ImGui::Text("");
 		
-			ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
-			ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
-			ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
+			// ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
+			// ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
+			// ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
 			// ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
 			// ImGui::Text("Canvas_scale: %.2f", canvas_scale_);
 
 			// ImGui::Text("");
 			
 			if (element_.node_){
-				ImGui::Text("element_node: %s", element_.node_->name_.c_str());
-				ImGui::Text("Inputerminals:");
-				for (auto& iT : element_.node_->gf_node->inputTerminals) {
-					ImGui::Text("\t%s, data: %i", iT.first.c_str(), iT.second->has_data());
-				}
+				// ImGui::Text("element_node: %s", element_.node_->name_.c_str());
+				// ImGui::Text("Inputerminals:");
+				// for (auto& iT : element_.node_->gf_node->inputTerminals) {
+				// 	ImGui::Text("\t%s, data: %i", iT.first.c_str(), iT.second->has_data());
+				// }
 				ImGui::Text("Outputerminals:");
 				for (auto& oT : element_.node_->gf_node->outputTerminals) {
 					ImGui::Text("\t%s, data: %i, #connections: %lu", oT.first.c_str(), oT.second->has_data(), oT.second->connections.size());
 				}
 			}
-			if (element_.node_slot0_)
-				ImGui::Text("element_node_slot0_: %s", element_.node_slot0_->name_.c_str());
+			// if (element_.node_slot0_)
+			// 	ImGui::Text("element_node_slot0_: %s", element_.node_slot0_->name_.c_str());
 		}
 
 		////////////////////////////////////////////////////////////////////////////////
