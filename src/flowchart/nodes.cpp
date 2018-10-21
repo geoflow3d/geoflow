@@ -1236,19 +1236,20 @@ namespace ImGui
 			if (ImGui::BeginPopup("NodesContextMenu"))
 			{
 				element_.Reset(NodesState_Block);
-
+				// add nodes where the popup was opened
+				auto popup_mouse = ImGui::GetMousePosOnOpeningCurrentPopup() - canvas_position_;
 				for (auto& node : gf_manager.node_register)
 				{
 					if (ImGui::MenuItem(node.first.c_str()))
 					{					
 						element_.Reset();
-						element_.node_ = CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, node.first);
+						element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, node.first);
 					}
 				}
 				if (ImGui::MenuItem("PoviPainter"))
 					{					
 						element_.Reset();
-						element_.node_ = CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, "PoviPainter");
+						element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, "PoviPainter");
 					}
 				ImGui::EndPopup();
 			}
