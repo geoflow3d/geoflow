@@ -12,6 +12,7 @@
 
 #include "gloo.h"
 
+static int redraw_counter = 0;
 class App
 {
 public:

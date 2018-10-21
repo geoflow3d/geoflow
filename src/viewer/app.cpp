@@ -98,78 +98,82 @@ void App::run(){
     while (!glfwWindowShouldClose(window))
     { 
         auto start = std::chrono::high_resolution_clock::now();
+        glfwWaitEvents(); // sleep until there is an event
 
-        glfwMakeContextCurrent(window);
-        // get framebuffer size, which could be different from the window size in case of eg a retina display  
-        glfwGetFramebufferSize(window, &viewport_width, &viewport_height);
-        glViewport(0, 0, viewport_width, viewport_height);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
+        for(int i=0; i<=redraw_counter; i++){
+            if (redraw_counter > 0)
+                redraw_counter--;
 
-        // process events:
-        // if(!glfwGetWindowAttrib(window, GLFW_FOCUSED)) // don't do anything if window not in focus
-            glfwWaitEvents(); // sleep until there is an event
-        // else
-        //     glfwPollEvents(); // don't sleep, eg needed for animations
+            glfwMakeContextCurrent(window);
+            // get framebuffer size, which could be different from the window size in case of eg a retina display  
+            glfwGetFramebufferSize(window, &viewport_width, &viewport_height);
+            glViewport(0, 0, viewport_width, viewport_height);
+            glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-        // Start the ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+            // process events:
+            // if(!glfwGetWindowAttrib(window, GLFW_FOCUSED)) // don't do anything if window not in focus
+            // else
+            //     glfwPollEvents(); // don't sleep, eg needed for animations
 
-        // Central dockspace
+            // Start the ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
 
-        // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-        // because it would be confusing to have two docking targets within each others.
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking; //ImGuiWindowFlags_MenuBar
+            // Central dockspace
 
-        ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->Pos);
-        ImGui::SetNextWindowSize(viewport->Size);
-        ImGui::SetNextWindowViewport(viewport->ID);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus ;
+            // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+            // because it would be confusing to have two docking targets within each others.
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking; //ImGuiWindowFlags_MenuBar
 
-        // When using ImGuiDockNodeFlags_PassthruDockspace, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
-        // ImGui::SetNextWindowBgAlpha(0.0f);
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->Pos);
+            ImGui::SetNextWindowSize(viewport->Size);
+            ImGui::SetNextWindowViewport(viewport->ID);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+            window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus ;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-        bool p_open;
-        ImGui::Begin("GeoflowDockSpace", &p_open, window_flags);
-        ImGui::PopStyleVar();
+            // When using ImGuiDockNodeFlags_PassthruDockspace, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
+            // ImGui::SetNextWindowBgAlpha(0.0f);
 
-        ImGui::PopStyleVar(2);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            bool p_open;
+            ImGui::Begin("GeoflowDockSpace", &p_open, window_flags);
+            ImGui::PopStyleVar();
 
-        // Dockspace
-        ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
-        ImGui::End();
-        
-        on_draw();
-        ImGui::ColorEdit4("Clear color", (float*)&clear_color);
-        ImGui::Checkbox("Show demo window", &show_demo_window);
+            ImGui::PopStyleVar(2);
 
-        if (show_demo_window)
-        {
-            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-            ImGui::ShowDemoWindow(&show_demo_window);
+            // Dockspace
+            ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+            ImGui::End();
+            
+            on_draw();
+            ImGui::ColorEdit4("Clear color", (float*)&clear_color);
+            ImGui::Checkbox("Show demo window", &show_demo_window);
+
+            if (show_demo_window)
+            {
+                ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+                ImGui::ShowDemoWindow(&show_demo_window);
+            }
+
+            // ImGui Rendering
+            ImGui::Render();
+            // int display_w, display_h;
+            
+            // glfwGetFramebufferSize(window, &display_w, &display_h);
+            // glViewport(0, 0, display_w, display_h);
+            
+            // glClear(GL_COLOR_BUFFER_BIT);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            
+            glfwMakeContextCurrent(window);
+            glfwSwapBuffers(window);
         }
-
-        // ImGui Rendering
-        ImGui::Render();
-        // int display_w, display_h;
-        
-        // glfwGetFramebufferSize(window, &display_w, &display_h);
-        // glViewport(0, 0, display_w, display_h);
-        
-        // glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        
-        glfwMakeContextCurrent(window);
-        glfwSwapBuffers(window);
-
         // macOS Mojave workaround for GLFW not initially drawing anything, see https://github.com/glfw/glfw/issues/1334
         #ifdef __APPLE__
             static bool macMoved = false;
@@ -225,11 +229,11 @@ void App::cursor_pos_callback(
 void App::mouse_button_callback(
     GLFWwindow* window, int button, int action, int mods
     ){
+    redraw_counter=2;
     ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
     if (ImGui::GetIO().WantCaptureMouse) {
         return;
     }
-
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);
     a->on_mouse_press(button, action, mods);
