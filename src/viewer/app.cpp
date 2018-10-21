@@ -169,10 +169,18 @@ void App::run(){
         
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
-        // for(int i=1; i>0; i--){
-        //     draw(); //second draw to ensure imgui is updated in case of glfwWaitEvents()
-        //     // not very elegant this and problem with modals...
-        // }
+
+        // macOS Mojave workaround for GLFW not initially drawing anything, see https://github.com/glfw/glfw/issues/1334
+        #ifdef __APPLE__
+            static bool macMoved = false;
+
+            if(!macMoved) {
+                int x, y;
+                glfwGetWindowPos(window, &x, &y);
+                glfwSetWindowPos(window, ++x, y);
+                macMoved = true;
+            }
+        #endif
 
         // sleep for the remainder of the rendering budget of this frame
         auto duration = std::chrono::high_resolution_clock::now()-start;
