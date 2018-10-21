@@ -95,7 +95,7 @@ void App::run(){
     bool show_demo_window = false;
 
     // we'll try to make each iteration last at least this long, ie a limit on the FPS
-    auto target_frame_duration = 16.667ms; // ~60FPS
+    auto target_frame_duration = 16ms; // ~60FPS
     while (!glfwWindowShouldClose(window))
     { 
         auto start = std::chrono::high_resolution_clock::now();
