@@ -75,7 +75,7 @@ namespace ImGui
 				ImVec2 p2 = p1 + (ImVec2(+50.0f, 0.0f) * canvas_scale_);
 				ImVec2 p3 = p4 + (ImVec2(-50.0f, 0.0f) * canvas_scale_);
 
-				if (element_.state_ == NodesState_Default)
+				if (element_.state_ == NodesState_Default && ImGui::IsWindowHovered())
 				{
 					const float distance_squared = GetSquaredDistanceToBezierCurve(ImGui::GetIO().MousePos, p1, p2, p3, p4);
 
@@ -860,7 +860,7 @@ namespace ImGui
 					ImGui::Text("%s", connection->name_.c_str());
 				}
 
-				if (IsConnectorHovered(connection_pos, (input_name_size.y / 2.0f)))
+				if (ImGui::IsWindowHovered() && IsConnectorHovered(connection_pos, (input_name_size.y / 2.0f)))
 				{
 					consider_io |= element_.state_ == NodesState_Default;
 					consider_io |= element_.state_ == NodesState_HoverConnection;
@@ -990,7 +990,7 @@ namespace ImGui
 					ImGui::Text("%s", connection->name_.c_str());
 				}
 
-				if (IsConnectorHovered(connection_pos, (output_name_size.y / 2.0f)))
+				if (ImGui::IsWindowHovered() && IsConnectorHovered(connection_pos, (output_name_size.y / 2.0f)))
 				{
 					consider_io |= element_.state_ == NodesState_Default;
 					consider_io |= element_.state_ == NodesState_HoverConnection;

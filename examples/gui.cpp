@@ -14,7 +14,7 @@ using json = nlohmann::json;
 
 // #include <boost/program_options.hpp>
 
-static auto a = std::make_shared<poviApp>(1280, 800, "Step edge detector");
+static auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
 static geoflow::NodeManager N;
 static ImGui::Nodes nodes_(N, *a);
 
