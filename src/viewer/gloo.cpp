@@ -383,9 +383,9 @@ void Painter::init() {
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_pointsize", 2,0,20)));
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1i("u_color_mode")));
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform4f("u_color")));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_ambient", 0.65,0,1)));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_ambient", 0.85,0,1)));
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_diffuse", 1.0,0,1)));
-    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_specular", 0.5,0,1)));
+    uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_specular", 0.1,0,1)));
     attributes["position"] = std::make_unique<Buffer>();
     attributes["normal"] = std::make_unique<Buffer>();
     attributes["value"] = std::make_unique<Buffer>();
