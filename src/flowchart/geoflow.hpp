@@ -10,6 +10,7 @@
 #include <set>
 #include <queue>
 #include <optional>
+#include <unordered_map>
 
 #include <iostream>
 #include <sstream>
@@ -29,6 +30,16 @@ namespace geoflow {
   typedef std::vector<size_t> vec1ui;
 
   enum gfGeometryType {points, lines, line_strip, line_loop, triangles};
+
+  typedef std::vector< vec3f > Geometry;
+  typedef std::unordered_map< std::string, std::vector<float>> AttributeMap;
+  struct Feature {
+      gfGeometryType type;
+      Geometry geom;
+      AttributeMap attr;
+  };
+
+  // this is deprecated:
   enum gfGeometryFormat {simple, count, index_count};
   struct gfGeometry3D {
     gfGeometryType type;
