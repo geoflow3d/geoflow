@@ -64,15 +64,16 @@ namespace geoflow {
     TT_vec6f,
     TT_vec_float,
     TT_colmap,
-    TT_geometry
+    TT_geometry,
+    TT_feature
   };
   class Terminal {
     public:
     Terminal(Node& parent_gnode, TerminalType type):parent(parent_gnode), type(type) {
-      std::cout<< "Constructing geoflow::Terminal " << this << "\n";
+      // std::cout<< "Constructing geoflow::Terminal " << this << "\n";
     }; 
     ~Terminal() {
-      std::cout<< "Destructing geoflow::Terminal " << this << "\n";
+      // std::cout<< "Destructing geoflow::Terminal " << this << "\n";
     }
 
     TerminalType type;
