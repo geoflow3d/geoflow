@@ -131,7 +131,7 @@ namespace geoflow {
     Node(NodeManager& manager, std::string name) : manager(manager), type_name(name){
     };
     ~Node(){
-      std::cout<< "Destructing geoflow::Node " << this << "\n";
+      // std::cout<< "Destructing geoflow::Node " << this << "\n";
       notify_children();
     }
 
