@@ -108,7 +108,7 @@ class GradientMapperNode:public Node {
   ImGradientMark* draggingMark = nullptr;
   ImGradientMark* selectedMark = nullptr;
 
-  size_t n_bins=100;
+  int n_bins=100;
   float minval, maxval, bin_width;
   size_t max_bin_count;
   vec1f histogram;
@@ -157,6 +157,7 @@ class GradientMapperNode:public Node {
 
   void gui(){
     ImGui::DragFloatRange2("range", &u_minval->get_value(), &u_maxval->get_value(), 0.1f, minval, maxval, "Min: %.2f", "Max: %.2f");
+    ImGui::DragInt("N of bins", &n_bins);
     if(inputTerminals["values"]->cdata.has_value())
       if(ImGui::Button("Rescale histogram")){
         compute_histogram(u_minval->get_value(), u_maxval->get_value());

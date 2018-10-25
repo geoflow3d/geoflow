@@ -173,6 +173,7 @@ namespace geoflow {
 
   class NodeManager {
     public:
+    std::array<double,3> data_offset; //use std::optional?
     NodeManager(){};
     std::queue<std::shared_ptr<Node>> node_queue;
     std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;
