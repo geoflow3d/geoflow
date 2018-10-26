@@ -2,7 +2,7 @@
 flowchart tool for geo-spatial data processing
 
 ## Building
-Requires compiler with c++17 support.
+Requires compiler with c++17 support  (see https://en.cppreference.com/w/cpp/compiler_support).
 
 All dependencies are included in this repository. Build with cmake:
 ```
