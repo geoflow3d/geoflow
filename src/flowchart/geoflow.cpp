@@ -169,6 +169,11 @@ using namespace geoflow;
     oT.connect(iT);
     return true;
   }
+  bool geoflow::is_compatible(Terminal& t1, Terminal& t2) {
+    auto& oT = dynamic_cast<OutputTerminal&>(t1);
+    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    return oT.is_compatible(iT);
+  }
   void geoflow::disconnect(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);
     auto& iT = dynamic_cast<InputTerminal&>(t2);

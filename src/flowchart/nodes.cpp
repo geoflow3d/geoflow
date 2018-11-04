@@ -128,7 +128,11 @@ namespace ImGui
 	{
 		std::shared_ptr<geoflow::Node> gf_node;
 		++id_;
-		if (type == "PoviPainter"){
+		if (type == "Painter"){
+			auto painter_node = std::make_shared<PainterNode>(gf_manager);
+			painter_node->add_to(pv_app, name);
+			gf_node = painter_node;
+		} else if (type == "PoviPainter"){
 			auto painter_node = std::make_shared<PoviPainterNode>(gf_manager);
 			painter_node->add_to(pv_app, name);
 			gf_node = painter_node;
@@ -1240,10 +1244,15 @@ namespace ImGui
 					}
 				}
 				if (ImGui::MenuItem("PoviPainter"))
-					{					
-						element_.Reset();
-						element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, "PoviPainter");
-					}
+				{					
+					element_.Reset();
+					element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, "PoviPainter");
+				}
+				if (ImGui::MenuItem("Painter"))
+				{					
+					element_.Reset();
+					element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, "Painter");
+				}
 				ImGui::EndPopup();
 			}
 

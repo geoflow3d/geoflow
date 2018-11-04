@@ -17,7 +17,7 @@
       "canvas-pos":[0,-100]
     },
     "CubePainter": {
-      "type": "PoviPainter",
+      "type": "Painter",
       "parameters": {
         "radius": 2,
         "subdivision": 16
@@ -35,7 +35,7 @@
   },
 
   "links": [
-    {"source":"MyCube::vertices", "target":"CubePainter::vertices"},
+    {"source":"MyCube::triangle_collection", "target":"CubePainter::geometries"},
     {"source":"MyCube::normals", "target":"CubePainter::normals"},
     {"source":"MyTriangle::vertices", "target":"TrianglePainter::vertices"}
   ]

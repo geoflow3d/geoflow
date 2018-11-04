@@ -159,6 +159,16 @@ template<typename T> void Buffer::set_data(T* d, size_t length_, size_t stride_)
 }
 template void Buffer::set_data(GLfloat*, size_t, size_t);
 // template void Buffer::set_data(double*, size_t);
+template<typename T> void Buffer::reserve_data(size_t length_, size_t dim) {
+    element_size = sizeof(T);
+    length = length_;
+    stride = dim;
+    
+    activate();
+    glBufferData(GL_ARRAY_BUFFER, element_size*stride*length, nullptr, GL_STATIC_DRAW);
+    deactivate();
+    has_data = false;
+}
 template<typename T> void Buffer::set_subdata(T* d, size_t offset, size_t length_)
 {
     element_size = sizeof(T);
@@ -278,18 +288,18 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, size_t st
 bool Painter::has_subdata() {
     return subdata_pairs.size()>0;
 }
-template<GeometryType GT> void Painter::set_geometry(const GeometryCollection<vec3f, GT>& geoms) {
+template<GeometryType GT> void Painter::set_geometry(GeometryCollection<vec3f, GT>& geoms) {
     subdata_pairs.clear();
     bbox.clear();
-    const auto gtype = geoms.type();
-    const auto count = geoms.vertex_count();
-    const auto dim = geoms.dimension();
-    // fixed length geometries:
+    auto gtype = geoms.type();
+    auto count = geoms.vertex_count();
+    auto dim = geoms.dimension();
+    // variable length geometries:
     // if (gtype==line_string || gtype==linear_ring) {
-        attributes["position"]->set_data(nullptr, count, dim);
+        attributes["position"]->reserve_data<GLfloat>(count, dim);
         size_t offset=0;
         for (auto& geom : geoms.geometries()) {
-            const size_t n = geom.size();
+            size_t n = geom.size();
             attributes["position"]->set_subdata(geom.data(), offset, n);
             subdata_pairs.push_back(std::make_pair(offset, n));
             offset += n;
@@ -302,17 +312,17 @@ template<GeometryType GT> void Painter::set_geometry(const GeometryCollection<ve
         draw_mode = GL_LINE_LOOP;
     enable_attribute("position");
 }
-template<GeometryType GT> void Painter::set_geometry(const GeometryCollection<arr3f, GT>& geoms) {
+template<GeometryType GT> void Painter::set_geometry(GeometryCollection<arr3f, GT>& geoms) {
     subdata_pairs.clear();
     bbox.clear();
-    const auto gtype = geoms.type();
-    const auto count = geoms.vertex_count();
-    const auto dim = geoms.dimension();
+    auto gtype = geoms.type();
+    auto count = geoms.vertex_count();
+    auto dim = geoms.dimension();
     // fixed length geometries:
     // if(gtype == point || gtype == triangle) {
         attributes["position"]->set_data(geoms.geometries().data(), count, dim);
         bbox.add(geoms.geometries());
-    // variable length geometries:
+    
     // }
     if (gtype == point)
         draw_mode = GL_POINTS;
@@ -320,10 +330,10 @@ template<GeometryType GT> void Painter::set_geometry(const GeometryCollection<ar
         draw_mode = GL_TRIANGLES;
     enable_attribute("position");
 }
-template<> void Painter::set_geometry(const GeometryCollection<vec3f, line_string>& geoms);
-template<> void Painter::set_geometry(const GeometryCollection<vec3f, linear_ring>& geoms);
-template<> void Painter::set_geometry(const GeometryCollection<arr3f, point>& geoms);
-template<> void Painter::set_geometry(const GeometryCollection<arr3f, triangle>& geoms);
+template void Painter::set_geometry(GeometryCollection<vec3f, line_string>& geoms);
+template void Painter::set_geometry(GeometryCollection<vec3f, linear_ring>& geoms);
+template void Painter::set_geometry(GeometryCollection<arr3f, point>& geoms);
+template void Painter::set_geometry(GeometryCollection<arr3f, triangle>& geoms);
 
 void Painter::clear_attribute(const std::string name) {
     if(name == "position")

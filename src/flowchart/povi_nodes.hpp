@@ -459,7 +459,7 @@ class TriangleNode:public Node {
 class CubeNode:public Node {
   public:
   CubeNode(NodeManager& manager):Node(manager, "Triangle") {
-    add_output("vertices", TT_vec3f);
+    add_output("triangle_collection", TT_triangle_collection);
     add_output("normals", TT_vec3f);
   }
 
@@ -478,28 +478,33 @@ class CubeNode:public Node {
     point p6 = {1.0f, 1.0f, 1.0f};
     point p7 = {-1.0f, 1.0f, 1.0f};
 
-    vec3f vertices = {
-      p2,p1,p0, p0,p3,p2,
-      p4,p5,p6, p6,p7,p4,
-      p0,p1,p5, p5,p4,p0,
-      p1,p2,p6, p6,p5,p1,
-      p2,p3,p7, p7,p6,p2,
-      p3,p0,p4, p4,p7,p3
-    };
+    TriangleCollection tc;
+    tc.push_back({p2,p1,p0});
+    tc.push_back({p0,p3,p2});
+    tc.push_back({p4,p5,p6});
+    tc.push_back({p6,p7,p4});
+    tc.push_back({p0,p1,p5});
+    tc.push_back({p5,p4,p0});
+    tc.push_back({p1,p2,p6});
+    tc.push_back({p6,p5,p1});
+    tc.push_back({p2,p3,p7});
+    tc.push_back({p7,p6,p2});
+    tc.push_back({p3,p0,p4});
+    tc.push_back({p4,p7,p3});
 
     vec3f normals;
     //counter-clockwise winding order
-    for(int i=0; i<vertices.size()/3; i++){
-      auto a = glm::make_vec3(vertices[i*3+0].data());
-      auto b = glm::make_vec3(vertices[i*3+1].data());
-      auto c = glm::make_vec3(vertices[i*3+2].data());
+    for(int i=0; i<tc.vertex_count()/3; i++){
+      auto a = glm::make_vec3(tc.geometries()[i*3+0].data());
+      auto b = glm::make_vec3(tc.geometries()[i*3+1].data());
+      auto c = glm::make_vec3(tc.geometries()[i*3+2].data());
       auto n = glm::cross(b-a, c-b);
 
       normals.push_back({n.x,n.y,n.z});
       normals.push_back({n.x,n.y,n.z});
       normals.push_back({n.x,n.y,n.z});
     }
-    set_value("vertices", vertices);
+    set_value("triangle_collection", tc);
     set_value("normals", normals);
   }
 };

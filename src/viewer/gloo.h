@@ -117,6 +117,7 @@ public:
     size_t get_stride();
     size_t get_length();
 
+    template<typename T> void reserve_data(size_t length_, size_t dim);
     template<typename T> void set_data(T* data, size_t length, size_t stride);
     template<typename T> void set_subdata(T* data, size_t offset, size_t length);
 
@@ -300,8 +301,8 @@ class Painter : public BasePainter {
     }
     void set_attribute(std::string name, GLfloat* data, size_t n, size_t stride);
     bool has_subdata();
-    template<GeometryType GT> void set_geometry(const GeometryCollection<arr3f, GT>& geoms);
-    template<GeometryType GT> void set_geometry(const GeometryCollection<vec3f, GT>& geoms);
+    template<GeometryType GT> void set_geometry(GeometryCollection<arr3f, GT>& geoms);
+    template<GeometryType GT> void set_geometry(GeometryCollection<vec3f, GT>& geoms);
     void clear_attribute(const std::string name);
 
     void set_texture(std::weak_ptr<Texture1D> tex);

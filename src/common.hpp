@@ -23,10 +23,10 @@ enum GeometryType {
   triangle,
 };
 
-inline const size_t vertex_count(const vec3f& vec) {
+inline size_t get_vertex_count(const vec3f& vec) {
   return vec.size();
 }
-inline const size_t vertex_count(const std::vector<vec3f>& vec_of_vec) {
+inline size_t get_vertex_count(const std::vector<vec3f>& vec_of_vec) {
   size_t result=0;
   for (auto& vec : vec_of_vec) {
     result += vec.size();
@@ -47,7 +47,7 @@ template<typename geom_def, GeometryType GT> class GeometryCollection {
     return geometry_vec.size();
   }
   size_t vertex_count() {
-    return vertex_count(geometry_vec);
+    return get_vertex_count(geometry_vec);
   }
   size_t dimension() {
     return 3;
@@ -74,6 +74,7 @@ template<typename geom_def, GeometryType GT> class GeometryCollection {
 
 // could add template specialisations if we need special features for a geometry type collection
 class TriangleCollection:public GeometryCollection<arr3f, triangle> {
+  public:
   size_t size() {
     return geometry_vec.size()/3;
   }
