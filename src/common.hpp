@@ -33,11 +33,12 @@ inline const size_t vertex_count(const std::vector<vec3f>& vec_of_vec) {
   }
   return result;
 }
-inline const size_t vertex_count(const std::vector<std::array<arr3f,3>>& vec_of_vec) {
-  return vec_of_vec.size()*3;
-}
+// inline const size_t vertex_count(const std::vector<std::array<arr3f,3>>& vec_of_vec) {
+//   return vec_of_vec.size()*3;
+// }
 
 template<typename geom_def, GeometryType GT> class GeometryCollection {
+  protected:
   const GeometryType geometry_type = GT;
   std::vector<geom_def> geometry_vec; // geom_def = arr3f, vec3f, vecvec3f etc
 
@@ -47,6 +48,9 @@ template<typename geom_def, GeometryType GT> class GeometryCollection {
   }
   size_t vertex_count() {
     return vertex_count(geometry_vec);
+  }
+  size_t dimension() {
+    return 3;
   }
   void push_back(const geom_def& geom) {
     geometry_vec.push_back(geom);
@@ -69,11 +73,21 @@ template<typename geom_def, GeometryType GT> class GeometryCollection {
 };
 
 // could add template specialisations if we need special features for a geometry type collection
-
-typedef GeometryCollection<arr3f, point> PointCollection;
-typedef GeometryCollection<vec3f, line_string> LineStringCollection;
-typedef GeometryCollection<vec3f, linear_ring> LinearRingCollection;
-typedef GeometryCollection<std::array<arr3f,3>, triangle> TriangleCollection;
+class TriangleCollection:public GeometryCollection<arr3f, triangle> {
+  size_t size() {
+    return geometry_vec.size()/3;
+  }
+  void push_back(const std::array<arr3f,3>& triangle) {
+    geometry_vec.push_back(triangle[0]);
+    geometry_vec.push_back(triangle[1]);
+    geometry_vec.push_back(triangle[2]);
+  }
+};
+class PointCollection:public GeometryCollection<arr3f, point> {};
+// typedef GeometryCollection<arr3f, point> PointCollection;
+class LineStringCollection:public GeometryCollection<vec3f, line_string> {};
+class LinearRingCollection:public GeometryCollection<vec3f, linear_ring> {};
+// typedef GeometryCollection<arr3f, triangle> TriangleCollection;
 
 
 class Box {
@@ -116,6 +130,10 @@ class Box {
   void add(Box& otherBox){
       add(otherBox.min().data());
       add(otherBox.max().data());
+  }
+  void add(vec3f& vec){
+      for (auto& p : vec)
+        add(p.data());
   }
   void clear(){
       pmin.fill(0);
