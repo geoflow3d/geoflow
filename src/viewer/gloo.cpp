@@ -300,7 +300,7 @@ template<GeometryType GT> void Painter::set_geometry(GeometryCollection<vec3f, G
         size_t offset=0;
         for (auto& geom : geoms.geometries()) {
             size_t n = geom.size();
-            attributes["position"]->set_subdata(geom.data(), offset, n);
+            attributes["position"]->set_subdata(geom[0].data(), offset, n);
             subdata_pairs.push_back(std::make_pair(offset, n));
             offset += n;
             bbox.add(geom);
@@ -320,7 +320,7 @@ template<GeometryType GT> void Painter::set_geometry(GeometryCollection<arr3f, G
     auto dim = geoms.dimension();
     // fixed length geometries:
     // if(gtype == point || gtype == triangle) {
-        attributes["position"]->set_data(geoms.geometries().data(), count, dim);
+        attributes["position"]->set_data(geoms.geometries()[0].data(), count, dim);
         bbox.add(geoms.geometries());
     
     // }
