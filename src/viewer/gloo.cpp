@@ -135,9 +135,9 @@ void Buffer::deactivate()
 //     stride = stride+dim;
 // }
 
-std::vector<size_t> Buffer::get_fields() {
-    return data_fields;
-}
+// std::vector<size_t> Buffer::get_fields() {
+//     return data_fields;
+// }
 
 size_t Buffer::get_stride() {
     return stride;
@@ -146,25 +146,30 @@ size_t Buffer::get_length() {
     return length;
 }
 
-template<typename T> void Buffer::set_data(T* d, size_t n, std::initializer_list<int> dims)
+template<typename T> void Buffer::set_data(T* d, size_t length_, size_t stride_)
 {
     element_size = sizeof(T);
-    length = n;
+    length = length_;
+    stride = stride_;
     
-    data_fields.clear();
-    stride = 0;
-    for(auto dim:dims){
-        data_fields.push_back(dim);
-        stride += dim;
-    }
     activate();
-    glBufferData(GL_ARRAY_BUFFER, element_size*length, d, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, element_size*stride*length, d, GL_STATIC_DRAW);
     deactivate();
     has_data = true;
 }
-template void Buffer::set_data(GLfloat*, size_t, std::initializer_list<int>);
+template void Buffer::set_data(GLfloat*, size_t, size_t);
 // template void Buffer::set_data(double*, size_t);
+template<typename T> void Buffer::set_subdata(T* d, size_t offset, size_t length_)
+{
+    element_size = sizeof(T);
+    length = length_;
 
+    activate();
+    glBufferSubData(GL_ARRAY_BUFFER, element_size*stride*offset, element_size*stride*length, d);
+    deactivate();
+    has_data = true;
+}
+template void Buffer::set_subdata(GLfloat*, size_t, size_t);
 
 void BasePainter::init()
 {
@@ -181,8 +186,8 @@ void BasePainter::attach_shader(std::string const & filename)
     shader->attach(filename);
 }
 
-void BasePainter::set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims) {
-    attributes[name]->set_data(data, n, dims);
+void BasePainter::set_attribute(std::string name, GLfloat* data, size_t n, size_t dim) {
+    attributes[name]->set_data(data, n, dim);
     enable_attribute(name);
 }
 // void BasePainter::set_texture(unsigned char * image, int width) {
@@ -216,14 +221,6 @@ void BasePainter::setup_VertexArray()
         a.second->deactivate();
         // glEnableVertexAttribArray(loc);
     }
-    // // Position attribute
-    // int start=0, i=0;
-    // int stride = buffer->get_stride();
-    // for(int dim:buffer->get_fields()) {
-    //     glVertexAttribPointer(i, dim, GL_FLOAT, GL_FALSE, stride * buffer->element_bytesize(), (GLvoid*)(start * buffer->element_bytesize()));
-    //     glEnableVertexAttribArray(i++);
-    //     start = start+dim;
-    // }
 
     glBindVertexArray(0); // Unbind VAO
 }
@@ -240,7 +237,7 @@ void hudPainter::init() {
         0,  1
     };
     attributes["position"] = std::make_unique<Buffer>();
-    set_attribute("position", crosshair_lines.data(), crosshair_lines.size(), {2});
+    set_attribute("position", crosshair_lines.data(), crosshair_lines.size(), 2);
     set_drawmode(GL_LINES);
     BasePainter::init();
 }
@@ -258,15 +255,16 @@ void hudPainter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & project
 
     glBindVertexArray(mVertexArray);
     if (attributes["position"]->get_length()>0) {
-        auto n = attributes["position"]->get_length()/attributes["position"]->get_stride();
+        auto n = attributes["position"]->get_length();
         glDrawArrays(draw_mode, 0, n);
     }   
     glBindVertexArray(0);
 }
 
 
-void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims) {
+void Painter::set_attribute(std::string name, GLfloat* data, size_t n, size_t stride) {
     if(name == "position") {
+        subdata_pairs.clear();
         bbox.clear();
         for(size_t i=0; i<n/3; i++) {
             bbox.add(&data[i*3]);
@@ -274,9 +272,58 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, std::init
         std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
     }
 
-    attributes[name]->set_data(data, n, dims);
+    attributes[name]->set_data(data, n, stride);
     enable_attribute(name);
 }
+bool Painter::has_subdata() {
+    return subdata_pairs.size()>0;
+}
+template<GeometryType GT> void Painter::set_geometry(const GeometryCollection<vec3f, GT>& geoms) {
+    subdata_pairs.clear();
+    bbox.clear();
+    const auto gtype = geoms.type();
+    const auto count = geoms.vertex_count();
+    const auto dim = geoms.dimension();
+    // fixed length geometries:
+    // if (gtype==line_string || gtype==linear_ring) {
+        attributes["position"]->set_data(nullptr, count, dim);
+        size_t offset=0;
+        for (auto& geom : geoms.geometries()) {
+            const size_t n = geom.size();
+            attributes["position"]->set_subdata(geom.data(), offset, n);
+            subdata_pairs.push_back(std::make_pair(offset, n));
+            offset += n;
+            bbox.add(geom);
+        }
+    // }
+    if (gtype == line_string)
+        draw_mode = GL_LINE_STRIP;
+    else if (gtype == linear_ring)
+        draw_mode = GL_LINE_LOOP;
+    enable_attribute("position");
+}
+template<GeometryType GT> void Painter::set_geometry(const GeometryCollection<arr3f, GT>& geoms) {
+    subdata_pairs.clear();
+    bbox.clear();
+    const auto gtype = geoms.type();
+    const auto count = geoms.vertex_count();
+    const auto dim = geoms.dimension();
+    // fixed length geometries:
+    // if(gtype == point || gtype == triangle) {
+        attributes["position"]->set_data(geoms.geometries().data(), count, dim);
+        bbox.add(geoms.geometries());
+    // variable length geometries:
+    // }
+    if (gtype == point)
+        draw_mode = GL_POINTS;
+    else if (gtype == triangle)
+        draw_mode = GL_TRIANGLES;
+    enable_attribute("position");
+}
+template<> void Painter::set_geometry(const GeometryCollection<vec3f, line_string>& geoms);
+template<> void Painter::set_geometry(const GeometryCollection<vec3f, linear_ring>& geoms);
+template<> void Painter::set_geometry(const GeometryCollection<arr3f, point>& geoms);
+template<> void Painter::set_geometry(const GeometryCollection<arr3f, triangle>& geoms);
 
 void Painter::clear_attribute(const std::string name) {
     if(name == "position")
@@ -311,7 +358,7 @@ void Painter::gui() {
     if(is_initialised()) {
         size_t n = 0;
         if (attributes["position"]->get_length()>0)
-            n = attributes["position"]->get_length()/attributes["position"]->get_stride();
+            n = attributes["position"]->get_length();
         ImGui::Text("[%zu vertices]", n);
     }
     {
@@ -413,13 +460,9 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     }
     shader->activate();
 
-    // note all shaders have these! eg crosshair painter
     auto mvp = projection*view*model;
     shader->bind("u_mvp", mvp);
     shader->bind("u_mv_normal", glm::mat3(glm::transpose(glm::inverse(view*model))));
-    // shader->bind("u_projection", projection);
-    // shader->bind("u_view", view);
-    // shader->bind("u_model", model);
 
     for (auto &u: uniforms) {
         u->bind(*shader);
@@ -432,8 +475,14 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
 
     glBindVertexArray(mVertexArray);
     if (attributes["position"]->get_length()>0) {
-        auto n = attributes["position"]->get_length()/attributes["position"]->get_stride();
-        glDrawArrays(draw_mode, 0, n);
+        if(has_subdata()){
+            for (auto& offset_len : subdata_pairs) {
+                glDrawArrays(draw_mode, offset_len.first, offset_len.second);
+            }
+        } else {
+            auto n = attributes["position"]->get_length();
+            glDrawArrays(draw_mode, 0, n);
+        }
     }   
     glBindVertexArray(0);
 }

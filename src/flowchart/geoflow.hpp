@@ -11,23 +11,25 @@
 #include <queue>
 #include <optional>
 #include <unordered_map>
+#include <exception>
 
 #include <iostream>
 #include <sstream>
 
-#include "../viewer/box.hpp"
+#include "../common.hpp"
 
 namespace geoflow {
 
+  struct ConnectionException : public std::exception
+  {
+    const char * what () const throw ()
+      {
+        return "Terminals have incompatible types!";
+      }
+  };
+
   class Node;
   class NodeManager;
-
-
-  typedef std::vector<std::array<float,3>> vec3f;
-  typedef std::vector<std::array<float,2>> vec2f;
-  typedef std::vector<int> vec1i;
-  typedef std::vector<float> vec1f;
-  typedef std::vector<size_t> vec1ui;
 
   enum gfGeometryType {points, lines, line_strip, line_loop, triangles};
 
@@ -65,18 +67,21 @@ namespace geoflow {
     TT_vec_float,
     TT_colmap,
     TT_geometry,
-    TT_feature
+    TT_feature,
+    TT_point_collection, 
+    TT_triangle_collection,
+    TT_line_string_collection,
+    TT_linear_ring_collection
   };
   class Terminal {
     public:
-    Terminal(Node& parent_gnode, TerminalType type):parent(parent_gnode), type(type) {
+    Terminal(Node& parent_gnode):parent(parent_gnode) {
       // std::cout<< "Constructing geoflow::Terminal " << this << "\n";
     }; 
     ~Terminal() {
       // std::cout<< "Destructing geoflow::Terminal " << this << "\n";
     }
 
-    TerminalType type;
     Node& parent;
     std::any cdata;
 
@@ -87,30 +92,33 @@ namespace geoflow {
   };
 
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
-
+    std::vector<TerminalType> types;
     public:
-    InputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
+    TerminalType connected_type;
+    InputTerminal(Node& parent_gnode, std::initializer_list<TerminalType> types): Terminal(parent_gnode), types(types) {};
     
     std::weak_ptr<InputTerminal> get_ptr(){
       return weak_from_this();
     }
+    std::vector<TerminalType> get_types() { return types; };
     void push(std::any data);
     void clear();
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     typedef std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connection_set;
-
+    TerminalType type;
     public:
     //use a set to make sure we don't get duplicate connection
     connection_set connections;
     
-    OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode, type){};
+    OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode), type(type){};
     ~OutputTerminal();
     
     std::weak_ptr<OutputTerminal> get_ptr(){
       return weak_from_this();
     }
 
+    bool is_compatible(InputTerminal& in);
     void connect(InputTerminal& in);
     void disconnect(InputTerminal& in);
     void propagate();
@@ -143,6 +151,7 @@ namespace geoflow {
     NodeManager& manager;
 
     void add_input(std::string name, TerminalType type);
+    void add_input(std::string name, std::initializer_list<TerminalType> types);
     void add_output(std::string name, TerminalType type);
 
     std::shared_ptr<Node> get_ptr(){return shared_from_this();};
@@ -195,9 +204,10 @@ namespace geoflow {
     
   };
 
-  bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
-  bool connect(Terminal* t1, Terminal* t2);
-  void disconnect(Terminal* t1, Terminal* t2);
-  bool detect_loop(Terminal* t1, Terminal* t2);
-  bool detect_loop(OutputTerminal* iT, InputTerminal* oT);
+  bool connect(Node& n1, Node& n2, std::string s1, std::string s2); // connect only node of the same nodemanager?
+  bool connect(Terminal& t1, Terminal& t2);
+  bool is_compatible(Terminal& t1, Terminal& t2);
+  void disconnect(Terminal& t1, Terminal& t2);
+  bool detect_loop(Terminal& t1, Terminal& t2);
+  bool detect_loop(OutputTerminal& iT, InputTerminal& oT);
 }

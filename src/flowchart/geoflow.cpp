@@ -43,12 +43,22 @@ using namespace geoflow;
       conn.lock()->push(cdata); // conn is the inputTerminal on the other end of the connection
     }
   }
-  void OutputTerminal::connect(InputTerminal& in) { 
+  bool OutputTerminal::is_compatible(InputTerminal& in) {
+    for (auto& in_type : in.get_types()) {
+      if (type == in_type) return true;
+    }
+    return false;
+  }
+  void OutputTerminal::connect(InputTerminal& in) {
+    //check type compatibility
+    if (!is_compatible(in) && !detect_loop(*this, *in.get_ptr().lock()))
+      throw ConnectionException();
     parent.on_connect(*this);
     connections.insert(in.get_ptr());
     if (has_data()) {
       in.push(cdata);
     }
+    in.connected_type = type;
   }
   void OutputTerminal::disconnect(InputTerminal& in) { 
     connections.erase(in.get_ptr());
@@ -57,10 +67,13 @@ using namespace geoflow;
     in.parent.notify_children();
   }
 
-  void Node::add_input(std::string name, TerminalType type) {
+  void Node::add_input(std::string name, std::initializer_list<TerminalType> types) {
     inputTerminals[name] = std::make_shared<InputTerminal>(
-      *this, type
+      *this, types
     );
+  }
+  void Node::add_input(std::string name, TerminalType type) {
+    add_input(name, {type});
   }
   void Node::add_output(std::string name, TerminalType type) {
     outputTerminals[name] = std::make_shared<OutputTerminal>(
@@ -143,31 +156,31 @@ using namespace geoflow;
   bool geoflow::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
     auto oT = n1.outputTerminals[s1].get();
     auto iT = n2.inputTerminals[s2].get();
-    if (detect_loop(oT, iT))
+    if (detect_loop(*oT, *iT))
       return false;
     oT->connect(*iT);
     return true;
   }
-  bool geoflow::connect(Terminal* t1, Terminal* t2) {
-    auto oT = dynamic_cast<OutputTerminal*>(t1);
-    auto iT = dynamic_cast<InputTerminal*>(t2);
+  bool geoflow::connect(Terminal& t1, Terminal& t2) {
+    auto& oT = dynamic_cast<OutputTerminal&>(t1);
+    auto& iT = dynamic_cast<InputTerminal&>(t2);
     if (detect_loop(oT, iT))
       return false;
-    oT->connect(*iT);
+    oT.connect(iT);
     return true;
   }
-  void geoflow::disconnect(Terminal* t1, Terminal* t2) {
-    auto oT = dynamic_cast<OutputTerminal*>(t1);
-    auto iT = dynamic_cast<InputTerminal*>(t2);
-    oT->disconnect(*iT);
+  void geoflow::disconnect(Terminal& t1, Terminal& t2) {
+    auto& oT = dynamic_cast<OutputTerminal&>(t1);
+    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    oT.disconnect(iT);
   }
-  bool geoflow::detect_loop(Terminal* t1, Terminal* t2) {
-    auto oT = dynamic_cast<OutputTerminal*>(t1);
-    auto iT = dynamic_cast<InputTerminal*>(t2);
+  bool geoflow::detect_loop(Terminal& t1, Terminal& t2) {
+    auto& oT = dynamic_cast<OutputTerminal&>(t1);
+    auto& iT = dynamic_cast<InputTerminal&>(t2);
     return detect_loop(oT, iT);
   }
-  bool geoflow::detect_loop(OutputTerminal* outputT, InputTerminal* inputT) {
-    auto node = inputT->parent.get_ptr();
+  bool geoflow::detect_loop(OutputTerminal& outputT, InputTerminal& inputT) {
+    auto node = inputT.parent.get_ptr();
     std::queue<std::shared_ptr<Node>> nodes_to_check;
     std::set<std::shared_ptr<Node>> visited;
     nodes_to_check.push(node);
@@ -176,7 +189,7 @@ using namespace geoflow;
       nodes_to_check.pop();
       
       for (auto& oT : n->outputTerminals) {
-        if (oT.second.get() == outputT){
+        if (oT.second.get() == &outputT){
           return true;
         }
         for (auto& c :oT.second->connections) {

@@ -178,6 +178,120 @@ class GradientMapperNode:public Node {
   }
 };
 
+class PainterNode:public Node {
+  std::shared_ptr<Painter> painter;
+  std::weak_ptr<poviApp> pv_app;
+  
+  public:
+  std::string name = "mypainter";
+  PainterNode(NodeManager& manager):Node(manager, "Painter") {
+    painter = std::make_shared<Painter>();
+    // painter->set_attribute("position", nullptr, 0, {3});
+    // painter->set_attribute("value", nullptr, 0, {1});
+    painter->attach_shader("basic.vert");
+    painter->attach_shader("basic.frag");
+    painter->set_drawmode(GL_TRIANGLES);
+    // a.add_painter(painter, "mypainter");
+    add_input("geometries", {
+      TT_point_collection, 
+      TT_triangle_collection,
+      TT_line_string_collection,
+      TT_linear_ring_collection
+      });
+    add_input("normals", TT_vec3f);
+    add_input("colormap", TT_colmap);
+    add_input("values", TT_vec1f);
+    add_input("identifiers", TT_vec1i);
+  }
+  ~PainterNode() {
+    // note: this assumes we have only attached this painter to one poviapp
+    if (auto a = pv_app.lock()) {
+      std::cout << "remove painter\n";
+      a->remove_painter(painter);
+    } else std::cout << "remove painter failed\n";
+  }
+
+  void add_to(poviApp& a, std::string name) {
+    a.add_painter(painter, name);
+    pv_app = a.get_ptr();
+  }
+
+  void map_identifiers() {
+    if (get_value("identifiers").has_value() && get_value("colormap").has_value()) {
+      auto cmap = std::any_cast<ColorMap>(get_value("colormap"));
+      if (cmap.is_gradient) return;
+      auto values = std::any_cast<vec1i>(get_value("identifiers"));
+      vec1f mapped;
+      for(auto& v : values){
+        mapped.push_back(float(cmap.mapping[v])/256);
+      }
+      painter->set_attribute("identifier", mapped.data(), mapped.size(), 1);
+    }
+  }
+
+  void on_push(InputTerminal& t) {
+    // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
+    if(t.cdata.has_value() && painter->is_initialised()) {
+      if(inputTerminals["geometries"].get() == &t) {
+        if (t.connected_type == TT_point_collection) {
+          auto& gc = std::any_cast<PointCollection&>(t.cdata);
+          painter->set_geometry(gc);
+        } else if (t.connected_type == TT_triangle_collection) {
+          auto& gc = std::any_cast<TriangleCollection&>(t.cdata);
+          painter->set_geometry(gc);
+        } else if(t.connected_type == TT_line_string_collection) {
+          auto& gc = std::any_cast<LineStringCollection&>(t.cdata);
+          painter->set_geometry(gc);
+        } else if (t.connected_type == TT_linear_ring_collection) {
+          auto& gc = std::any_cast<LinearRingCollection&>(t.cdata);
+          painter->set_geometry(gc);
+        }
+      } else if(inputTerminals["normals"].get() == &t) {
+        auto& d = std::any_cast<vec3f&>(t.cdata);
+        painter->set_attribute("normal", d[0].data(), d.size(), 3);
+      } else if(inputTerminals["values"].get() == &t) {
+        auto& d = std::any_cast<vec1f&>(t.cdata);
+        painter->set_attribute("value", d.data(), d.size(), 1);
+      } else if(inputTerminals["identifiers"].get() == &t) {
+        map_identifiers();
+      } else if(inputTerminals["colormap"].get() == &t) {
+        auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+        if(cmap.is_gradient) {
+          painter->register_uniform(cmap.u_valmax);
+          painter->register_uniform(cmap.u_valmin);
+        } else {
+          map_identifiers();
+        }
+        painter->set_texture(cmap.tex);
+      }
+    }
+  }
+  void on_clear(InputTerminal& t) {
+    // clear attributes...
+    // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
+     if(inputTerminals["vertices"].get() == &t) {
+        painter->clear_attribute("position");
+      } else if(inputTerminals["values"].get() == &t) {
+        painter->clear_attribute("value");
+      } else if(inputTerminals["colormap"].get() == &t) {
+        if(t.cdata.has_value()) {
+          auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+          painter->unregister_uniform(cmap.u_valmax);
+          painter->unregister_uniform(cmap.u_valmin);
+        }
+        painter->remove_texture();
+      }
+  }
+
+  void gui(){
+    painter->gui();
+    // type: points, lines, triangles
+    // fp_painter->attach_shader("basic.vert");
+    // fp_painter->attach_shader("basic.frag");
+    // fp_painter->set_drawmode(GL_LINE_STRIP);
+  }
+};
+
 class PoviPainterNode:public Node {
   std::shared_ptr<Painter> painter;
   std::weak_ptr<poviApp> pv_app;
@@ -220,7 +334,7 @@ class PoviPainterNode:public Node {
       for(auto& v : values){
         mapped.push_back(float(cmap.mapping[v])/256);
       }
-      painter->set_attribute("identifier", mapped.data(), mapped.size(), {1});
+      painter->set_attribute("identifier", mapped.data(), mapped.size(), 1);
     }
   }
 
@@ -229,13 +343,13 @@ class PoviPainterNode:public Node {
     if(t.cdata.has_value() && painter->is_initialised()) {
       if(inputTerminals["vertices"].get() == &t) {
         auto& d = std::any_cast<vec3f&>(t.cdata);
-        painter->set_attribute("position", d[0].data(), d.size()*3, {3});
+        painter->set_attribute("position", d[0].data(), d.size(), 3);
       } else if(inputTerminals["normals"].get() == &t) {
         auto& d = std::any_cast<vec3f&>(t.cdata);
-        painter->set_attribute("normal", d[0].data(), d.size()*3, {3});
+        painter->set_attribute("normal", d[0].data(), d.size(), 3);
       } else if(inputTerminals["values"].get() == &t) {
         auto& d = std::any_cast<vec1f&>(t.cdata);
-        painter->set_attribute("value", d.data(), d.size(), {1});
+        painter->set_attribute("value", d.data(), d.size(), 1);
       } else if(inputTerminals["identifiers"].get() == &t) {
         map_identifiers();
       } else if(inputTerminals["colormap"].get() == &t) {

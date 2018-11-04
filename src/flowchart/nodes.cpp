@@ -150,14 +150,12 @@ namespace ImGui
 			std::cout << "&term " << input.second.get() << "\n";
 			auto connection = std::make_unique<Connection>(input.second);
 			connection->name_ = input.first;
-			connection->type_ = input.second->type;
 
 			node->inputs_.push_back(std::move(connection));
 		}
 		for (auto& output : gf_node->outputTerminals){
 			auto connection = std::make_unique<Connection>(output.second);
 			connection->name_ = output.first;
-			connection->type_ = output.second->type;
 
 			node->outputs_.push_back(std::move(connection));
 		}
@@ -842,11 +840,6 @@ namespace ImGui
 
 			for (auto& connection : node.inputs_)
 			{
-				// if (connection->type_ == ConnectionType_None)
-				// {
-				// 	continue;
-				// }
-
 				bool consider_io = false;
 
 				ImVec2 input_name_size = ImGui::CalcTextSize(connection->name_.c_str());
@@ -884,7 +877,7 @@ namespace ImGui
 						if (connection->input_)
 						{
 							connection->input_->connections_--;
-							geoflow::disconnect(connection->input_->gf_terminal.get(), connection->gf_terminal.get());
+							geoflow::disconnect(*connection->input_->gf_terminal.get(), *connection->gf_terminal.get());
 						}
 
 						connection->target_ = nullptr;
@@ -915,8 +908,8 @@ namespace ImGui
 					// check if this connection is legal (ie does not cause a loop in the graph)
 					if (	
 						element_.node_ != node.Get() 
-						&& element_.connection_->type_ == connection->type_ 
-						&& !geoflow::detect_loop(element_.connection_->gf_terminal.get(), connection->gf_terminal.get())
+						&& geoflow::is_compatible(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get()) //element_.connection_->type_ == connection->type_ 
+						&& !geoflow::detect_loop(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get())
 					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -930,14 +923,14 @@ namespace ImGui
 								if (connection->input_)
 								{
 									connection->input_->connections_--;
-									geoflow::disconnect(connection->input_->gf_terminal.get(), connection->gf_terminal.get());
+									geoflow::disconnect(*connection->input_->gf_terminal.get(), *connection->gf_terminal.get());
 								}
 								connection->target_ = element_.node_;
 								connection->input_ = element_.connection_;
 								connection->connections_ = 1;
 								element_.connection_->connections_++;
 
-								geoflow::connect(element_.connection_->gf_terminal.get(), connection->gf_terminal.get());
+								geoflow::connect(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get());
 								gf_manager.run(connection->gf_terminal->parent);
 								// std::cout << "connected " << element_.connection_->name_ << " to " <<connection->name_ <<"\n";
 
@@ -1034,8 +1027,8 @@ namespace ImGui
 					// check is draging input are not from the same node
 					if (
 						element_.node_ != node.Get() 
-						&& element_.connection_->type_ == connection->type_
-						&& !geoflow::detect_loop(connection->gf_terminal.get(), element_.connection_->gf_terminal.get())
+						&& geoflow::is_compatible(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get()) //element_.connection_->type_ == connection->type_
+						&& !geoflow::detect_loop(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get())
 					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -1051,7 +1044,7 @@ namespace ImGui
 								element_.connection_->input_ = connection.get();
 								element_.connection_->connections_ = 1;
 								
-								geoflow::connect(connection->gf_terminal.get(), element_.connection_->gf_terminal.get());
+								geoflow::connect(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get());
 								gf_manager.run(element_.connection_->gf_terminal->parent);
 								// std::cout << "connected " << connection->name_ << " to " << element_.connection_->name_ << "\n";
 
@@ -1195,7 +1188,7 @@ namespace ImGui
 				conn_source->connections_++;
 				conn_target->connections_++;
 
-				geoflow::connect(conn_source->gf_terminal.get(), conn_target->gf_terminal.get());
+				geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
 				gf_manager.run(conn_target->gf_terminal->parent);
 
 				// CreateNodeFromType(n.second, n.first);

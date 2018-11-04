@@ -19,7 +19,9 @@
 
 #include <imgui.h>
 
-#include "box.hpp"
+#include "../common.hpp"
+
+using namespace geoflow;
 
 class Shader
 {
@@ -111,11 +113,12 @@ public:
     size_t element_bytesize() { return element_size; }
 
     // void add_field(size_t dim);
-    std::vector<size_t> get_fields();
+    // std::vector<size_t> get_fields();
     size_t get_stride();
     size_t get_length();
 
-    template<typename T> void set_data(T* data, size_t n, std::initializer_list<int> dims);
+    template<typename T> void set_data(T* data, size_t length, size_t stride);
+    template<typename T> void set_subdata(T* data, size_t offset, size_t length);
 
 private:
     GLfloat* data;
@@ -247,8 +250,8 @@ public:
     // GLuint get() { return mVertexArray; }
 
     void attach_shader(std::string const & filename);
-    // void set_data(GLfloat* data, size_t n, std::initializer_list<int> dims);
-    virtual void set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims);
+    // void set_data(GLfloat* data, size_t n, size_t stride);
+    virtual void set_attribute(std::string name, GLfloat* data, size_t n, size_t stride);
     void enable_attribute(const std::string name);
     void disable_attribute(const std::string name);
     // void set_texture(unsigned char * image, int width);
@@ -295,7 +298,10 @@ class Painter : public BasePainter {
     geoflow::Box& get_bbox(){
         return bbox;
     }
-    void set_attribute(std::string name, GLfloat* data, size_t n, std::initializer_list<int> dims);
+    void set_attribute(std::string name, GLfloat* data, size_t n, size_t stride);
+    bool has_subdata();
+    template<GeometryType GT> void set_geometry(const GeometryCollection<arr3f, GT>& geoms);
+    template<GeometryType GT> void set_geometry(const GeometryCollection<vec3f, GT>& geoms);
     void clear_attribute(const std::string name);
 
     void set_texture(std::weak_ptr<Texture1D> tex);
@@ -308,6 +314,7 @@ class Painter : public BasePainter {
     
 
     private:
+    std::vector<std::pair<size_t,size_t>> subdata_pairs;
     void init();
     geoflow::Box bbox;
     std::weak_ptr<Texture1D> texture;

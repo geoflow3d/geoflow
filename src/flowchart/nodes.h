@@ -148,7 +148,6 @@ namespace ImGui
 		{
 			ImVec2 position_;
 			std::string name_;
-			geoflow::TerminalType type_;
 
 			Node* target_;
 			Connection* input_;
@@ -159,8 +158,6 @@ namespace ImGui
 			Connection(std::shared_ptr<geoflow::Terminal> gf_term)
 			{
 				position_ = ImVec2(0.0f, 0.0f);
-
-				// type_ = ConnectionType_None;
 
 				target_ = nullptr;
 				input_ = nullptr;
