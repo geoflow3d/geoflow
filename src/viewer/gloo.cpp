@@ -336,8 +336,10 @@ template void Painter::set_geometry(GeometryCollection<arr3f, point>& geoms);
 template void Painter::set_geometry(GeometryCollection<arr3f, triangle>& geoms);
 
 void Painter::clear_attribute(const std::string name) {
-    if(name == "position")
+    if(name == "position"){
         bbox.clear();
+        subdata_pairs.clear();
+    }
     disable_attribute(name);
 }
 

@@ -269,7 +269,7 @@ class PainterNode:public Node {
   void on_clear(InputTerminal& t) {
     // clear attributes...
     // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
-     if(inputTerminals["vertices"].get() == &t) {
+     if(inputTerminals["geometries"].get() == &t) {
         painter->clear_attribute("position");
       } else if(inputTerminals["values"].get() == &t) {
         painter->clear_attribute("value");

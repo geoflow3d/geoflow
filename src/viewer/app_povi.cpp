@@ -78,6 +78,7 @@ void poviApp::on_draw(){
     // Render painters
     // Render to framebuffer
     ImGui::Begin("3D Viewer");
+    ImGui::BeginChild("3DChild", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking);
         auto size = ImGui::GetContentRegionAvail();
         width = size.x;
         height = size.y;
@@ -91,7 +92,7 @@ void poviApp::on_draw(){
                 on_scroll(io.MouseWheelH, io.MouseWheel);
 
             if (ImGui::IsMouseClicked(0)) {
-                if(io.KeyShift)
+                if(io.KeySuper)
                     drag = TRANSLATE;
                 else
                     drag = ROTATE;
@@ -130,6 +131,7 @@ void poviApp::on_draw(){
             ch_painter.render(model, view, projection);
 
         ImGui::Image((void*)(intptr_t)renderedTexture, size, ImVec2(0,1), ImVec2(1,0));
+    ImGui::EndChild();
     ImGui::End();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
