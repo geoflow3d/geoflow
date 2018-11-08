@@ -12,6 +12,7 @@
 #include <optional>
 #include <unordered_map>
 #include <exception>
+#include <optional>
 
 #include <iostream>
 #include <sstream>
@@ -89,6 +90,7 @@ namespace geoflow {
     virtual void clear() = 0;
     
     bool has_data() {return cdata.has_value();};
+    template<typename T> T get_data() { return std::any_cast<T>(cdata); };
   };
 
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
@@ -182,7 +184,7 @@ namespace geoflow {
 
   class NodeManager {
     public:
-    std::array<double,3> data_offset; //use std::optional?
+    std::optional<std::array<double,3>> data_offset;
     NodeManager(){};
     std::queue<std::shared_ptr<Node>> node_queue;
     std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;

@@ -301,8 +301,9 @@ class Painter : public BasePainter {
     }
     void set_attribute(std::string name, GLfloat* data, size_t n, size_t stride);
     bool has_subdata();
-    template<GeometryType GT> void set_geometry(GeometryCollection<arr3f, GT>& geoms);
-    template<GeometryType GT> void set_geometry(GeometryCollection<vec3f, GT>& geoms);
+    void set_geometry(GeometryCollection<vec3f>& geoms);
+    void set_geometry(GeometryCollection<arr3f>& geoms);
+    void set_geometry(GeometryCollection< std::array<arr3f,3> >& geoms);
     void clear_attribute(const std::string name);
 
     void set_texture(std::weak_ptr<Texture1D> tex);

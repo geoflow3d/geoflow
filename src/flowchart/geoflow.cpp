@@ -53,12 +53,12 @@ using namespace geoflow;
     //check type compatibility
     if (!is_compatible(in) && !detect_loop(*this, *in.get_ptr().lock()))
       throw ConnectionException();
+    in.connected_type = type;
     parent.on_connect(*this);
     connections.insert(in.get_ptr());
     if (has_data()) {
       in.push(cdata);
     }
-    in.connected_type = type;
   }
   void OutputTerminal::disconnect(InputTerminal& in) { 
     connections.erase(in.get_ptr());

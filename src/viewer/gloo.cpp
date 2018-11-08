@@ -288,52 +288,42 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, size_t st
 bool Painter::has_subdata() {
     return subdata_pairs.size()>0;
 }
-template<GeometryType GT> void Painter::set_geometry(GeometryCollection<vec3f, GT>& geoms) {
+void Painter::set_geometry(GeometryCollection<vec3f>& geoms) {
+    if (geoms.size()==0) return;
     subdata_pairs.clear();
     bbox.clear();
-    auto gtype = geoms.type();
-    auto count = geoms.vertex_count();
-    auto dim = geoms.dimension();
-    // variable length geometries:
-    // if (gtype==line_string || gtype==linear_ring) {
-        attributes["position"]->reserve_data<GLfloat>(count, dim);
-        size_t offset=0;
-        for (auto& geom : geoms.geometries()) {
-            size_t n = geom.size();
-            attributes["position"]->set_subdata(geom[0].data(), offset, n);
-            subdata_pairs.push_back(std::make_pair(offset, n));
-            offset += n;
-            bbox.add(geom);
-        }
-    // }
-    if (gtype == line_string)
-        draw_mode = GL_LINE_STRIP;
-    else if (gtype == linear_ring)
-        draw_mode = GL_LINE_LOOP;
-    enable_attribute("position");
-}
-template<GeometryType GT> void Painter::set_geometry(GeometryCollection<arr3f, GT>& geoms) {
-    subdata_pairs.clear();
-    bbox.clear();
-    auto gtype = geoms.type();
-    auto count = geoms.vertex_count();
-    auto dim = geoms.dimension();
-    // fixed length geometries:
-    // if(gtype == point || gtype == triangle) {
-        attributes["position"]->set_data(geoms.geometries()[0].data(), count, dim);
-        bbox.add(geoms.geometries());
     
-    // }
-    if (gtype == point)
-        draw_mode = GL_POINTS;
-    else if (gtype == triangle)
-        draw_mode = GL_TRIANGLES;
+    attributes["position"]->reserve_data<GLfloat>(geoms.vertex_count(), geoms.dimension());
+    size_t offset=0;
+    for (auto& geom : geoms) {
+        size_t n = geom.size();
+        attributes["position"]->set_subdata(geom[0].data(), offset, n);
+        subdata_pairs.push_back(std::make_pair(offset, n));
+        offset += n;
+        bbox.add(geom);
+    }
     enable_attribute("position");
 }
-template void Painter::set_geometry(GeometryCollection<vec3f, line_string>& geoms);
-template void Painter::set_geometry(GeometryCollection<vec3f, linear_ring>& geoms);
-template void Painter::set_geometry(GeometryCollection<arr3f, point>& geoms);
-template void Painter::set_geometry(GeometryCollection<arr3f, triangle>& geoms);
+void Painter::set_geometry(GeometryCollection<arr3f>& geoms) {
+    if (geoms.size()==0) return;
+    subdata_pairs.clear();
+    bbox.clear();
+    bbox.add(geoms.box());
+    
+    attributes["position"]->set_data(geoms[0].data(), geoms.vertex_count(), geoms.dimension());
+  
+    enable_attribute("position");
+}
+void Painter::set_geometry(GeometryCollection< std::array<arr3f,3> >& geoms) {
+    if (geoms.size()==0) return;
+    subdata_pairs.clear();
+    bbox.clear();
+    bbox.add(geoms.box());
+    
+    attributes["position"]->set_data(geoms[0][0].data(), geoms.vertex_count(), geoms.dimension());
+  
+    enable_attribute("position");
+}
 
 void Painter::clear_attribute(const std::string name) {
     if(name == "position"){

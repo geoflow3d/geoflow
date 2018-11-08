@@ -236,15 +236,19 @@ class PainterNode:public Node {
         if (t.connected_type == TT_point_collection) {
           auto& gc = std::any_cast<PointCollection&>(t.cdata);
           painter->set_geometry(gc);
+          painter->set_drawmode(GL_POINTS);
         } else if (t.connected_type == TT_triangle_collection) {
           auto& gc = std::any_cast<TriangleCollection&>(t.cdata);
           painter->set_geometry(gc);
+          painter->set_drawmode(GL_TRIANGLES);
         } else if(t.connected_type == TT_line_string_collection) {
           auto& gc = std::any_cast<LineStringCollection&>(t.cdata);
           painter->set_geometry(gc);
+          painter->set_drawmode(GL_LINE_STRIP);
         } else if (t.connected_type == TT_linear_ring_collection) {
           auto& gc = std::any_cast<LinearRingCollection&>(t.cdata);
           painter->set_geometry(gc);
+          painter->set_drawmode(GL_LINE_LOOP);
         }
       } else if(inputTerminals["normals"].get() == &t) {
         auto& d = std::any_cast<vec3f&>(t.cdata);
@@ -494,10 +498,10 @@ class CubeNode:public Node {
 
     vec3f normals;
     //counter-clockwise winding order
-    for(int i=0; i<tc.vertex_count()/3; i++){
-      auto a = glm::make_vec3(tc.geometries()[i*3+0].data());
-      auto b = glm::make_vec3(tc.geometries()[i*3+1].data());
-      auto c = glm::make_vec3(tc.geometries()[i*3+2].data());
+    for(auto& t : tc){
+      auto a = glm::make_vec3(t[0].data());
+      auto b = glm::make_vec3(t[1].data());
+      auto c = glm::make_vec3(t[2].data());
       auto n = glm::cross(b-a, c-b);
 
       normals.push_back({n.x,n.y,n.z});
