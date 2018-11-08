@@ -59,6 +59,10 @@ class Box {
       add(otherBox.min());
       add(otherBox.max());
   }
+  void add(Box& otherBox){
+      add(otherBox.min());
+      add(otherBox.max());
+  }
   void add(vec3f& vec){
       for (auto& p : vec)
         add(p);
@@ -79,18 +83,19 @@ class Box {
 template<typename geom_def> class GeometryCollection : public std::vector<geom_def> {
   protected:
   std::optional<Box> bbox;
+  virtual void compute_box() =0;
 
   public:
   virtual size_t vertex_count()=0;
-  virtual const Box& box()=0;
+  virtual Box& box() {return *bbox;};
   size_t dimension() {
     return 3;
   }
 };
 
 // geometry types:
-typedef arr3f Point;
-typedef std::array<Point, 3> Triangle;
+// typedef arr3f Point;
+typedef std::array<arr3f, 3> Triangle;
 typedef vec3f LineString;
 typedef vec3f LinearRing;
 class TriangleCollection:public GeometryCollection<Triangle> {
@@ -98,7 +103,7 @@ class TriangleCollection:public GeometryCollection<Triangle> {
   size_t vertex_count() {
     return size()*3;
   }
-  virtual const Box& box() {
+  virtual void compute_box() {
     if (!bbox.has_value()) {
       bbox=Box();
       for(auto& t : *this){
@@ -107,20 +112,18 @@ class TriangleCollection:public GeometryCollection<Triangle> {
         bbox->add(t[2]);
       }
     }
-    return *bbox;
   }
 };
-class PointCollection:public GeometryCollection<Point> {
+class PointCollection:public GeometryCollection<arr3f> {
   public:
   size_t vertex_count() {
     return size();
   }
-  virtual const Box& box() {
+  virtual void compute_box() {
     if (!bbox.has_value()) {
       bbox=Box();
       bbox->add(*this);
     }
-    return *bbox;
   }
 };
 // typedef GeometryCollection<arr3f, point> PointCollection;
@@ -133,14 +136,13 @@ class LineStringCollection:public GeometryCollection<LineString> {
     }
     return result;
   }
-  virtual const Box& box() {
+  virtual void compute_box() {
     if (!bbox.has_value()) {
       bbox=Box();
       for(auto& vec : *this){
         bbox->add(vec);
       }
     }
-    return *bbox;
   }
 };
 class LinearRingCollection:public GeometryCollection<LinearRing> {
@@ -151,14 +153,13 @@ class LinearRingCollection:public GeometryCollection<LinearRing> {
     }
     return result;
   }
-  virtual const Box& box() {
+  virtual void compute_box() {
     if (!bbox.has_value()) {
       bbox=Box();
       for(auto& vec : *this){
         bbox->add(vec);
       }
     }
-    return *bbox;
   }
 };
 
