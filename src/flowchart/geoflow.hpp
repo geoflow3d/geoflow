@@ -138,7 +138,7 @@ namespace geoflow {
   };
   class Node : public std::enable_shared_from_this<Node>{
     public:
-    Node(NodeManager& manager, std::string name) : manager(manager), type_name(name){
+    Node(NodeManager& manager) : manager(manager){
     };
     ~Node(){
       // std::cout<< "Destructing geoflow::Node " << this << "\n";
@@ -149,7 +149,6 @@ namespace geoflow {
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
 
     node_status status=WAITING;
-    const std::string type_name;
     NodeManager& manager;
 
     void add_input(std::string name, TerminalType type);

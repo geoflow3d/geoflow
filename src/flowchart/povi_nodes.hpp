@@ -27,7 +27,7 @@ class ColorMapperNode:public Node {
   std::map<int,int> value_counts;
 
   public:
-  ColorMapperNode(NodeManager& manager):Node(manager, "ColorMapper") {
+  ColorMapperNode(NodeManager& manager):Node(manager) {
     add_input("values", TT_vec1i);
     add_output("colormap", TT_colmap);
     texture = std::make_shared<Texture1D>();
@@ -114,7 +114,7 @@ class GradientMapperNode:public Node {
   vec1f histogram;
 
   public:
-  GradientMapperNode(NodeManager& manager):Node(manager, "GradientMapper") {
+  GradientMapperNode(NodeManager& manager):Node(manager) {
     add_input("values", TT_vec1f);
     add_output("colormap", TT_colmap);
     texture = std::make_shared<Texture1D>();
@@ -184,7 +184,7 @@ class PainterNode:public Node {
   
   public:
   std::string name = "mypainter";
-  PainterNode(NodeManager& manager):Node(manager, "Painter") {
+  PainterNode(NodeManager& manager):Node(manager) {
     painter = std::make_shared<Painter>();
     // painter->set_attribute("position", nullptr, 0, {3});
     // painter->set_attribute("value", nullptr, 0, {1});
@@ -302,7 +302,7 @@ class PoviPainterNode:public Node {
   
   public:
   std::string name = "mypainter";
-  PoviPainterNode(NodeManager& manager):Node(manager, "PoviPainter") {
+  PoviPainterNode(NodeManager& manager):Node(manager) {
     painter = std::make_shared<Painter>();
     // painter->set_attribute("position", nullptr, 0, {3});
     // painter->set_attribute("value", nullptr, 0, {1});
@@ -397,7 +397,7 @@ class PoviPainterNode:public Node {
 class Vec3SplitterNode:public Node {
   public:
 
-  Vec3SplitterNode(NodeManager& manager):Node(manager, "Vec3Splitter") {
+  Vec3SplitterNode(NodeManager& manager):Node(manager) {
     add_input("vec3f", TT_vec3f);
     add_output("x", TT_vec1f);
     add_output("y", TT_vec1f);
@@ -439,7 +439,7 @@ class TriangleNode:public Node {
   vec1f attrf = {1.0,5.5,10.0};
   vec1i attri = {1,42,42};
 
-  TriangleNode(NodeManager& manager):Node(manager, "Triangle") {
+  TriangleNode(NodeManager& manager):Node(manager) {
     add_output("vertices", TT_vec3f);
     add_output("colors", TT_vec3f);
     add_output("attrf", TT_vec1f);
@@ -462,7 +462,7 @@ class TriangleNode:public Node {
 };
 class CubeNode:public Node {
   public:
-  CubeNode(NodeManager& manager):Node(manager, "Triangle") {
+  CubeNode(NodeManager& manager):Node(manager) {
     add_output("triangle_collection", TT_triangle_collection);
     add_output("normals", TT_vec3f);
   }
