@@ -172,10 +172,9 @@ template<typename T> void Buffer::reserve_data(size_t length_, size_t dim) {
 template<typename T> void Buffer::set_subdata(T* d, size_t offset, size_t length_)
 {
     element_size = sizeof(T);
-    length = length_;
-
+    
     activate();
-    glBufferSubData(GL_ARRAY_BUFFER, element_size*stride*offset, element_size*stride*length, d);
+    glBufferSubData(GL_ARRAY_BUFFER, element_size*stride*offset, element_size*stride*length_, d);
     deactivate();
     has_data = true;
 }

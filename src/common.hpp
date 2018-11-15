@@ -86,8 +86,13 @@ template<typename geom_def> class GeometryCollection : public std::vector<geom_d
   virtual void compute_box() =0;
 
   public:
-  virtual size_t vertex_count()=0;
-  virtual Box& box() {return *bbox;};
+  virtual size_t vertex_count() const=0;
+  virtual Box& box() {
+    if (!bbox.has_value()){
+      compute_box();
+    }
+    return *bbox;
+  };
   size_t dimension() {
     return 3;
   }
@@ -100,7 +105,7 @@ typedef vec3f LineString;
 typedef vec3f LinearRing;
 class TriangleCollection:public GeometryCollection<Triangle> {
   public:
-  size_t vertex_count() {
+  size_t vertex_count() const {
     return size()*3;
   }
   virtual void compute_box() {
@@ -116,7 +121,7 @@ class TriangleCollection:public GeometryCollection<Triangle> {
 };
 class PointCollection:public GeometryCollection<arr3f> {
   public:
-  size_t vertex_count() {
+  size_t vertex_count() const{
     return size();
   }
   virtual void compute_box() {
@@ -129,7 +134,7 @@ class PointCollection:public GeometryCollection<arr3f> {
 // typedef GeometryCollection<arr3f, point> PointCollection;
 class LineStringCollection:public GeometryCollection<LineString> {
   public:
-  size_t vertex_count() {
+  size_t vertex_count() const{
     size_t result=0;
     for (auto& vec : *this) {
       result += vec.size();
@@ -146,7 +151,7 @@ class LineStringCollection:public GeometryCollection<LineString> {
   }
 };
 class LinearRingCollection:public GeometryCollection<LinearRing> {
-  size_t vertex_count() {
+  size_t vertex_count() const{
     size_t result=0;
     for (auto& vec : *this) {
       result += vec.size();

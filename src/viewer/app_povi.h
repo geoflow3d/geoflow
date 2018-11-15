@@ -77,9 +77,9 @@ xy_pos last_mouse_pos;
 
 geoflow::Box bbox;
 
-float fov = 60;
-float clip_near = 0.01;
-float clip_far = 500;
+float fov = 30;
+float clip_near = 1;
+float clip_far = 10000;
 std::shared_ptr<Uniform1f> cam_pos;
 std::shared_ptr<Uniform3f> light_direction;
 std::shared_ptr<Uniform4f> light_color;
