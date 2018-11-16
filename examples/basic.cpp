@@ -21,7 +21,7 @@ int main(void) {
   bool success = N.run(*number);
   if (success){
     try{
-      std::cout << "Result: " << std::any_cast<float>(adder2->outputTerminals["result"]->cdata) << "\n";
+      std::cout << "Result: " << adder2->outputs("result").get<float>() << "\n";
     } catch(const std::bad_any_cast& e) {
       std::cout << "Oops... " << e.what() << '\n';
     }

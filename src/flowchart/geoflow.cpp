@@ -154,11 +154,11 @@ using namespace geoflow;
   }
 
   bool geoflow::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
-    auto oT = n1.outputTerminals[s1].get();
-    auto iT = n2.inputTerminals[s2].get();
-    if (detect_loop(*oT, *iT))
+    auto oT = n1.outputs(s1);
+    auto iT = n2.inputs(s2);
+    if (detect_loop(oT, iT))
       return false;
-    oT->connect(*iT);
+    oT.connect(iT);
     return true;
   }
   bool geoflow::connect(Terminal& t1, Terminal& t2) {

@@ -89,8 +89,15 @@ namespace geoflow {
     virtual void push(std::any data) = 0;
     virtual void clear() = 0;
     
-    bool has_data() {return cdata.has_value();};
-    template<typename T> T get_data() { return std::any_cast<T>(cdata); };
+    bool has_data() {
+      return cdata.has_value();
+    };
+    template<typename T> T get() { 
+      return std::any_cast<T>(cdata); 
+    };
+    template<typename T> void set(T data) { 
+      push(std::any(data)); 
+    };
   };
 
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
@@ -138,6 +145,10 @@ namespace geoflow {
   };
   class Node : public std::enable_shared_from_this<Node>{
     public:
+
+    std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
+    std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
+
     Node(NodeManager& manager) : manager(manager){
     };
     ~Node(){
@@ -145,8 +156,12 @@ namespace geoflow {
       notify_children();
     }
 
-    std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
-    std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
+    InputTerminal& inputs(std::string name) {
+      return *inputTerminals.at(name);
+    }
+    OutputTerminal& outputs(std::string name) {
+      return *outputTerminals.at(name);
+    }
 
     node_status status=WAITING;
     NodeManager& manager;
@@ -162,12 +177,12 @@ namespace geoflow {
     void notify_children();
 
     // private:
-    std::any get_value(std::string input_name){
-      return inputTerminals[input_name]->cdata;
-    }
-    template<typename T> void set_value(const std::string output_name, T value){
-      outputTerminals[output_name]->push(std::any(value));
-    }
+    // std::any get_value(std::string input_name){
+    //   return inputTerminals[input_name]->cdata;
+    // }
+    // template<typename T> void set_value(const std::string output_name, T value){
+    //   outputTerminals[output_name]->push(std::any(value));
+    // }
 
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};

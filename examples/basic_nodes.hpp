@@ -15,18 +15,17 @@ class AdderNode:public Node {
   }
 
   void gui(){
-    auto a = outputTerminals["result"]->cdata;
-    if (a.has_value()) {
-      ImGui::Text("Result %f", std::any_cast<float>(a));
+    if (outputs("result").has_data()) {
+      ImGui::Text("Result %f", outputs("result").get<float>());
     }
   }
 
   void process(){
     std::cout << "begin AddderNode::process()" << "\n";
-    auto in1 = get_value("in1");
-    auto in2 = get_value("in2");
+    auto in1 = inputs("in1").get<float>();
+    auto in2 = inputs("in2").get<float>();
     std::this_thread::sleep_for(std::chrono::microseconds(200));
-    set_value("result", std::any_cast<float>(in1)+std::any_cast<float>(in2));
+    outputs("result").set(float(in1+in2));
     std::cout << "end AddderNode::process()" << "\n";
   }
 };
@@ -45,7 +44,7 @@ class NumberNode:public Node {
 
   void process(){
     std::cout << "begin NumberNode::process()" << "\n";
-    set_value("result", float(thenumber));
+    outputs("result").set(float(thenumber));
     std::cout << "end NumberNode::process()" << "\n";
   }
 };
@@ -58,7 +57,7 @@ class NumberNodeI:public Node {
 
   void process(){
     std::cout << "begin NumberNode::process()" << "\n";
-    set_value("result", int(1));
+    outputs("result").set(1);
     std::cout << "end NumberNode::process()" << "\n";
   }
 };
