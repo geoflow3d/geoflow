@@ -72,7 +72,8 @@ namespace geoflow {
     TT_point_collection, 
     TT_triangle_collection,
     TT_line_string_collection,
-    TT_linear_ring_collection
+    TT_linear_ring_collection,
+    TT_attribute_map_f
   };
   class Terminal {
     public:
@@ -177,12 +178,6 @@ namespace geoflow {
     void notify_children();
 
     // private:
-    // std::any get_value(std::string input_name){
-    //   return inputTerminals[input_name]->cdata;
-    // }
-    // template<typename T> void set_value(const std::string output_name, T value){
-    //   outputTerminals[output_name]->push(std::any(value));
-    // }
 
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
