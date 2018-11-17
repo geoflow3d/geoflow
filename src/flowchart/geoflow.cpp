@@ -154,8 +154,8 @@ using namespace geoflow;
   }
 
   bool geoflow::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
-    auto oT = n1.outputs(s1);
-    auto iT = n2.inputs(s2);
+    auto& oT = n1.outputs(s1);
+    auto& iT = n2.inputs(s2);
     if (detect_loop(oT, iT))
       return false;
     oT.connect(iT);

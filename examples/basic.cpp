@@ -20,11 +20,11 @@ int main(void) {
   connect(*adder, *adder2, "result", "in2");
   bool success = N.run(*number);
   if (success){
-    try{
+    // try{
       std::cout << "Result: " << adder2->outputs("result").get<float>() << "\n";
-    } catch(const std::bad_any_cast& e) {
-      std::cout << "Oops... " << e.what() << '\n';
-    }
+    // } catch(const std::bad_any_cast& e) {
+    //   std::cout << "Oops... " << e.what() << '\n';
+    // }
   } else {
     std::cout << "No result, missing inputs\n";
   }

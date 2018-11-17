@@ -47,20 +47,20 @@ class ColorMapperNode:public Node {
 
   void count_values() {
     value_counts.clear();
-    auto data = std::any_cast<vec1i>(get_value("values"));
+    auto data = inputs("values").get<vec1i>();
     for(auto& val : data) {
       value_counts[val]++;
     }
   }
 
   void on_push(InputTerminal& t) {
-    if(inputTerminals["values"].get() == &t) {
+    if(&inputs("values") == &t) {
       count_values();
     }
   }
 
   void on_connect(OutputTerminal& t) {
-    if(outputTerminals["colormap"].get() == &t) {
+    if(&outputs("colormap") == &t) {
       update_texture();
     }
   }
@@ -94,7 +94,7 @@ class ColorMapperNode:public Node {
       colormap.mapping[cv.first] = i++;
     }
     colormap.tex = texture;
-    set_value("colormap", colormap);
+    outputs("colormap").set(colormap);
   }
 };
 
@@ -129,7 +129,7 @@ class GradientMapperNode:public Node {
   }
 
   void compute_histogram(float min, float max) {
-    auto data = std::any_cast<vec1f>(get_value("values"));
+    auto data = inputs("values").get<vec1f>();
     histogram.resize(n_bins);
     for(auto& el:histogram) {
       el=0;
@@ -145,8 +145,8 @@ class GradientMapperNode:public Node {
   }
 
   void on_push(InputTerminal& t) {
-    if(inputTerminals["values"].get() == &t) {
-      auto& d = std::any_cast<vec1f&>(t.cdata);
+    if(&inputs("values") == &t) {
+      auto& d = t.get<vec1f&>();
       minval = *std::min_element(d.begin(), d.end());
       maxval = *std::max_element(d.begin(), d.end());
       compute_histogram(minval, maxval);
@@ -158,7 +158,7 @@ class GradientMapperNode:public Node {
   void gui(){
     ImGui::DragFloatRange2("range", &u_minval->get_value(), &u_maxval->get_value(), 0.1f, minval, maxval, "Min: %.2f", "Max: %.2f");
     ImGui::DragInt("N of bins", &n_bins);
-    if(inputTerminals["values"]->cdata.has_value())
+    if(inputs("values").has_data())
       if(ImGui::Button("Rescale histogram")){
         compute_histogram(u_minval->get_value(), u_maxval->get_value());
       }
@@ -174,7 +174,7 @@ class GradientMapperNode:public Node {
     colormap.is_gradient = true;
     colormap.u_valmax = u_maxval;
     colormap.u_valmin = u_minval;
-    set_value("colormap", colormap);
+    outputs("colormap").set(colormap);
   }
 };
 
@@ -217,10 +217,10 @@ class PainterNode:public Node {
   }
 
   void map_identifiers() {
-    if (get_value("identifiers").has_value() && get_value("colormap").has_value()) {
-      auto cmap = std::any_cast<ColorMap>(get_value("colormap"));
+    if (inputs("identifiers").has_data() && inputs("colormap").has_data()) {
+      auto cmap = inputs("colormap").get<ColorMap>();
       if (cmap.is_gradient) return;
-      auto values = std::any_cast<vec1i>(get_value("identifiers"));
+      auto values = inputs("identifiers").get<vec1i>();
       vec1f mapped;
       for(auto& v : values){
         mapped.push_back(float(cmap.mapping[v])/256);
@@ -231,35 +231,35 @@ class PainterNode:public Node {
 
   void on_push(InputTerminal& t) {
     // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
-    if(t.cdata.has_value() && painter->is_initialised()) {
+    if(t.has_data() && painter->is_initialised()) {
       if(inputTerminals["geometries"].get() == &t) {
         if (t.connected_type == TT_point_collection) {
-          auto& gc = std::any_cast<PointCollection&>(t.cdata);
+          auto& gc = t.get<PointCollection&>();
           painter->set_geometry(gc);
           painter->set_drawmode(GL_POINTS);
         } else if (t.connected_type == TT_triangle_collection) {
-          auto& gc = std::any_cast<TriangleCollection&>(t.cdata);
+          auto& gc = t.get<TriangleCollection&>();
           painter->set_geometry(gc);
           painter->set_drawmode(GL_TRIANGLES);
         } else if(t.connected_type == TT_line_string_collection) {
-          auto& gc = std::any_cast<LineStringCollection&>(t.cdata);
+          auto& gc = t.get<LineStringCollection&>();
           painter->set_geometry(gc);
           painter->set_drawmode(GL_LINE_STRIP);
         } else if (t.connected_type == TT_linear_ring_collection) {
-          auto& gc = std::any_cast<LinearRingCollection&>(t.cdata);
+          auto& gc = t.get<LinearRingCollection&>();
           painter->set_geometry(gc);
           painter->set_drawmode(GL_LINE_LOOP);
         }
-      } else if(inputTerminals["normals"].get() == &t) {
+      } else if(&inputs("normals") == &t) {
         auto& d = std::any_cast<vec3f&>(t.cdata);
         painter->set_attribute("normal", d[0].data(), d.size(), 3);
-      } else if(inputTerminals["values"].get() == &t) {
+      } else if(&inputs("values") == &t) {
         auto& d = std::any_cast<vec1f&>(t.cdata);
         painter->set_attribute("value", d.data(), d.size(), 1);
-      } else if(inputTerminals["identifiers"].get() == &t) {
+      } else if(&inputs("identifiers") == &t) {
         map_identifiers();
-      } else if(inputTerminals["colormap"].get() == &t) {
-        auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+      } else if(&inputs("colormap") == &t) {
+        auto& cmap = t.get<ColorMap&>();
         if(cmap.is_gradient) {
           painter->register_uniform(cmap.u_valmax);
           painter->register_uniform(cmap.u_valmin);
@@ -273,13 +273,13 @@ class PainterNode:public Node {
   void on_clear(InputTerminal& t) {
     // clear attributes...
     // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
-     if(inputTerminals["geometries"].get() == &t) {
+     if(&inputs("geometries") == &t) {
         painter->clear_attribute("position");
-      } else if(inputTerminals["values"].get() == &t) {
+      } else if(&inputs("values") == &t) {
         painter->clear_attribute("value");
-      } else if(inputTerminals["colormap"].get() == &t) {
+      } else if(&inputs("colormap") == &t) {
         if(t.cdata.has_value()) {
-          auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+          auto& cmap = t.get<ColorMap&>();
           painter->unregister_uniform(cmap.u_valmax);
           painter->unregister_uniform(cmap.u_valmin);
         }
@@ -330,10 +330,10 @@ class PoviPainterNode:public Node {
   }
 
   void map_identifiers() {
-    if (get_value("identifiers").has_value() && get_value("colormap").has_value()) {
-      auto cmap = std::any_cast<ColorMap>(get_value("colormap"));
+    if (inputs("identifiers").has_data() && inputs("colormap").has_data()) {
+      auto cmap = inputs("colormap").get<ColorMap>();
       if (cmap.is_gradient) return;
-      auto values = std::any_cast<vec1i>(get_value("identifiers"));
+      auto values = inputs("identifiers").get<vec1i>();
       vec1f mapped;
       for(auto& v : values){
         mapped.push_back(float(cmap.mapping[v])/256);
@@ -344,20 +344,20 @@ class PoviPainterNode:public Node {
 
   void on_push(InputTerminal& t) {
     // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
-    if(t.cdata.has_value() && painter->is_initialised()) {
-      if(inputTerminals["vertices"].get() == &t) {
-        auto& d = std::any_cast<vec3f&>(t.cdata);
+    if(t.has_data() && painter->is_initialised()) {
+      if(&inputs("vertices") == &t) {
+        auto& d = t.get<vec3f&>();
         painter->set_attribute("position", d[0].data(), d.size(), 3);
-      } else if(inputTerminals["normals"].get() == &t) {
-        auto& d = std::any_cast<vec3f&>(t.cdata);
+      } else if(&inputs("normals") == &t) {
+        auto& d = t.get<vec3f&>();
         painter->set_attribute("normal", d[0].data(), d.size(), 3);
-      } else if(inputTerminals["values"].get() == &t) {
-        auto& d = std::any_cast<vec1f&>(t.cdata);
+      } else if(&inputs("values") == &t) {
+        auto& d = t.get<vec1f&>();
         painter->set_attribute("value", d.data(), d.size(), 1);
-      } else if(inputTerminals["identifiers"].get() == &t) {
+      } else if(&inputs("identifiers") == &t) {
         map_identifiers();
-      } else if(inputTerminals["colormap"].get() == &t) {
-        auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+      } else if(&inputs("colormap") == &t) {
+        auto& cmap = t.get<ColorMap&>();
         if(cmap.is_gradient) {
           painter->register_uniform(cmap.u_valmax);
           painter->register_uniform(cmap.u_valmin);
@@ -371,13 +371,13 @@ class PoviPainterNode:public Node {
   void on_clear(InputTerminal& t) {
     // clear attributes...
     // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
-     if(inputTerminals["vertices"].get() == &t) {
+     if(&inputs("vertices") == &t) {
         painter->clear_attribute("position");
-      } else if(inputTerminals["values"].get() == &t) {
+      } else if(&inputs("values") == &t) {
         painter->clear_attribute("value");
-      } else if(inputTerminals["colormap"].get() == &t) {
+      } else if(&inputs("colormap") == &t) {
         if(t.cdata.has_value()) {
-          auto& cmap = std::any_cast<ColorMap&>(t.cdata);
+          auto& cmap = t.get<ColorMap&>();
           painter->unregister_uniform(cmap.u_valmax);
           painter->unregister_uniform(cmap.u_valmin);
         }
@@ -408,7 +408,7 @@ class Vec3SplitterNode:public Node {
   }
 
   void process(){
-    auto v = std::any_cast<vec3f>(get_value("vec3f"));
+    auto v = inputs("vec3f").get<vec3f>();
     vec1f x,y,z;
     const size_t size = v.size();
     x.reserve(size);
@@ -419,9 +419,9 @@ class Vec3SplitterNode:public Node {
       y.push_back(el[1]);
       z.push_back(el[2]);
     }
-    set_value("x", x);
-    set_value("y", y);
-    set_value("z", z);
+    outputs("x").set(x);
+    outputs("y").set(y);
+    outputs("z").set(z);
   }
 };
 class TriangleNode:public Node {
@@ -453,11 +453,11 @@ class TriangleNode:public Node {
   }
 
   void process(){
-    set_value("vertices", vertices);
-    set_value("colors", colors);
-    set_value("attrf", attrf);
-    set_value("attrf", attrf);
-    set_value("attri", attri);
+    outputs("vertices").set(vertices);
+    outputs("colors").set(colors);
+    outputs("attrf").set(attrf);
+    outputs("attrf").set(attrf);
+    outputs("attri").set(attri);
   }
 };
 class CubeNode:public Node {
@@ -508,7 +508,7 @@ class CubeNode:public Node {
       normals.push_back({n.x,n.y,n.z});
       normals.push_back({n.x,n.y,n.z});
     }
-    set_value("triangle_collection", tc);
-    set_value("normals", normals);
+    outputs("triangle_collection").set(tc);
+    outputs("normals").set(normals);
   }
 };
