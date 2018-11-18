@@ -12,6 +12,7 @@ typedef std::array<float,3> arr3f;
 typedef std::vector<arr3f> vec3f;
 typedef std::vector<std::array<float,2>> vec2f;
 typedef std::vector<int> vec1i;
+typedef std::vector<bool> vec1b;
 typedef std::vector<float> vec1f;
 typedef std::vector<size_t> vec1ui;
 

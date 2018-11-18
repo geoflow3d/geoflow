@@ -62,6 +62,7 @@ namespace geoflow {
     TT_vec1ui,
     TT_vec1i,
     TT_vec1f,
+    TT_vec1b,
     TT_vec2f,
     TT_vec3f,
     TT_vec6f,
