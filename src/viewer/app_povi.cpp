@@ -6,6 +6,7 @@ void poviApp::on_initialise(){
 
     glfwGetCursorPos(window, &last_mouse_pos.x, &last_mouse_pos.y);
 
+    // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
     // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
     FramebufferName = 0;
     glGenFramebuffers(1, &FramebufferName);
@@ -19,15 +20,19 @@ void poviApp::on_initialise(){
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, renderedTexture);
 
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, 1024, 768, 0,GL_RGB, GL_UNSIGNED_BYTE, 0);
+
     // Poor filtering. Needed !
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  
     
     // We also need a depth buffer. This is optional, depending on what you actually need to draw in your texture; but since we’re going to render Suzanne, we need depth-testing.
 
     // The depth buffer
     glGenRenderbuffers(1, &depthrenderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
     
     // Finally, we configure our framebuffer
@@ -41,8 +46,11 @@ void poviApp::on_initialise(){
     // Something may have gone wrong during the process, depending on the capabilities of the GPU. This is how you check it :
 
     // Always check that our framebuffer is ok
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status != GL_FRAMEBUFFER_COMPLETE) {
         std::cerr << "Error: something wrong with the framebuffer setup\n";
+        std::cerr << "Status code:" << status << "\n";
+    }
 }
 
 void poviApp::center(float x, float y, float z) {
