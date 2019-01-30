@@ -8,7 +8,9 @@ using namespace geoflow;
 
 class AdderNode:public Node {
   public:
-  AdderNode(NodeManager& manager):Node(manager) {
+  using Node::Node;
+
+  void init() {
     add_input("in1", TT_float);
     add_input("in2", TT_float);
     add_output("result", TT_float);
@@ -32,9 +34,10 @@ class AdderNode:public Node {
 
 class NumberNode:public Node {
   public:
+  using Node::Node;
   int thenumber=0;
 
-  NumberNode(NodeManager& manager):Node(manager) {
+  void init() {
     add_output("result", TT_float);
   }
 
@@ -51,7 +54,8 @@ class NumberNode:public Node {
 
 class NumberNodeI:public Node {
   public:
-  NumberNodeI(NodeManager& manager):Node(manager) {
+  using Node::Node;
+  void init() {
     add_output("result", TT_int);
   }
 

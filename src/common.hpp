@@ -16,6 +16,8 @@ typedef std::vector<bool> vec1b;
 typedef std::vector<float> vec1f;
 typedef std::vector<size_t> vec1ui;
 
+typedef std::unordered_map< std::string, std::vector<float>> AttributeMap;
+
 class Box {
   private:
   std::array<float,3> pmin, pmax;

@@ -67,9 +67,30 @@ using namespace geoflow;
     in.parent.notify_children();
   }
 
+  bool Node::set_name(std::string new_name) { 
+    return manager.name_node(get_handle(), new_name); 
+  };
+  void Node::load_params(ParameterMap new_map) {
+    for (auto& kv : new_map) {
+      auto key = kv.first;
+      if (parameters.find(key) != parameters.end()) {
+        if(parameters[key].index() == kv.second.index())
+          parameters[key] = kv.second;
+        else {
+          std::cout << "Incorrect datatype for parameter: '" << key <<"', node type: " << type_name << "\n";
+        }
+      } else {
+        std::cout << "No such parameter in this node: '" << key <<"', node type: " << type_name << "\n";
+      }
+    }
+  }
+  const ParameterMap& Node::dump_params() {
+    return parameters;
+  }
   void Node::add_input(std::string name, std::initializer_list<TerminalType> types) {
+    // TODO: check if name is unique key in inputTerminals map
     inputTerminals[name] = std::make_shared<InputTerminal>(
-      *this, types
+      *this, name, types
     );
   }
   void Node::add_input(std::string name, TerminalType type) {
@@ -77,7 +98,7 @@ using namespace geoflow;
   }
   void Node::add_output(std::string name, TerminalType type) {
     outputTerminals[name] = std::make_shared<OutputTerminal>(
-      *this, type
+      *this, name, type
     );
   }
   bool Node::update() {
@@ -87,7 +108,7 @@ using namespace geoflow;
         return false;
         }
     }
-    manager.queue(get_ptr());
+    manager.queue(get_handle());
     status = READY;
     return true;
   };
@@ -110,7 +131,7 @@ using namespace geoflow;
         for (auto& conn : oT.second->get_connections()) {
           auto iT = conn.lock();
           iT->clear();
-          auto child_node = iT->parent.get_ptr().get();
+          auto child_node = iT->parent.get_handle().get();
           if (visited.count(child_node)==0) {
             visited.insert(child_node);
             nodes_to_check.push(child_node);
@@ -152,10 +173,58 @@ using namespace geoflow;
     } 
     return false;
   }
+  NodeHandle NodeManager::create_node(NodeRegister& node_register, std::string type_name) {
+    // add node through a node register
+    NodeHandle handle = node_register.create(type_name, *this);
+    std::string new_name = type_name + " (" + std::to_string(++ID) + ")";
+    handle->name = new_name;
+    nodes[new_name] = handle;
+    return handle;
+  }
+  void NodeManager::remove_node(NodeHandle node) {
+    nodes.erase(node->get_name());
+  }
+  bool NodeManager::name_node(NodeHandle node, std::string new_name) {
+    // rename a node, ensure uniqueness of name, return true if it wasn't already used
+    if(nodes.find(new_name)==nodes.end())
+      return false;
+    remove_node(node);
+    nodes[new_name] = node;
+    node->name = new_name;
+    return true;
+  }
+  std::vector<NodeHandle> NodeManager::dump_nodes() {
+    std::vector<NodeHandle> node_dump;
+    for (auto& kv : nodes) {
+      node_dump.push_back(kv.second);
+    }
+    return node_dump;
+  }
+  NodeManager::ConnectionList NodeManager::dump_connections() {
+    // collect all connections attached to nodes in this manager
+    // return tuples, one for each connection: <output_node, input_node, output_term, input_term>
+    ConnectionList connections;
+    for (auto& kv : nodes) {
+      auto node = kv.second;
+      for (auto& output_term : node->outputTerminals) {
+        for (auto& input_term : output_term.second->connections) {
+          auto iT = input_term.lock();
+          auto oT = output_term.second;
+          connections.push_back(std::make_tuple(
+            node->get_name(), 
+            iT->parent.get_name(),
+            oT->get_name(),
+            iT->get_name()
+          ));
+        }
+      }
+    }
+    return connections;
+  }
 
   bool geoflow::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
-    auto& oT = n1.outputs(s1);
-    auto& iT = n2.inputs(s2);
+    auto oT = n1.outputs(s1);
+    auto iT = n2.inputs(s2);
     if (detect_loop(oT, iT))
       return false;
     oT.connect(iT);
@@ -185,7 +254,7 @@ using namespace geoflow;
     return detect_loop(oT, iT);
   }
   bool geoflow::detect_loop(OutputTerminal& outputT, InputTerminal& inputT) {
-    auto node = inputT.parent.get_ptr();
+    auto node = inputT.parent.get_handle();
     std::queue<std::shared_ptr<Node>> nodes_to_check;
     std::set<std::shared_ptr<Node>> visited;
     nodes_to_check.push(node);
@@ -199,7 +268,7 @@ using namespace geoflow;
         }
         for (auto& c :oT.second->connections) {
           if (auto iT = c.lock()) {
-            auto child_node = iT->parent.get_ptr();
+            auto child_node = iT->parent.get_handle();
             if (visited.count(child_node)==0) {
               visited.insert(child_node);
               nodes_to_check.push(child_node);

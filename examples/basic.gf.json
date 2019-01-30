@@ -35,8 +35,9 @@
   },
 
   "links": [
-    {"source":"MyCube::triangle_collection", "target":"CubePainter::geometries"},
-    {"source":"MyCube::normals", "target":"CubePainter::normals"},
-    {"source":"MyTriangle::vertices", "target":"TrianglePainter::vertices"}
+    ["MyCube","triangle_collection", "CubePainter","geometries"],
+    ["MyCube","normals", "CubePainter","normals"],
+    ["MyTriangle","vertices", "TrianglePainter","vertices"],
+    ["MyCube", "triangle_collection", "CubePainter", "geometries"]
   ]
 }

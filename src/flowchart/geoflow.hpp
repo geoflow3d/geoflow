@@ -6,13 +6,13 @@
 #include <utility>
 #include <functional>
 #include <any>
+#include <optional>
+#include <variant>
 #include <map>
+#include <unordered_map>
 #include <set>
 #include <queue>
-#include <optional>
-#include <unordered_map>
 #include <exception>
-#include <optional>
 
 #include <iostream>
 #include <sstream>
@@ -31,31 +31,16 @@ namespace geoflow {
 
   class Node;
   class NodeManager;
+  class InputTerminal;
+  class OutputTerminal;
+  // typedef std::weak_ptr<InputTerminal> InputHandle;
+  // typedef std::weak_ptr<OutputTerminal> OutputHandle;
 
-  enum gfGeometryType {points, lines, line_strip, line_loop, triangles};
-
-  typedef std::vector< vec3f > Geometry;
-  typedef std::unordered_map< std::string, std::vector<float>> AttributeMap;
-  struct Feature {
-      gfGeometryType type;
-      Geometry geom;
-      AttributeMap attr;
-  };
-
-  // this is deprecated:
-  enum gfGeometryFormat {simple, count, index_count};
-  struct gfGeometry3D {
-    gfGeometryType type;
-    gfGeometryFormat format;
-    Box bounding_box;
-    vec3f vertices;
-    vec3f normals;
-    vec1ui indices;
-    vec1ui counts;
-    vec1ui firsts;
-  };
+  typedef std::variant<bool,int,double,std::string> Parameter;
+  typedef std::unordered_map<std::string, Parameter> ParameterMap;
+  typedef std::shared_ptr<Node> NodeHandle;
   
-  enum TerminalType : uint32_t{
+  enum TerminalType : uint32_t {
     TT_any = 0,
     TT_float,
     TT_int,
@@ -78,14 +63,15 @@ namespace geoflow {
   };
   class Terminal {
     public:
-    Terminal(Node& parent_gnode):parent(parent_gnode) {
+    Terminal(Node& parent_gnode, std::string name):parent(parent_gnode), name(name) {
       // std::cout<< "Constructing geoflow::Terminal " << this << "\n";
-    }; 
+    };
     ~Terminal() {
       // std::cout<< "Destructing geoflow::Terminal " << this << "\n";
     }
 
     Node& parent;
+    const std::string name;
     std::any cdata;
 
     virtual void push(std::any data) = 0;
@@ -100,15 +86,17 @@ namespace geoflow {
     template<typename T> void set(T data) { 
       push(std::any(data)); 
     };
+
+    const std::string get_name() { return name; };
   };
 
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
     std::vector<TerminalType> types;
     public:
     TerminalType connected_type;
-    InputTerminal(Node& parent_gnode, std::initializer_list<TerminalType> types): Terminal(parent_gnode), types(types) {};
+    InputTerminal(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types): Terminal(parent_gnode, name), types(types) {};
     
-    std::weak_ptr<InputTerminal> get_ptr(){
+    std::weak_ptr<InputTerminal>  get_ptr(){
       return weak_from_this();
     }
     std::vector<TerminalType> get_types() { return types; };
@@ -122,10 +110,10 @@ namespace geoflow {
     //use a set to make sure we don't get duplicate connection
     connection_set connections;
     
-    OutputTerminal(Node& parent_gnode, TerminalType type): Terminal(parent_gnode), type(type){};
+    OutputTerminal(Node& parent_gnode, std::string name, TerminalType type): Terminal(parent_gnode, name), type(type){};
     ~OutputTerminal();
     
-    std::weak_ptr<OutputTerminal> get_ptr(){
+    std::weak_ptr<OutputTerminal>  get_ptr(){
       return weak_from_this();
     }
 
@@ -145,16 +133,18 @@ namespace geoflow {
     PROCESSING,
     DONE
   };
-  class Node : public std::enable_shared_from_this<Node>{
+
+  class Node : public std::enable_shared_from_this<Node> {
     public:
 
-    std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
+    std::map<std::string,std::shared_ptr<InputTerminal> > inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
 
-    Node(NodeManager& manager) : manager(manager){
-    };
-    ~Node(){
-      // std::cout<< "Destructing geoflow::Node " << this << "\n";
+    ParameterMap parameters;
+
+    Node(NodeManager& manager, std::string type_name): manager(manager), type_name(type_name) {};
+    ~Node() {
+      std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
       notify_children();
     }
 
@@ -164,15 +154,20 @@ namespace geoflow {
     OutputTerminal& outputs(std::string name) {
       return *outputTerminals.at(name);
     }
+    template<typename T> T& params(std::string name) {
+      return std::get<T>(parameters.at(name));
+    }
 
     node_status status=WAITING;
-    NodeManager& manager;
 
     void add_input(std::string name, TerminalType type);
     void add_input(std::string name, std::initializer_list<TerminalType> types);
     void add_output(std::string name, TerminalType type);
 
-    std::shared_ptr<Node> get_ptr(){return shared_from_this();};
+    void load_params(ParameterMap param_map);
+    const ParameterMap&  dump_params();
+
+    NodeHandle get_handle(){return shared_from_this();};
 
     bool update();
     void propagate_outputs();
@@ -180,43 +175,82 @@ namespace geoflow {
 
     // private:
 
+    virtual void init() = 0;
+    virtual void process() = 0;
+    virtual void gui(){};
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
     virtual void on_connect(OutputTerminal& ot){};
-    virtual void process(){};
-    virtual void gui(){};
 
     std::string get_info();
+    const std::string get_name() { return name; };
+    bool set_name(std::string new_name);
+
+    protected:
+    std::string name;
+    const std::string type_name; // to be managed only by node manager because uniqueness constraint (among all nodes in the manager)
+    NodeManager& manager;
+
+    friend class NodeManager;
   };
 
-  class ObjectNode {};
-
-
-  class NodeManager {
+  class NodeRegister {
+    // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
     public:
-    std::optional<std::array<double,3>> data_offset;
-    NodeManager(){};
-    std::queue<std::shared_ptr<Node>> node_queue;
-    std::map<std::string, std::function<std::shared_ptr<Node>(NodeManager&)>> node_register;
+    NodeRegister(){};
+    std::map<std::string, std::function<NodeHandle(NodeManager&, std::string)>> node_type_register;
 
-    template<class NodeClass> void register_node(std::string name) {
-      node_register[name] = create_node<NodeClass>;
+    template<class NodeClass> void register_node(std::string type_name) {
+      node_type_register[type_name] = create_node_type<NodeClass>;
     }
-    template<class NodeClass> static std::shared_ptr<NodeClass> create_node(NodeManager& nm){
-      return std::make_shared<NodeClass>(nm);
-    }
-    std::shared_ptr<Node> create(std::string name) {
-      auto f = node_register[name];
-      auto n = f(*this);
+    NodeHandle create(std::string type_name, NodeManager& nm) {
+      auto f = node_type_register[type_name];
+      auto n = f(nm, type_name);
       return n;
     }
-    
-    bool run(Node &node);
-    void queue(std::shared_ptr<Node> n);
-    
+    protected:
+    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeManager& nm, std::string type_name){
+      auto node = std::make_shared<NodeClass>(nm, type_name);
+      node->init();
+      return node;
+    }
+    friend class NodeManager;
   };
 
-  bool connect(Node& n1, Node& n2, std::string s1, std::string s2); // connect only node of the same nodemanager?
+  class NodeManager {
+    // manages a set of nodes that form one flowchart. Every node must linked to a NodeManager.
+    typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> ConnectionList;
+    public:
+    size_t ID=0;
+
+    std::optional<std::array<double,3>> data_offset;
+    NodeManager(){};
+    std::unordered_map<std::string, NodeHandle> nodes;
+
+    NodeHandle create_node(NodeRegister& node_register, std::string type_name);
+    void remove_node(NodeHandle node);
+
+    bool name_node(NodeHandle node, std::string new_name);
+
+    std::vector<NodeHandle> dump_nodes();
+
+    ConnectionList dump_connections();
+
+    // load_json() {
+
+    // }
+    
+    bool run(Node &node);
+    
+    protected:
+    std::queue<NodeHandle> node_queue;
+    void queue(NodeHandle n);
+    
+    friend class Node;
+  };
+
+  bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
+  bool connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2);
   bool connect(Terminal& t1, Terminal& t2);
   bool is_compatible(Terminal& t1, Terminal& t2);
   void disconnect(Terminal& t1, Terminal& t2);
