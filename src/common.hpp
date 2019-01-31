@@ -102,6 +102,7 @@ template<typename geom_def> class GeometryCollection : public std::vector<geom_d
 // geometry types:
 // typedef arr3f Point;
 typedef std::array<arr3f, 3> Triangle;
+typedef std::array<arr3f, 2> Segment;
 typedef vec3f LineString;
 typedef vec3f LinearRing;
 class TriangleCollection:public GeometryCollection<Triangle> {
@@ -116,6 +117,21 @@ class TriangleCollection:public GeometryCollection<Triangle> {
         bbox->add(t[0]);
         bbox->add(t[1]);
         bbox->add(t[2]);
+      }
+    }
+  }
+};
+class SegmentCollection:public GeometryCollection<Segment> {
+  public:
+  size_t vertex_count() const {
+    return size()*2;
+  }
+  virtual void compute_box() {
+    if (!bbox.has_value()) {
+      bbox=Box();
+      for(auto& t : *this){
+        bbox->add(t[0]);
+        bbox->add(t[1]);
       }
     }
   }
