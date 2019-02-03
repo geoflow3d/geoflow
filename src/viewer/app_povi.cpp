@@ -143,8 +143,9 @@ void poviApp::on_draw(){
     ImGui::End();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    if (drawthis_func)
-        drawthis_func();
+    for (auto render_object : render_objects) {
+        render_object->render();
+    }
 
     // ImGui::Begin("View parameters");
     // xy_pos p0 = screen2view(last_mouse_pos);

@@ -11,11 +11,16 @@
 
 namespace ImGui
 {
-	Nodes::Nodes(geoflow::NodeManager& nm, poviApp& a):gf_manager(nm), pv_app(a)
+	Nodes::Nodes(geoflow::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers)
+		:gf_manager(node_manager), pv_app(app), registers(node_registers)
 	{
 		id_ = 0;
 		element_.Reset();
 		canvas_scale_ = 1.0f;
+		geoflow::NodeRegister R("Visualisation");
+		R.register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
+    R.register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
+		registers.push_back(R);
 	}
 
 	Nodes::~Nodes()
@@ -121,31 +126,20 @@ namespace ImGui
 		ImGui::SetWindowFontScale(1.0f);
 	}
 
-	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type) {
-		return CreateNodeFromType(pos, type, type+std::to_string(id_));
-	}
-	Nodes::Node* Nodes::CreateNodeFromType(ImVec2 pos, std::string type, std::string name)
+	// Nodes::Node* Nodes::CreateNodeFromHandle(ImVec2 pos, std::string type) {
+	// 	return CreateNodeFromType(pos, type, type+std::to_string(id_));
+	// }
+	Nodes::Node* Nodes::CreateNodeFromHandle(ImVec2 pos, geoflow::NodeHandle gf_node)
 	{
-		std::shared_ptr<geoflow::Node> gf_node;
 		++id_;
-		if (type == "Painter"){
-			auto painter_node = std::make_shared<PainterNode>(gf_manager);
-			painter_node->add_to(pv_app, name);
-			gf_node = painter_node;
-		} else if (type == "PoviPainter"){
-			auto painter_node = std::make_shared<PoviPainterNode>(gf_manager);
-			painter_node->add_to(pv_app, name);
-			gf_node = painter_node;
-		} else {
-			gf_node = gf_manager.create(type);
-		}
-		gf_manager.run(*gf_node);
+
+		gf_manager.run(gf_node);
 		auto node = std::make_unique<Node>(gf_node);
 		
 		////////////////////////////////////////////////////////////////////////////////
 		
 		node->id_ = -id_;
-		node->name_ = name;
+		node->name_ = gf_node->get_name();
 		node->position_ = pos;
 
 		// std::cout << "reading inputs from " << type <<  "\n";
@@ -1095,14 +1089,10 @@ namespace ImGui
 		ImGui::PopID();
 	}
 
-	void Nodes::PreloadNodes(NodeStore nodes){
-		nodestore = nodes;
-		// CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, "PoviPainter");
-	}
-
-	void Nodes::PreloadLinks(LinkStore links){
-		linkstore = links;
-		// CreateNodeFromType((canvas_mouse_ - canvas_scroll_) / canvas_scale_, "PoviPainter");
+	void Nodes::render() {
+		ImGui::Begin("Flowchart");
+			ProcessNodes();
+		ImGui::End();
 	}
 
 	void Nodes::ProcessNodes()
@@ -1161,13 +1151,13 @@ namespace ImGui
 			draw_list->AddRect(element_.rect_.Min, element_.rect_.Max, ImColor(200.0f, 200.0f, 0.0f, 0.5f));
 		}
 
-		if(!nodestore_is_added) {
-			for(auto& n : nodestore){
-				CreateNodeFromType(std::get<2>(n), std::get<0>(n), std::get<1>(n));
+		if(!gf_manager_checked) {
+			for(auto& kv : gf_manager.nodes){
+				auto gf_node = kv.second;
+				auto pos = gf_node->get_position();
+				CreateNodeFromHandle({pos.first, pos.second}, gf_node);
 			}
-			nodestore_is_added = true;
-		}
-		if(!linkstore_is_added) {
+		
 			// map all nodes and input/output ports
 			std::unordered_map<std::string, std::pair<Node*,Connection*>> node_input_map, node_output_map;
 			for(auto& node : nodes_) {
@@ -1178,7 +1168,7 @@ namespace ImGui
 					node_output_map[node->name_+conn->name_] = std::make_pair(node.get(),conn.get());
 				}
 			}
-			for(auto& link : linkstore){
+			for(auto& link : gf_manager.dump_connections()){
 				auto source = std::get<0>(link)+std::get<2>(link);
 				auto target = std::get<1>(link)+std::get<3>(link);
 				Node *node_source, *node_target;
@@ -1194,10 +1184,8 @@ namespace ImGui
 
 				geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
 				gf_manager.run(conn_target->gf_terminal->parent);
-
-				// CreateNodeFromType(n.second, n.first);
 			}
-			linkstore_is_added = true;
+			gf_manager_checked = true;
 		}
 		////////////////////////////////////////////////////////////////////////////////
 		// context menu
@@ -1235,23 +1223,30 @@ namespace ImGui
 				element_.Reset(NodesState_Block);
 				// add nodes where the popup was opened
 				auto popup_mouse = ImGui::GetMousePosOnOpeningCurrentPopup() - canvas_position_;
-				for (auto& node : gf_manager.node_register)
-				{
-					if (ImGui::MenuItem(node.first.c_str()))
-					{					
-						element_.Reset();
-						element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, node.first);
+				for(auto& node_register : registers) {
+					for (auto& kv : node_register.node_types)
+					{
+						auto type_name = kv.first;
+						if (ImGui::MenuItem(type_name.c_str()))
+						{	
+							element_.Reset();
+							element_.node_ = CreateNodeFromHandle(
+								(popup_mouse - canvas_scroll_) / canvas_scale_, 
+								gf_manager.create_node(node_register, type_name)
+							);
+						}
 					}
 				}
-				if (ImGui::MenuItem("PoviPainter"))
-				{					
-					element_.Reset();
-					element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, "PoviPainter");
-				}
 				if (ImGui::MenuItem("Painter"))
-				{					
+				{
 					element_.Reset();
-					element_.node_ = CreateNodeFromType((popup_mouse - canvas_scroll_) / canvas_scale_, "Painter");
+					auto painter_node = std::make_shared<geoflow::nodes::gui::PainterNode>(gf_manager, "Painter");
+					painter_node->set_name("painter "+std::to_string(id_));
+					painter_node->add_to(pv_app, painter_node->get_name());
+					element_.node_ = CreateNodeFromHandle(
+						(popup_mouse - canvas_scroll_) / canvas_scale_, 
+						painter_node
+					);
 				}
 				ImGui::EndPopup();
 			}

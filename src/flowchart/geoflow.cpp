@@ -51,8 +51,11 @@ using namespace geoflow;
   }
   void OutputTerminal::connect(InputTerminal& in) {
     //check type compatibility
-    if (!is_compatible(in) && !detect_loop(*this, *in.get_ptr().lock()))
-      throw ConnectionException();
+    if (!is_compatible(in))
+      throw Exception("Failed to connect. Terminals have incompatible types!");
+    if (detect_loop(*this, *in.get_ptr().lock()))
+      throw Exception("Failed to connect. Loop detected!");
+    
     in.connected_type = type;
     parent.on_connect(*this);
     connections.insert(in.get_ptr());
@@ -176,9 +179,14 @@ using namespace geoflow;
   NodeHandle NodeManager::create_node(NodeRegister& node_register, std::string type_name) {
     // add node through a node register
     NodeHandle handle = node_register.create(type_name, *this);
-    std::string new_name = type_name + " (" + std::to_string(++ID) + ")";
+    std::string new_name = type_name + "(" + std::to_string(++ID) + ")";
     handle->name = new_name;
     nodes[new_name] = handle;
+    return handle;
+  }
+  NodeHandle NodeManager::create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos) {
+    auto handle = create_node(node_register, type_name);
+    handle->set_position(pos.first, pos.second);
     return handle;
   }
   void NodeManager::remove_node(NodeHandle node) {
@@ -186,8 +194,10 @@ using namespace geoflow;
   }
   bool NodeManager::name_node(NodeHandle node, std::string new_name) {
     // rename a node, ensure uniqueness of name, return true if it wasn't already used
-    if(nodes.find(new_name)==nodes.end())
+    if(nodes.find(new_name)==nodes.end()){
+      node->name = new_name;
       return false;
+    }
     remove_node(node);
     nodes[new_name] = node;
     node->name = new_name;
@@ -222,21 +232,24 @@ using namespace geoflow;
     return connections;
   }
 
-  bool geoflow::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
-    auto& oT = n1.outputs(s1);
-    auto& iT = n2.inputs(s2);
+  bool geoflow::connect(OutputTerminal& oT, InputTerminal& iT) {
     if (detect_loop(oT, iT))
       return false;
     oT.connect(iT);
     return true;
   }
+  bool geoflow::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
+    auto& oT = n1.output(s1);
+    auto& iT = n2.input(s2);
+    return geoflow::connect(oT, iT);
+  }
+  bool geoflow::connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2) {
+    return geoflow::connect(n1->output(s1), n2->input(s2));
+  }
   bool geoflow::connect(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);
     auto& iT = dynamic_cast<InputTerminal&>(t2);
-    if (detect_loop(oT, iT))
-      return false;
-    oT.connect(iT);
-    return true;
+    return geoflow::connect(oT, iT);
   }
   bool geoflow::is_compatible(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);

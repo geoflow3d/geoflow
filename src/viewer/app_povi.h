@@ -35,6 +35,11 @@ inline glm::quat arcball(xy_pos p){
 		return glm::quat(0., p.x, p.y, glm::sqrt(1.-h2));
 }
 
+class RenderObject {
+	public:
+	virtual void render() = 0;
+};
+
 class poviApp: public std::enable_shared_from_this<poviApp>, public App {
 public:
 poviApp(int width, int height, std::string title):App(width, height, title) {
@@ -44,7 +49,7 @@ poviApp(int width, int height, std::string title):App(width, height, title) {
 };
 void add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible=true);
 void remove_painter(std::shared_ptr<Painter> painter); 
-void draw_that(void (*func)()) { drawthis_func = func; };
+void draw_that(RenderObject* o) { render_objects.push_back(o); };
 void center(float, float, float z=0);
 std::shared_ptr<poviApp> get_ptr() {
 	return shared_from_this();
@@ -65,7 +70,7 @@ private:
 GLuint FramebufferName, renderedTexture, depthrenderbuffer;
 
 std::vector< std::tuple<std::shared_ptr<Painter>,std::string,bool> > painters;
-void (*drawthis_func)();
+std::vector<RenderObject*> render_objects;
 
 glm::mat4 model;
 glm::mat4 view;

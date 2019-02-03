@@ -131,16 +131,17 @@ namespace ImGui
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	typedef std::vector<std::tuple<std::string, std::string, ImVec2>> NodeStore; // type, name, position
-	typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> LinkStore; // sourceNode, targetNode, sourceTerminal, targetTerminal
+	// typedef std::vector<std::tuple<std::string, std::string, ImVec2>> NodeStore; // type, name, position
+	// typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> LinkStore; // sourceNode, targetNode, sourceTerminal, targetTerminal
 
-	class Nodes final
+	class Nodes final : public RenderObject
 	{
-	private:	
+	private:
 		////////////////////////////////////////////////////////////////////////////////
 
 		geoflow::NodeManager& gf_manager;
 		poviApp& pv_app;
+		std::vector<geoflow::NodeRegister> registers;
 
 		struct Node;
 
@@ -205,7 +206,6 @@ namespace ImGui
 				id_ = 0;
 				state_ = NodeStateFlag_Default;
 
-				position_ = ImVec2(0.0f, 0.0f);
 				size_ = ImVec2(0.0f, 0.0f);
 
 				collapsed_height = 0.0f;
@@ -367,20 +367,18 @@ namespace ImGui
 
 		////////////////////////////////////////////////////////////////////////////////
 
-		Nodes::Node* CreateNodeFromType(ImVec2 pos, std::string type, std::string name);
-		Nodes::Node* CreateNodeFromType(ImVec2 pos, std::string type);
+		Nodes::Node* CreateNodeFromHandle(ImVec2 pos, geoflow::NodeHandle);
+		// Nodes::Node* CreateNodeFromHandle(ImVec2 pos, std::string type);
 
-		NodeStore nodestore;
-		bool nodestore_is_added = false;
-		LinkStore linkstore;
-		bool linkstore_is_added = false;
+		bool gf_manager_checked = false;
 
 	public:
-		explicit Nodes(geoflow::NodeManager& nm, poviApp& a);
+		explicit Nodes(geoflow::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers);
 		~Nodes();
 
+		void render();
 		void ProcessNodes();
-		void PreloadNodes(NodeStore nodes);
-		void PreloadLinks(LinkStore links);
+		// void PreloadNodes(NodeStore nodes);
+		// void PreloadLinks(LinkStore links);
 	};
 }

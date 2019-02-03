@@ -18,15 +18,22 @@
 #include <sstream>
 
 #include "../common.hpp"
+#include "imgui.h"
 
 namespace geoflow {
 
-  struct ConnectionException : public std::exception
+  class Exception: public std::exception
   {
-    const char * what () const throw ()
-      {
-        return "Terminals have incompatible types!";
+  public:
+      explicit Exception(const std::string& message):
+        msg_(message)
+        {}
+      virtual const char* what() const throw (){
+        return msg_.c_str();
       }
+
+  protected:
+      std::string msg_;
   };
 
   class Node;
@@ -141,18 +148,25 @@ namespace geoflow {
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
 
     ParameterMap parameters;
+    ImVec2 position;
 
     Node(NodeManager& manager, std::string type_name): manager(manager), type_name(type_name) {};
     ~Node() {
-      std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
+      // std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
       notify_children();
     }
 
-    InputTerminal& inputs(std::string name) {
-      return *inputTerminals.at(name);
+    InputTerminal& input(std::string term_name) {
+      if (inputTerminals.find(term_name) == inputTerminals.end()) {
+        throw Exception("No such input terminal - \""+term_name+"\" in " + get_name());
+      }
+      return *inputTerminals[term_name];
     }
-    OutputTerminal& outputs(std::string name) {
-      return *outputTerminals.at(name);
+    OutputTerminal& output(std::string term_name) {
+      if (outputTerminals.find(term_name) == outputTerminals.end()) {
+        throw Exception("No such output terminal - \""+term_name+"\" in " + get_name());
+      }
+      return *outputTerminals[term_name];
     }
     template<typename T> T& params(std::string name) {
       return std::get<T>(parameters.at(name));
@@ -166,6 +180,14 @@ namespace geoflow {
 
     void load_params(ParameterMap param_map);
     const ParameterMap&  dump_params();
+
+    void set_position(float x, float y) {
+      position.x=x;
+      position.y=y;
+    }
+    std::pair<float,float> get_position() {
+      return std::make_pair(position.x, position.y);
+    }
 
     NodeHandle get_handle(){return shared_from_this();};
 
@@ -184,6 +206,7 @@ namespace geoflow {
 
     std::string get_info();
     const std::string get_name() { return name; };
+    const std::string get_type_name() { return type_name; };
     bool set_name(std::string new_name);
 
     protected:
@@ -197,23 +220,28 @@ namespace geoflow {
   class NodeRegister {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
     public:
-    NodeRegister(){};
-    std::map<std::string, std::function<NodeHandle(NodeManager&, std::string)>> node_type_register;
+    NodeRegister(std::string name):name(name) {};
+    std::map<std::string, std::function<NodeHandle(NodeManager&, std::string)>> node_types;
 
     template<class NodeClass> void register_node(std::string type_name) {
-      node_type_register[type_name] = create_node_type<NodeClass>;
+      node_types[type_name] = create_node_type<NodeClass>;
     }
-    NodeHandle create(std::string type_name, NodeManager& nm) {
-      auto f = node_type_register[type_name];
-      auto n = f(nm, type_name);
-      return n;
-    }
+    std::string get_name() {return name;}
     protected:
     template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeManager& nm, std::string type_name){
       auto node = std::make_shared<NodeClass>(nm, type_name);
       node->init();
       return node;
     }
+    NodeHandle create(std::string type_name, NodeManager& nm) {
+      if (node_types.find(type_name) == node_types.end())
+        throw Exception("No such node type - \""+type_name+"\"");
+
+      auto f = node_types[type_name];
+      auto n = f(nm, type_name);
+      return n;
+    }
+    const std::string name;
     friend class NodeManager;
   };
 
@@ -228,6 +256,7 @@ namespace geoflow {
     std::unordered_map<std::string, NodeHandle> nodes;
 
     NodeHandle create_node(NodeRegister& node_register, std::string type_name);
+    NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);
     void remove_node(NodeHandle node);
 
     bool name_node(NodeHandle node, std::string new_name);
@@ -241,6 +270,9 @@ namespace geoflow {
     // }
     
     bool run(Node &node);
+    bool run(NodeHandle node) {
+      return run(*node);
+    };
     
     protected:
     std::queue<NodeHandle> node_queue;
@@ -249,6 +281,7 @@ namespace geoflow {
     friend class Node;
   };
 
+  bool connect(OutputTerminal& oT, InputTerminal& iT);
   bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
   bool connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2);
   bool connect(Terminal& t1, Terminal& t2);
