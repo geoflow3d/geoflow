@@ -1,9 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <viewer/app_povi.h>
-#include <geoflow/gui/nodes.h>
-#include <array>
+#include <geoflow/gui/flowchart.hpp>
 
 #include "basic_nodes.hpp"
 
@@ -31,10 +29,7 @@ int main(int ac, const char * av[])
     connect(number->output("result"), adder->input("in1"));
     connect(number->output("result"), adder->input("in2"));
 
-    auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
-    
-    ImGui::Nodes nodes(N, *a, {R, R_gui});
-    a->draw_that(&nodes);
+    ImGui::launch_flowchart(N, {R,R_gui});
 
     // std::ifstream i("../examples/basic.gf.json");
     // json j;
@@ -58,5 +53,4 @@ int main(int ac, const char * av[])
     // }
     // nodes_.PreloadLinks(ls);
 
-    a->run();
 }

@@ -381,4 +381,6 @@ namespace ImGui
 		// void PreloadNodes(NodeStore nodes);
 		// void PreloadLinks(LinkStore links);
 	};
+
+	void launch_flowchart(NodeManager&, std::initializer_list<NodeRegister>);
 }

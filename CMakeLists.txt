@@ -78,7 +78,7 @@ if(${GF_BUILD_GUI})
   target_link_libraries(viewer ${GLFW_LIBS})
   add_library(geoflow-gui STATIC
     src/geoflow/core/geoflow.cpp
-    src/geoflow/gui/nodes.cpp 
+    src/geoflow/gui/flowchart.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
   )
   target_link_libraries(geoflow-gui viewer)

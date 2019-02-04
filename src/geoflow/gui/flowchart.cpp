@@ -6,7 +6,7 @@
 // @ocornut https://gist.github.com/ocornut/7e9b3ec566a333d725d4
 // @flix01 https://github.com/Flix01/imgui/blob/b248df2df98af13d4b7dbb70c92430afc47a038a/addons/imguinodegrapheditor/imguinodegrapheditor.cpp#L432
 
-#include "nodes.h"
+#include "flowchart.hpp"
 #include <tuple>
 
 namespace ImGui
@@ -1332,5 +1332,12 @@ namespace ImGui
 		ImGui::EndChild();
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar(2);
+	}
+
+	void launch_flowchart(NodeManager& manager, std::initializer_list<NodeRegister> registers) {
+		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
+    Nodes nodes(manager, *a, registers);
+    a->draw_that(&nodes);
+		a->run();
 	}
 }
