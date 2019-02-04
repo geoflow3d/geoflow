@@ -29,7 +29,7 @@ int main(int ac, const char * av[])
     connect(number->output("result"), adder->input("in1"));
     connect(number->output("result"), adder->input("in2"));
 
-    ImGui::launch_flowchart(N, {R,R_gui});
+    launch_flowchart(N, {R,R_gui});
 
     // std::ifstream i("../examples/basic.gf.json");
     // json j;

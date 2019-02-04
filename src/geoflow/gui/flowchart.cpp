@@ -1334,10 +1334,13 @@ namespace ImGui
 		ImGui::PopStyleVar(2);
 	}
 
+}
+
+namespace geoflow {
 	void launch_flowchart(NodeManager& manager, std::initializer_list<NodeRegister> registers) {
 		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
-    Nodes nodes(manager, *a, registers);
-    a->draw_that(&nodes);
+		ImGui::Nodes nodes(manager, *a, registers);
+		a->draw_that(&nodes);
 		a->run();
 	}
 }

@@ -382,5 +382,7 @@ namespace ImGui
 		// void PreloadLinks(LinkStore links);
 	};
 
+}
+namespace geoflow {
 	void launch_flowchart(NodeManager&, std::initializer_list<NodeRegister>);
 }
