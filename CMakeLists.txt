@@ -57,6 +57,7 @@ endif()
 add_library(geoflow-core STATIC
   src/geoflow/core/geoflow.cpp
   thirdparty/imgui/imgui.cpp
+  thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
   thirdparty/imgui/imgui_draw.cpp
   thirdparty/imgui/imgui_widgets.cpp
 )
@@ -69,6 +70,7 @@ if(${GF_BUILD_GUI})
     thirdparty/glad/src/glad.c 
     src/viewer/gloo.cpp
     thirdparty/imgui/imgui.cpp
+    thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
     thirdparty/imgui/imgui_demo.cpp
     thirdparty/imgui/imgui_draw.cpp
     thirdparty/imgui/imgui_widgets.cpp
