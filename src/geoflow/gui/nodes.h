@@ -139,9 +139,9 @@ namespace ImGui
 	private:
 		////////////////////////////////////////////////////////////////////////////////
 
-		geof::NodeManager& gf_manager;
+		geoflow::NodeManager& gf_manager;
 		poviApp& pv_app;
-		std::vector<geof::NodeRegister> registers;
+		std::vector<geoflow::NodeRegister> registers;
 
 		struct Node;
 
@@ -154,9 +154,9 @@ namespace ImGui
 			Connection* input_;
 			uint32_t connections_;
 
-			std::shared_ptr<geof::Terminal> gf_terminal;
+			std::shared_ptr<geoflow::Terminal> gf_terminal;
 
-			Connection(std::shared_ptr<geof::Terminal> gf_term)
+			Connection(std::shared_ptr<geoflow::Terminal> gf_term)
 			{
 				position_ = ImVec2(0.0f, 0.0f);
 
@@ -199,9 +199,9 @@ namespace ImGui
 			std::vector<std::unique_ptr<Connection>> inputs_;
 			std::vector<std::unique_ptr<Connection>> outputs_;
 
-			std::shared_ptr<geof::Node> gf_node;
+			std::shared_ptr<geoflow::Node> gf_node;
 
-			Node(std::shared_ptr<geof::Node> gf_node):gf_node(gf_node)
+			Node(std::shared_ptr<geoflow::Node> gf_node):gf_node(gf_node)
 			{
 				id_ = 0;
 				state_ = NodeStateFlag_Default;
@@ -367,13 +367,13 @@ namespace ImGui
 
 		////////////////////////////////////////////////////////////////////////////////
 
-		Nodes::Node* CreateNodeFromHandle(ImVec2 pos, geof::NodeHandle);
+		Nodes::Node* CreateNodeFromHandle(ImVec2 pos, geoflow::NodeHandle);
 		// Nodes::Node* CreateNodeFromHandle(ImVec2 pos, std::string type);
 
 		bool gf_manager_checked = false;
 
 	public:
-		explicit Nodes(geof::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers);
+		explicit Nodes(geoflow::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers);
 		~Nodes();
 
 		void render();

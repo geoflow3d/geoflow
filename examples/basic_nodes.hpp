@@ -3,7 +3,7 @@
 #include <thread>
 #include <chrono>
 
-namespace geof::nodes::arithmetic {
+namespace geoflow::nodes::arithmetic {
   class AdderNode:public Node {
     public:
     using Node::Node;

@@ -8,7 +8,7 @@
 #include "../../viewer/app_povi.h"
 #include "imgui_color_gradient.h"
 
-namespace geof::nodes::gui {
+namespace geoflow::nodes::gui {
   struct ColorMap {
     std::shared_ptr<Uniform> u_valmax, u_valmin;
     bool is_gradient=false;

@@ -21,7 +21,7 @@
 
 #include "../geoflow/common.hpp"
 
-using namespace geof;
+using namespace geoflow;
 
 class Shader
 {
@@ -296,7 +296,7 @@ class hudPainter : public BasePainter {
 class Painter : public BasePainter {
 
     public:
-    geof::Box& get_bbox(){
+    geoflow::Box& get_bbox(){
         return bbox;
     }
     void set_attribute(std::string name, GLfloat* data, size_t n, size_t stride);
@@ -318,7 +318,7 @@ class Painter : public BasePainter {
     private:
     std::vector<std::pair<size_t,size_t>> subdata_pairs;
     void init();
-    geof::Box bbox;
+    geoflow::Box bbox;
     std::weak_ptr<Texture1D> texture;
     std::unordered_map<std::shared_ptr<Uniform>, std::shared_ptr<Uniform>> uniforms_external;
 };

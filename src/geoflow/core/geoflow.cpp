@@ -1,7 +1,7 @@
 #include "geoflow.hpp"
 #include <iostream>
 
-using namespace geof;
+using namespace geoflow;
   // TODO: what happens if connect several output terminals to 1 input terminal? -> should clear other connections to same input terminal
   void InputTerminal::push(std::any data) {
     cdata = data;
@@ -232,41 +232,41 @@ using namespace geof;
     return connections;
   }
 
-  bool geof::connect(OutputTerminal& oT, InputTerminal& iT) {
+  bool geoflow::connect(OutputTerminal& oT, InputTerminal& iT) {
     if (detect_loop(oT, iT))
       return false;
     oT.connect(iT);
     return true;
   }
-  bool geof::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
+  bool geoflow::connect(Node& n1, Node& n2, std::string s1, std::string s2) {
     auto& oT = n1.output(s1);
     auto& iT = n2.input(s2);
-    return geof::connect(oT, iT);
+    return geoflow::connect(oT, iT);
   }
-  bool geof::connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2) {
-    return geof::connect(n1->output(s1), n2->input(s2));
+  bool geoflow::connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2) {
+    return geoflow::connect(n1->output(s1), n2->input(s2));
   }
-  bool geof::connect(Terminal& t1, Terminal& t2) {
+  bool geoflow::connect(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);
     auto& iT = dynamic_cast<InputTerminal&>(t2);
-    return geof::connect(oT, iT);
+    return geoflow::connect(oT, iT);
   }
-  bool geof::is_compatible(Terminal& t1, Terminal& t2) {
+  bool geoflow::is_compatible(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);
     auto& iT = dynamic_cast<InputTerminal&>(t2);
     return oT.is_compatible(iT);
   }
-  void geof::disconnect(Terminal& t1, Terminal& t2) {
+  void geoflow::disconnect(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);
     auto& iT = dynamic_cast<InputTerminal&>(t2);
     oT.disconnect(iT);
   }
-  bool geof::detect_loop(Terminal& t1, Terminal& t2) {
+  bool geoflow::detect_loop(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);
     auto& iT = dynamic_cast<InputTerminal&>(t2);
     return detect_loop(oT, iT);
   }
-  bool geof::detect_loop(OutputTerminal& outputT, InputTerminal& inputT) {
+  bool geoflow::detect_loop(OutputTerminal& outputT, InputTerminal& inputT) {
     auto node = inputT.parent.get_handle();
     std::queue<std::shared_ptr<Node>> nodes_to_check;
     std::set<std::shared_ptr<Node>> visited;
