@@ -171,7 +171,7 @@ namespace geoflow {
       }
       return *outputTerminals[term_name];
     }
-    template<typename T> T& params(std::string name) {
+    template<typename T> T& param(std::string name) {
       return std::get<T>(parameters.at(name));
     }
 
@@ -181,6 +181,9 @@ namespace geoflow {
     void add_input(std::string name, std::initializer_list<TerminalType> types);
     void add_output(std::string name, TerminalType type);
 
+    template<typename T> void add_param(std::string name, T value) {
+      parameters[name] = value;
+    }
     void load_params(ParameterMap param_map);
     const ParameterMap&  dump_params();
 

@@ -33,19 +33,20 @@ namespace geoflow::nodes::arithmetic {
   class NumberNode:public Node {
     public:
     using Node::Node;
-    int thenumber=0;
 
     void init() {
       add_output("result", TT_float);
+      
+      add_param("number_value", (int) 42);
     }
 
     void gui(){
-      ImGui::InputInt("The number", &thenumber);
+      ImGui::InputInt("Number value", &param<int>("number_value"));
     }
 
     void process(){
       std::cout << "begin NumberNode::process()" << "\n";
-      output("result").set(float(thenumber));
+      output("result").set(float(param<int>("number_value")));
       std::cout << "end NumberNode::process()" << "\n";
     }
   };

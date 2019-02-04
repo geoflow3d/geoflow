@@ -10,19 +10,19 @@ int main(void) {
   auto number = N.create_node(R, "Number");
   auto adder2 = N.create_node(R, "Adder");
   auto number2 = N.create_node(R, "Number");
-  // connect(*adder2, *adder, "result", "in1");
-  // connect(*adder, *adder2, "result", "in1");
+  
   connect(number->output("result"), adder->input("in1"));
   connect(number, adder, "result", "in2");
   connect(adder, adder2, "result", "in1");
   connect(adder, adder2, "result", "in2");
+
+  number->load_params({
+    {"number_value", (int) 5}
+  });
+
   bool success = N.run(number);
   if (success){
-    // try{
-      std::cout << "Result: " << adder2->output("result").get<float>() << "\n";
-    // } catch(const std::bad_any_cast& e) {
-    //   std::cout << "Oops... " << e.what() << '\n';
-    // }
+    std::cout << "Result: " << adder2->output("result").get<float>() << "\n";
   } else {
     std::cout << "No result\n";
   }
