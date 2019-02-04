@@ -47,7 +47,7 @@ namespace geof {
   typedef std::unordered_map<std::string, Parameter> ParameterMap;
   typedef std::shared_ptr<Node> NodeHandle;
   
-  enum TerminalType : uint32_t {
+  enum TerminalType : uint32_t{
     TT_any = 0,
     TT_float,
     TT_int,
@@ -63,8 +63,11 @@ namespace geof {
     TT_geometry,
     TT_feature,
     TT_point_collection, 
+    TT_point_collection_list, 
     TT_triangle_collection,
+    TT_segment_collection,
     TT_line_string_collection,
+    TT_linear_ring,
     TT_linear_ring_collection,
     TT_attribute_map_f
   };
