@@ -1,14 +1,5 @@
 cmake_minimum_required (VERSION 3.10)
 
-# if(APPLE)
-  # set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
-  # set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
-  # set(CMAKE_EXE_LINKER_FLAGS -Wl)
-  # set(CMAKE_MACOSX_RPATH 1)
-  # set(CMAKE_INSTALL_RPATH "/usr/local/opt/llvm/lib")
-  # link_directories("/usr/local/opt/llvm/lib")
-# endif()
-
 project (Geoflow VERSION 0.0.1)
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
@@ -45,8 +36,7 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(thirdparty/json)
 
 include_directories(
-  src/viewer
-  src/flowchart
+  src
   thirdparty/glad/include 
   thirdparty/imgui
   thirdparty/imgui/examples
@@ -64,6 +54,14 @@ if(MSVC)
   add_definitions(-DNOMINMAX)
 endif()
 
+add_library(geoflow-core STATIC
+  src/geoflow/core/geoflow.cpp
+  thirdparty/imgui/imgui.cpp
+  thirdparty/imgui/imgui_draw.cpp
+  thirdparty/imgui/imgui_widgets.cpp
+)
+target_link_libraries(geoflow-core nlohmann_json::nlohmann_json)
+
 if(${GF_BUILD_GUI})
   add_library(viewer STATIC 
     src/viewer/app.cpp 
@@ -78,46 +76,38 @@ if(${GF_BUILD_GUI})
     thirdparty/imgui/examples/imgui_impl_opengl3.cpp
   )
   target_link_libraries(viewer ${GLFW_LIBS})
-  add_library(flowchart-gui STATIC
-    src/flowchart/nodes.cpp 
-    src/flowchart/geoflow.cpp
-    src/flowchart/imgui_color_gradient.cpp
+  add_library(geoflow-gui STATIC
+    src/geoflow/core/geoflow.cpp
+    src/geoflow/gui/nodes.cpp 
+    src/geoflow/gui/imgui_color_gradient.cpp
   )
-  target_link_libraries(flowchart-gui viewer)
+  target_link_libraries(geoflow-gui viewer)
 
   add_executable(
     gui 
     examples/gui.cpp 
   )
-  target_link_libraries(gui flowchart-gui)
-  add_executable(
-    viewer-test 
-    src/viewer/main.cpp 
-  )
-  target_link_libraries(viewer-test viewer)
+  target_link_libraries(gui geoflow-gui)
+  # add_executable(
+  #   viewer-test 
+  #   src/viewer/main.cpp 
+  # )
+  # target_link_libraries(viewer-test viewer)
 
   set_target_properties(
     viewer
-    flowchart-gui
-    viewer-test
+    geoflow-gui
+    # viewer-test
     gui 
     PROPERTIES CXX_STANDARD 17
   )
 endif()
 
-add_library(flowchart-core STATIC
-  src/flowchart/geoflow.cpp
-  thirdparty/imgui/imgui.cpp
-  thirdparty/imgui/imgui_draw.cpp
-  thirdparty/imgui/imgui_widgets.cpp
-)
-target_link_libraries(flowchart-core nlohmann_json::nlohmann_json)
-
 add_executable(basic examples/basic.cpp)
-target_link_libraries(basic flowchart-core)
+target_link_libraries(basic geoflow-core)
 
 set_target_properties(
-  flowchart-core
+  geoflow-core
   basic
   PROPERTIES CXX_STANDARD 17
 )

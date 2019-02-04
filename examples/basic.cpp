@@ -1,8 +1,7 @@
-#include "geoflow.hpp"
 #include "basic_nodes.hpp"
 #include <iostream>
 
-using namespace geoflow;
+using namespace geof;
 
 int main(void) {
   NodeRegister R = nodes::arithmetic::create_register();

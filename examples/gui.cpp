@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "app_povi.h"
-#include "nodes.h"
+#include <viewer/app_povi.h>
+#include <geoflow/gui/nodes.h>
 #include <array>
 
 #include "basic_nodes.hpp"
@@ -33,7 +33,7 @@ int main(int ac, const char * av[])
 
     auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
     
-    ImGui::Nodes nodes(N, *a, {R});
+    ImGui::Nodes nodes(N, *a, {R, R_gui});
     a->draw_that(&nodes);
 
     // std::ifstream i("../examples/basic.gf.json");

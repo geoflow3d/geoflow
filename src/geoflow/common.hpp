@@ -6,7 +6,7 @@
 #include <optional>
 #include <glm/glm.hpp>
 
-namespace geoflow {
+namespace geof {
 
 typedef std::array<float,3> arr3f;
 typedef std::vector<arr3f> vec3f;

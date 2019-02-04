@@ -80,7 +80,7 @@ mouse_drag drag = NO_DRAG;
 xy_pos drag_init_pos;
 xy_pos last_mouse_pos;
 
-geoflow::Box bbox;
+geof::Box bbox;
 
 float fov = 30;
 float clip_near = 1;

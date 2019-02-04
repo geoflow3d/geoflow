@@ -11,15 +11,15 @@
 
 namespace ImGui
 {
-	Nodes::Nodes(geoflow::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers)
+	Nodes::Nodes(geof::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers)
 		:gf_manager(node_manager), pv_app(app), registers(node_registers)
 	{
 		id_ = 0;
 		element_.Reset();
 		canvas_scale_ = 1.0f;
-		geoflow::NodeRegister R("Visualisation");
-		R.register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
-    R.register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
+		geof::NodeRegister R("Visualisation");
+		R.register_node<geof::nodes::gui::ColorMapperNode>("ColorMapper");
+    R.register_node<geof::nodes::gui::GradientMapperNode>("GradientMapper");
 		registers.push_back(R);
 	}
 
@@ -129,7 +129,7 @@ namespace ImGui
 	// Nodes::Node* Nodes::CreateNodeFromHandle(ImVec2 pos, std::string type) {
 	// 	return CreateNodeFromType(pos, type, type+std::to_string(id_));
 	// }
-	Nodes::Node* Nodes::CreateNodeFromHandle(ImVec2 pos, geoflow::NodeHandle gf_node)
+	Nodes::Node* Nodes::CreateNodeFromHandle(ImVec2 pos, geof::NodeHandle gf_node)
 	{
 		++id_;
 
@@ -801,11 +801,11 @@ namespace ImGui
 			
 			// set border color based on status of node
 			auto bcol = ImColor(0.6, 0.6f, 0.6f, 1.0f);
-			if (node.gf_node->status==geoflow::DONE)
+			if (node.gf_node->status==geof::DONE)
 				bcol = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
-			else if (node.gf_node->status==geoflow::WAITING)
+			else if (node.gf_node->status==geof::WAITING)
 				bcol = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
-			else if (node.gf_node->status==geoflow::READY)
+			else if (node.gf_node->status==geof::READY)
 				bcol = ImColor(0.0f, 0.0f, 1.0f, 1.0f);
 
 			if (node.state_ > 0)
@@ -875,7 +875,7 @@ namespace ImGui
 						if (connection->input_)
 						{
 							connection->input_->connections_--;
-							geoflow::disconnect(*connection->input_->gf_terminal.get(), *connection->gf_terminal.get());
+							geof::disconnect(*connection->input_->gf_terminal.get(), *connection->gf_terminal.get());
 						}
 
 						connection->target_ = nullptr;
@@ -906,8 +906,8 @@ namespace ImGui
 					// check if this connection is legal (ie does not cause a loop in the graph)
 					if (	
 						element_.node_ != node.Get() 
-						&& geoflow::is_compatible(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get()) //element_.connection_->type_ == connection->type_ 
-						&& !geoflow::detect_loop(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get())
+						&& geof::is_compatible(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get()) //element_.connection_->type_ == connection->type_ 
+						&& !geof::detect_loop(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get())
 					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -921,14 +921,14 @@ namespace ImGui
 								if (connection->input_)
 								{
 									connection->input_->connections_--;
-									geoflow::disconnect(*connection->input_->gf_terminal.get(), *connection->gf_terminal.get());
+									geof::disconnect(*connection->input_->gf_terminal.get(), *connection->gf_terminal.get());
 								}
 								connection->target_ = element_.node_;
 								connection->input_ = element_.connection_;
 								connection->connections_ = 1;
 								element_.connection_->connections_++;
 
-								geoflow::connect(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get());
+								geof::connect(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get());
 								gf_manager.run(connection->gf_terminal->parent);
 								// std::cout << "connected " << element_.connection_->name_ << " to " <<connection->name_ <<"\n";
 
@@ -1025,8 +1025,8 @@ namespace ImGui
 					// check is draging input are not from the same node
 					if (
 						element_.node_ != node.Get() 
-						&& geoflow::is_compatible(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get()) //element_.connection_->type_ == connection->type_
-						&& !geoflow::detect_loop(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get())
+						&& geof::is_compatible(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get()) //element_.connection_->type_ == connection->type_
+						&& !geof::detect_loop(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get())
 					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -1042,7 +1042,7 @@ namespace ImGui
 								element_.connection_->input_ = connection.get();
 								element_.connection_->connections_ = 1;
 								
-								geoflow::connect(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get());
+								geof::connect(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get());
 								gf_manager.run(element_.connection_->gf_terminal->parent);
 								// std::cout << "connected " << connection->name_ << " to " << element_.connection_->name_ << "\n";
 
@@ -1182,7 +1182,7 @@ namespace ImGui
 				conn_source->connections_++;
 				conn_target->connections_++;
 
-				geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
+				geof::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
 				gf_manager.run(conn_target->gf_terminal->parent);
 			}
 			gf_manager_checked = true;
@@ -1240,7 +1240,7 @@ namespace ImGui
 				if (ImGui::MenuItem("Painter"))
 				{
 					element_.Reset();
-					auto painter_node = std::make_shared<geoflow::nodes::gui::PainterNode>(gf_manager, "Painter");
+					auto painter_node = std::make_shared<geof::nodes::gui::PainterNode>(gf_manager, "Painter");
 					painter_node->set_name("painter "+std::to_string(id_));
 					painter_node->add_to(pv_app, painter_node->get_name());
 					element_.node_ = CreateNodeFromHandle(

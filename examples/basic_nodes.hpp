@@ -1,10 +1,9 @@
-#include "geoflow.hpp"
+#include <geoflow/core/geoflow.hpp>
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include "imgui.h"
 
-namespace geoflow::nodes::arithmetic {
+namespace geof::nodes::arithmetic {
   class AdderNode:public Node {
     public:
     using Node::Node;

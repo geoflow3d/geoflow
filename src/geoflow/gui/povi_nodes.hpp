@@ -1,15 +1,14 @@
-#include "geoflow.hpp"
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include "imgui.h"
-#include "gloo.h"
-#include "app_povi.h"
-#include "imgui_color_gradient.h"
 #include <algorithm>
 #include <random>
+#include "../core/geoflow.hpp"
+#include "../../viewer/gloo.h"
+#include "../../viewer/app_povi.h"
+#include "imgui_color_gradient.h"
 
-namespace geoflow::nodes::gui {
+namespace geof::nodes::gui {
   struct ColorMap {
     std::shared_ptr<Uniform> u_valmax, u_valmin;
     bool is_gradient=false;

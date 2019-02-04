@@ -20,7 +20,7 @@
 #include "../common.hpp"
 #include "imgui.h"
 
-namespace geoflow {
+namespace geof {
 
   class Exception: public std::exception
   {
