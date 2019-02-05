@@ -44,7 +44,7 @@ namespace geoflow {
   // typedef std::weak_ptr<InputTerminal> InputHandle;
   // typedef std::weak_ptr<OutputTerminal> OutputHandle;
 
-  typedef std::variant<bool,int,double,std::string> Parameter;
+  typedef std::variant<bool,int,float,std::string> Parameter;
   typedef std::unordered_map<std::string, Parameter> ParameterMap;
   typedef std::shared_ptr<Node> NodeHandle;
   
