@@ -185,7 +185,8 @@ namespace geoflow {
     template<typename T> void add_param(std::string name, T value) {
       parameters[name] = value;
     }
-    void load_params(ParameterMap param_map);
+    void set_param(std::string name, Parameter param);
+    void set_params(ParameterMap param_map);
     const ParameterMap&  dump_params();
 
     void set_position(float x, float y) {

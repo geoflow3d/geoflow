@@ -16,9 +16,7 @@ int main(void) {
   connect(adder, adder2, "result", "in1");
   connect(adder, adder2, "result", "in2");
 
-  number->load_params({
-    {"number_value", (int) 5}
-  });
+  number->set_param("number_value", (int) 5);
 
   bool success = N.run(number);
   if (success){

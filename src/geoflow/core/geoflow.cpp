@@ -73,18 +73,20 @@ using namespace geoflow;
   bool Node::set_name(std::string new_name) { 
     return manager.name_node(get_handle(), new_name); 
   };
-  void Node::load_params(ParameterMap new_map) {
-    for (auto& kv : new_map) {
-      auto key = kv.first;
-      if (parameters.find(key) != parameters.end()) {
-        if(parameters[key].index() == kv.second.index())
-          parameters[key] = kv.second;
-        else {
-          std::cout << "Incorrect datatype for parameter: '" << key <<"', node type: " << type_name << "\n";
-        }
-      } else {
-        std::cout << "No such parameter in this node: '" << key <<"', node type: " << type_name << "\n";
+  void Node::set_param(std::string name, Parameter param) {
+    if (parameters.find(name) != parameters.end()) {
+      if(parameters[name].index() == param.index())
+        parameters[name] = param;
+      else {
+        std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
       }
+    } else {
+      std::cout << "No such parameter in this node: '" << name <<"', node type: " << type_name << "\n";
+    }
+  }
+  void Node::set_params(ParameterMap new_map) {
+    for (auto& kv : new_map) {
+      set_param(kv.first, kv.second);
     }
   }
   const ParameterMap& Node::dump_params() {

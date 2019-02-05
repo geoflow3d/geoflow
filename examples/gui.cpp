@@ -26,7 +26,7 @@ int main(int ac, const char * av[])
     auto adder = N.create_node(R, "Adder", {300,0});
     auto number = N.create_node(R, "Number", {0, 000});
 
-    number->load_params({
+    number->set_params({
         {"number_value", (int) 5}
     });
 
