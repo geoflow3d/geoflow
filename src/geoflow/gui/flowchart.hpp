@@ -168,7 +168,6 @@ namespace ImGui
 			}
 			~Connection()
 			{
-				std::cout << "destructing Connection " << name_ <<"\n";
 			}
 
 			Connection* Get()
@@ -212,8 +211,6 @@ namespace ImGui
 				full_height = 0.0f;
 			}
 			~Node(){
-				// gf_node->parent.remove(gf_node.lock());
-				std::cout << "Destructing Node\n";
 			}
 
 			Node* Get()

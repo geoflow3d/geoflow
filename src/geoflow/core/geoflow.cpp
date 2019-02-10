@@ -170,7 +170,9 @@ using namespace geoflow;
         auto n = node_queue.front();
         node_queue.pop();
         n->status = PROCESSING;
+        std::cout << "Starting node " << n->get_name();
         n->process();
+        std::cout << " ...processing complete\n";
         n->status = DONE;
         n->propagate_outputs();
       }

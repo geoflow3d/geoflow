@@ -145,7 +145,6 @@ namespace ImGui
 		// std::cout << "reading inputs from " << type <<  "\n";
 		// std::cout << "\t has " << gf_node->inputTerminals.size() <<  " input terminals\n";
 		for (auto input : gf_node->inputTerminals){
-			std::cout << "&term " << input.second.get() << "\n";
 			auto connection = std::make_unique<Connection>(input.second);
 			connection->name_ = input.first;
 
@@ -1207,11 +1206,11 @@ namespace ImGui
 				if (context->IO.MouseDragMaxDistanceSqr[1] < 36.0f)
 				{						
 					if (element_.state_ == NodesState_HoverNode) {
-						std::cout << "creating NodeActionsContextMenu\n";
+						// std::cout << "creating NodeActionsContextMenu\n";
 						element_.node_slot0_ = element_.node_;
 						ImGui::OpenPopup("NodeActionsContextMenu");
 					} else {
-						std::cout << "creating NodesContextMenu\n";
+						// std::cout << "creating NodesContextMenu\n";
 						ImGui::OpenPopup("NodesContextMenu");
 					}
 				}								
