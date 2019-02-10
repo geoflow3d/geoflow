@@ -313,6 +313,7 @@ class Painter : public BasePainter {
     void clear_uniforms();
     void render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection);
     void gui();
+    void short_gui();
     
 
     private:

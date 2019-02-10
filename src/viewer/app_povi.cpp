@@ -100,7 +100,7 @@ void poviApp::on_draw(){
                 on_scroll(io.MouseWheelH, io.MouseWheel);
 
             if (ImGui::IsMouseClicked(0)) {
-                if(io.KeySuper)
+                if(io.KeyCtrl)
                     drag = TRANSLATE;
                 else
                     drag = ROTATE;
@@ -164,12 +164,27 @@ void poviApp::on_draw(){
     ImGui::Begin("Painters");
     for(auto &painter:painters){
         auto p = std::get<0>(painter);
+        ImGui::PushID(p.get());
+
         ImGui::Checkbox(std::get<1>(painter).c_str(), &std::get<2>(painter));
+        
+        ImGui::SameLine();
+        if (ImGui::Button("Center"))
+            translation = -p->get_bbox().center();
+        ImGui::SameLine();
+        if (ImGui::Button("...")) 
+            ImGui::OpenPopup("config");
+        if (ImGui::BeginPopup("config")) {
+            p->gui();
+            ImGui::EndPopup();
+        }
         ImGui::Indent();
         ImGui::PushItemWidth(150);
-        p->gui();
+        p->short_gui();
         ImGui::PopItemWidth();
         ImGui::Unindent();
+
+        ImGui::PopID();
     }
     ImGui::End();
 }

@@ -351,11 +351,7 @@ void Painter::clear_uniforms() {
     uniforms_external.clear();
 }
 
-void Painter::gui() {
-    ImGui::PushID(this);
-    auto c = bbox.center();
-    // ImGui::Text("Init: %d", is_initialised());
-    ImGui::Text("[%.2f, %.2f, %.2f]", c.x, c.y, c.z);
+void Painter::short_gui() {
     if(is_initialised()) {
         size_t n = 0;
         if (attributes["position"]->get_length()>0)
@@ -393,6 +389,13 @@ void Painter::gui() {
             ImGui::EndCombo();
         }
     }
+}
+
+void Painter::gui() {
+    ImGui::PushID(this);
+    auto c = bbox.center();
+    // ImGui::Text("Init: %d", is_initialised());
+    ImGui::Text("center: [%.2f, %.2f, %.2f]", c.x, c.y, c.z);
     if(draw_mode==GL_TRIANGLES) {
         const char* items[] = { "GL_POINT", "GL_LINE", "GL_FILL" };
         const char* item_current;

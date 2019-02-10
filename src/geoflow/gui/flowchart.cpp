@@ -133,7 +133,7 @@ namespace ImGui
 	{
 		++id_;
 
-		gf_manager.run(gf_node);
+		// gf_manager.run(gf_node);
 		auto node = std::make_unique<Node>(gf_node);
 		
 		////////////////////////////////////////////////////////////////////////////////
