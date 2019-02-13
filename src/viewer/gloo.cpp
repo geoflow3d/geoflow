@@ -323,6 +323,16 @@ void Painter::set_geometry(GeometryCollection< std::array<arr3f,3> >& geoms) {
   
     enable_attribute("position");
 }
+void Painter::set_geometry(GeometryCollection< std::array<arr3f,2> >& geoms) {
+    if (geoms.size()==0) return;
+    subdata_pairs.clear();
+    bbox.clear();
+    bbox.add(geoms.box());
+    
+    attributes["position"]->set_data(geoms[0][0].data(), geoms.vertex_count(), geoms.dimension());
+  
+    enable_attribute("position");
+}
 
 void Painter::clear_attribute(const std::string name) {
     if(name == "position"){

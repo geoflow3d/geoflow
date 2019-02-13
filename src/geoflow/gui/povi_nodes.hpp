@@ -197,6 +197,7 @@ namespace geoflow::nodes::gui {
       add_input("geometries", {
         TT_point_collection, 
         TT_triangle_collection,
+        TT_segment_collection,
         TT_line_string_collection,
         TT_linear_ring_collection
         });
@@ -248,6 +249,10 @@ namespace geoflow::nodes::gui {
             auto& gc = t.get<LineStringCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINE_STRIP);
+          } else if(t.connected_type == TT_segment_collection) {
+            auto& gc = t.get<SegmentCollection&>();
+            painter->set_geometry(gc);
+            painter->set_drawmode(GL_LINES);
           } else if (t.connected_type == TT_linear_ring_collection) {
             auto& gc = t.get<LinearRingCollection&>();
             painter->set_geometry(gc);

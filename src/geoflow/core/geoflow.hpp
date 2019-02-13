@@ -67,6 +67,7 @@ namespace geoflow {
     TT_point_collection_list, 
     TT_triangle_collection,
     TT_segment_collection,
+    TT_segment_collection_list,
     TT_line_string_collection,
     TT_linear_ring,
     TT_linear_ring_collection,
