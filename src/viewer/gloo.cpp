@@ -403,6 +403,7 @@ void Painter::short_gui() {
 
 void Painter::gui() {
     ImGui::PushID(this);
+    short_gui();
     auto c = bbox.center();
     // ImGui::Text("Init: %d", is_initialised());
     ImGui::Text("center: [%.2f, %.2f, %.2f]", c.x, c.y, c.z);

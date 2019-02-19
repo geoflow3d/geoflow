@@ -154,6 +154,7 @@ void poviApp::on_draw(){
     ImGui::SliderFloat("Field of view", &fov, 1, 180);
     ImGui::SliderFloat("Clip near", &clip_near, 0.01, 100);
     ImGui::SliderFloat("Clip far", &clip_far, 1, 1000);
+    ImGui::SliderFloat("Zoom speed", &zoom_speed, 1, 1000);
     // ImGui::SliderFloat("Camera position", &cam_pos, -200, -1);
     cam_pos->gui();
     light_color->gui();
@@ -172,17 +173,16 @@ void poviApp::on_draw(){
         if (ImGui::Button("Center"))
             translation = -p->get_bbox().center();
         ImGui::SameLine();
-        if (ImGui::Button("...")) 
-            ImGui::OpenPopup("config");
-        if (ImGui::BeginPopup("config")) {
+        // if (ImGui::Button("...")) 
+        //     ImGui::OpenPopup("config");
+        if (ImGui::CollapsingHeader("More")) {
+            // p->short_gui();
+            ImGui::Indent();
+            ImGui::PushItemWidth(150);
             p->gui();
-            ImGui::EndPopup();
+            ImGui::PopItemWidth();
+            ImGui::Unindent();
         }
-        ImGui::Indent();
-        ImGui::PushItemWidth(150);
-        p->short_gui();
-        ImGui::PopItemWidth();
-        ImGui::Unindent();
 
         ImGui::PopID();
     }
@@ -250,7 +250,9 @@ void poviApp::on_mouse_move(double xpos, double ypos) {
     last_mouse_pos.y = ypos;
 }
 void poviApp::on_scroll(double xoffset, double yoffset){
-    cam_pos->get_value() += yoffset/10;
+    auto& io = ImGui::GetIO();
+    float multiply = io.KeyCtrl ? zoom_speed : 1.0;
+    cam_pos->get_value() += (yoffset/10) * multiply;
 }
 
 void poviApp::update_view_matrix(){

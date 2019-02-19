@@ -85,6 +85,7 @@ geoflow::Box bbox;
 float fov = 30;
 float clip_near = 1;
 float clip_far = 10000;
+float zoom_speed = 200;
 std::shared_ptr<Uniform1f> cam_pos;
 std::shared_ptr<Uniform3f> light_direction;
 std::shared_ptr<Uniform4f> light_color;

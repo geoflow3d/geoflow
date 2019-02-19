@@ -52,9 +52,10 @@ using namespace geoflow;
   void OutputTerminal::connect(InputTerminal& in) {
     //check type compatibility
     if (!is_compatible(in))
-      throw Exception("Failed to connect. Terminals have incompatible types!");
+      throw Exception("Failed to connect ouput " +get_name()+ " from "+parent.get_name()+" to input " + in.get_name() + " from " +in.parent.get_name()+ ". Terminals have incompatible types!");
+      
     if (detect_loop(*this, *in.get_ptr().lock()))
-      throw Exception("Failed to connect. Loop detected!");
+      throw Exception("Failed to connect ouput " +get_name()+ " from "+parent.get_name()+" to input " + in.get_name() + " from " +in.parent.get_name()+ ". Loop detected!");
     
     in.connected_type = type;
     parent.on_connect(*this);

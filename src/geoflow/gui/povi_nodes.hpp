@@ -199,7 +199,8 @@ namespace geoflow::nodes::gui {
         TT_triangle_collection,
         TT_segment_collection,
         TT_line_string_collection,
-        TT_linear_ring_collection
+        TT_linear_ring_collection,
+        TT_linear_ring
         });
       add_input("normals", TT_vec3f);
       add_input("colormap", TT_colmap);
@@ -256,6 +257,12 @@ namespace geoflow::nodes::gui {
           } else if (t.connected_type == TT_linear_ring_collection) {
             auto& gc = t.get<LinearRingCollection&>();
             painter->set_geometry(gc);
+            painter->set_drawmode(GL_LINE_LOOP);
+          } else if (t.connected_type == TT_linear_ring) {
+            auto& gc = t.get<LinearRing&>();
+            LinearRingCollection lrc;
+            lrc.push_back(gc);
+            painter->set_geometry(lrc);
             painter->set_drawmode(GL_LINE_LOOP);
           }
         } else if(&input("normals") == &t) {
