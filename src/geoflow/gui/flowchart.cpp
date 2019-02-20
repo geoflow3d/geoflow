@@ -20,6 +20,7 @@ namespace ImGui
 		geoflow::NodeRegister R("Visualisation");
 		R.register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
     R.register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
+    R.register_node<geoflow::nodes::gui::PainterNode>("Painter");
 		registers.push_back(R);
 	}
 
@@ -1229,23 +1230,17 @@ namespace ImGui
 						if (ImGui::MenuItem(type_name.c_str()))
 						{	
 							element_.Reset();
+							auto handle = gf_manager.create_node(node_register, type_name);
+							if (type_name=="Painter") {
+								auto& painter_node = dynamic_cast<geoflow::nodes::gui::PainterNode&>(*handle);
+								painter_node.add_to(pv_app, handle->get_name());
+							}
 							element_.node_ = CreateNodeFromHandle(
 								(popup_mouse - canvas_scroll_) / canvas_scale_, 
-								gf_manager.create_node(node_register, type_name)
+								handle
 							);
 						}
 					}
-				}
-				if (ImGui::MenuItem("Painter"))
-				{
-					element_.Reset();
-					auto painter_node = std::make_shared<geoflow::nodes::gui::PainterNode>(gf_manager, "Painter");
-					painter_node->set_name("painter "+std::to_string(id_));
-					painter_node->add_to(pv_app, painter_node->get_name());
-					element_.node_ = CreateNodeFromHandle(
-						(popup_mouse - canvas_scroll_) / canvas_scale_, 
-						painter_node
-					);
 				}
 				ImGui::EndPopup();
 			}
