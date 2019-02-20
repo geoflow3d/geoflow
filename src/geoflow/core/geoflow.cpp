@@ -199,14 +199,15 @@ using namespace geoflow;
   }
   bool NodeManager::name_node(NodeHandle node, std::string new_name) {
     // rename a node, ensure uniqueness of name, return true if it wasn't already used
-    if(nodes.find(new_name)==nodes.end()){
-      node->name = new_name;
-      return false;
-    }
-    remove_node(node);
-    nodes[new_name] = node;
-    node->name = new_name;
-    return true;
+    if(nodes.find(new_name)==nodes.end()) // check if new_name already exists
+     if (nodes.find(node->get_name())!=nodes.end()) // check if we can find node's current name 
+      if (nodes[node->get_name()] == node) { // node object must exist in nodes
+        remove_node(node);
+        nodes[new_name] = node;
+        node->name = new_name;
+        return true;
+      }
+    return false;
   }
   std::vector<NodeHandle> NodeManager::dump_nodes() {
     std::vector<NodeHandle> node_dump;
