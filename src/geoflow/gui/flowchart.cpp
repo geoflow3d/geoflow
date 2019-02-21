@@ -202,7 +202,7 @@ namespace ImGui
 			const float half = ((ImGui::CalcTextSize(connection->name_.c_str()).y * vertical_padding) / 2.0f);
 
 			inputs_size.y += half;
-			connection->position_ = ImVec2(inputs_size.x-9.5f, inputs_size.y);
+			connection->position_ = ImVec2(inputs_size.x-14.0f, inputs_size.y);
 			inputs_size.y += half;
 		}
 
@@ -212,7 +212,7 @@ namespace ImGui
 			const float half = ((ImGui::CalcTextSize(connection->name_.c_str()).y * vertical_padding) / 2.0f);
 
 			outputs_size.y += half;
-			connection->position_ = ImVec2(outputs_size.x+9.5f, outputs_size.y);
+			connection->position_ = ImVec2(outputs_size.x+14.0f, outputs_size.y);
 			outputs_size.y += half;
 		}
 	
