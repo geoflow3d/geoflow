@@ -1224,22 +1224,24 @@ namespace ImGui
 				// add nodes where the popup was opened
 				auto popup_mouse = ImGui::GetMousePosOnOpeningCurrentPopup() - canvas_position_;
 				for(auto& node_register : registers) {
-					for (auto& kv : node_register.node_types)
-					{
-						auto type_name = kv.first;
-						if (ImGui::MenuItem(type_name.c_str()))
-						{	
-							element_.Reset();
-							auto handle = gf_manager.create_node(node_register, type_name);
-							if (type_name=="Painter") {
-								auto& painter_node = dynamic_cast<geoflow::nodes::gui::PainterNode&>(*handle);
-								painter_node.add_to(pv_app, handle->get_name());
+					if ( ImGui::BeginMenu(node_register.get_name().c_str())) {
+						for (auto& kv : node_register.node_types) {
+							auto type_name = kv.first;
+							if (ImGui::MenuItem(type_name.c_str()))
+							{	
+								element_.Reset();
+								auto handle = gf_manager.create_node(node_register, type_name);
+								if (type_name=="Painter") {
+									auto& painter_node = dynamic_cast<geoflow::nodes::gui::PainterNode&>(*handle);
+									painter_node.add_to(pv_app, handle->get_name());
+								}
+								element_.node_ = CreateNodeFromHandle(
+									(popup_mouse - canvas_scroll_) / canvas_scale_, 
+									handle
+								);
 							}
-							element_.node_ = CreateNodeFromHandle(
-								(popup_mouse - canvas_scroll_) / canvas_scale_, 
-								handle
-							);
 						}
+						ImGui::EndMenu();
 					}
 				}
 				ImGui::EndPopup();
