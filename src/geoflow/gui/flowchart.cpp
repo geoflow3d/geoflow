@@ -1227,8 +1227,7 @@ namespace ImGui
 					if ( ImGui::BeginMenu(node_register.get_name().c_str())) {
 						for (auto& kv : node_register.node_types) {
 							auto type_name = kv.first;
-							if (ImGui::MenuItem(type_name.c_str()))
-							{	
+							if (ImGui::MenuItem(type_name.c_str())) {	
 								element_.Reset();
 								auto handle = gf_manager.create_node(node_register, type_name);
 								if (type_name=="Painter") {
