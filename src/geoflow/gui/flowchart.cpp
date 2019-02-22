@@ -789,7 +789,7 @@ namespace ImGui
 		////////////////////////////////////////////////////////////////////////////////
 
 		ImVec2 title_name_size = ImGui::CalcTextSize(node.name_.c_str());
-		const float corner = title_name_size.y / 2.0f;
+		const float corner = title_name_size.y / 3.0f;
 
 		{		
 			ImVec2 title_area;
@@ -800,20 +800,20 @@ namespace ImGui
 			title_pos.x = node_rect_min.x + ((title_area.x - node_rect_min.x) / 2.0f) - (title_name_size.x / 2.0f);
 			
 			// set border color based on status of node
-			auto bcol = ImColor(0.6, 0.6f, 0.6f, 1.0f);
+			auto bcol = ImColor(0.6, 0.6f, 0.6f, 0.8f);
 			if (node.gf_node->status==geoflow::DONE)
-				bcol = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
+				bcol = ImColor(0.0f, 1.0f, 0.0f, 0.8f);
 			else if (node.gf_node->status==geoflow::WAITING)
-				bcol = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
+				bcol = ImColor(1.0f, 1.0f, 0.0f, 0.8f);
 			else if (node.gf_node->status==geoflow::READY)
-				bcol = ImColor(0.0f, 0.0f, 1.0f, 1.0f);
+				bcol = ImColor(0.0f, 0.0f, 1.0f, 0.8f);
 
 			if (node.state_ > 0)
 			{
-				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.4f, 0.4f, 0.4f, 0.7f), corner, ImDrawCornerFlags_All);
-				drawList->AddRectFilled(node_rect_min, title_area, ImColor(0.3f, 0.3f, 0.3f, 0.7f), corner, ImDrawCornerFlags_Top);
+				drawList->AddRectFilled(node_rect_min, node_rect_max, ImColor(0.2f, 0.2f, 0.2f, 0.7f), corner, ImDrawCornerFlags_All);
+				drawList->AddRectFilled(node_rect_min, title_area, ImColor(0.1f, 0.1f, 0.1f, 0.7f), corner, ImDrawCornerFlags_Top);
 
-				drawList->AddRect(node_rect_min, node_rect_max, bcol, corner, ImDrawCornerFlags_All, 1.0f);
+				drawList->AddRect(node_rect_min, node_rect_max, bcol, corner, ImDrawCornerFlags_All, 1.5f);
 
 				title_pos.y = node_rect_min.y + ((title_name_size.y * 2.0f) / 2.0f) - (title_name_size.y / 2.0f);
 			}
@@ -1101,7 +1101,7 @@ namespace ImGui
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
 
 		ImGui::BeginChild("NodesScrollingRegion", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
 
@@ -1123,7 +1123,7 @@ namespace ImGui
 		{
 			ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-			ImU32 color = ImColor(0.4f, 0.4f, 0.4f, 0.4f);
+			ImU32 color = ImColor(0.2f, 0.2f, 0.2f, 1.0f);
 			const float size = 64.0f * canvas_scale_;
 
 			for (float x = fmodf(canvas_scroll_.x, size); x < canvas_size_.x; x += size)
