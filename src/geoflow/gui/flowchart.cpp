@@ -1315,7 +1315,7 @@ namespace ImGui
 				// }
 				ImGui::Text("Outputerminals:");
 				for (auto& oT : element_.node_->gf_node->outputTerminals) {
-					ImGui::Text("\t%s, data: %i, #connections: %lu", oT.first.c_str(), oT.second->has_data(), oT.second->connections.size());
+					ImGui::Text("[%i/%lu] %s", oT.second->has_data(), oT.second->connections.size(), oT.first.c_str());
 				}
 			}
 			// if (element_.node_slot0_)
