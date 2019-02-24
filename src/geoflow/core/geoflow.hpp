@@ -64,31 +64,6 @@ namespace geoflow {
   typedef std::unordered_map<std::string, Parameter> ParameterMap;
   typedef std::shared_ptr<Node> NodeHandle;
   
-  enum TerminalType : uint32_t{
-    TT_any = 0,
-    TT_float,
-    TT_int,
-    TT_vec1ui,
-    TT_vec1i,
-    TT_vec1f,
-    TT_vec1b,
-    TT_vec2f,
-    TT_vec3f,
-    TT_vec6f,
-    TT_vec_float,
-    TT_colmap,
-    TT_geometry,
-    TT_feature,
-    TT_point_collection, 
-    TT_point_collection_list, 
-    TT_triangle_collection,
-    TT_segment_collection,
-    TT_segment_collection_list,
-    TT_line_string_collection,
-    TT_linear_ring,
-    TT_linear_ring_collection,
-    TT_attribute_map_f
-  };
   class Terminal {
     public:
     Terminal(Node& parent_gnode, std::string name):parent(parent_gnode), name(name) {
@@ -155,6 +130,32 @@ namespace geoflow {
     void clear();
   };
 
+  template <typename TerminalClass> class TerminalGroup {
+    protected:
+    std::map<std::string,std::shared_ptr<TerminalClass> > terminals;
+    std::vector<TerminalType> types;
+    std::string name;
+    Node& parent;
+    public:
+    TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types)
+    : parent(parent_gnode), name(name), types(types) {};
+
+    TerminalClass& term(std::string term_name) {
+      return *terminals.at(term_name);
+    }
+    void add(std::string term_name, TerminalType type) {
+      // TODO: check if term_name is unique and if type is in types
+      terminals[term_name] = std::make_shared<InputTerminal>(parent, name, type);
+    }
+    void clear(std::string term_name) {
+      terminals.erase(term_name);
+    }
+    void clear() {
+      terminals.clear();
+    }
+    friend class Node;
+  };
+
   enum node_status {
     WAITING,
     READY,
@@ -165,8 +166,11 @@ namespace geoflow {
   class Node : public std::enable_shared_from_this<Node> {
     public:
 
-    std::map<std::string,std::shared_ptr<InputTerminal> > inputTerminals;
+    std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
+
+    std::map<std::string,TerminalGroup<InputTerminal>> inputGroups;
+    std::map<std::string,TerminalGroup<OutputTerminal>> outputGroups;
 
     ParameterMap parameters;
     ImVec2 position;
@@ -192,12 +196,46 @@ namespace geoflow {
     template<typename T> T& param(std::string name) {
       return std::get<T>(parameters.at(name));
     }
+    TerminalGroup<InputTerminal>& input_group(std::string group_name){
+      return inputGroups.at(group_name)
+    }
+    TerminalGroup<OutputTerminal>& output_group(std::string group_name){
+      return outputGroups.at(group_name)
+    }
+
+    void for_each_input(std::function<void(InputTerminal&)> f) {
+      for (auto& iT : inputTerminals) {
+        f(*iT.second);
+      }
+      for (auto& iG : inputGroups) {
+        for (auto& iT : iG.terminals) {
+          f(*iT.second);
+        }
+      }
+    }
+    void for_each_output(std::function<void(OutputTerminal&)> f) {
+      for (auto& iT : outputTerminals) {
+        f(*iT.second);
+      }
+      for (auto& iG : outputGroups) {
+        for (auto& iT : iG.terminals) {
+          f(*iT.second);
+        }
+      }
+    }
 
     node_status status=WAITING;
 
     void add_input(std::string name, TerminalType type);
     void add_input(std::string name, std::initializer_list<TerminalType> types);
     void add_output(std::string name, TerminalType type);
+
+    void add_input_group(std::string group_name, std::initializer_list<TerminalType> types) {
+      inputGroups[group_name] = TerminalGroup<InputTerminal>(*this, group_name, types);
+    }
+    void add_output_group(std::string group_name, std::initializer_list<TerminalType> types) {
+      outputGroups[group_name] = TerminalGroup<OutputTerminal>(*this, group_name, types);
+    }
 
     template<typename T> void add_param(std::string name, T value) {
       parameters[name] = value;

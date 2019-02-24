@@ -124,20 +124,23 @@ using namespace geoflow;
     );
   }
   bool Node::update() {
-    for(auto &input : inputTerminals) {
-      if(!input.second->has_data()) {
+    bool success = true;
+    for_each_input([success&, status&](InputTerminal& iT) {
+      if(!iT.has_data()) {
         status = WAITING;
-        return false;
-        }
-    }
+        success &= false;
+      }
+    });
+    if (!success) return false;
+
     manager.queue(get_handle());
     status = READY;
     return true;
   };
   void Node::propagate_outputs() {
-    for (auto &oT : outputTerminals) {
-      oT.second->propagate();
-    }
+    for_each_output([](OutputTerminal& oT) {
+      oT.propagate();
+    });
   }
   void Node::notify_children() {
     std::queue<Node*> nodes_to_check;
@@ -148,9 +151,9 @@ using namespace geoflow;
       auto n = nodes_to_check.front();
       nodes_to_check.pop();
       
-      for (auto& oT : n->outputTerminals) {
-         oT.second->clear(); // clear output terminal
-        for (auto& conn : oT.second->get_connections()) {
+      n->for_each_output([nodes_to_check&, visited&](OutputTerminal& oT) {
+        oT.clear(); // clear output terminal
+        for (auto& conn : oT.get_connections()) {
           auto iT = conn.lock();
           iT->clear();
           auto child_node = iT->parent.get_handle().get();
@@ -159,7 +162,8 @@ using namespace geoflow;
             nodes_to_check.push(child_node);
           }
         }
-      }
+      });
+
     }
   }
   std::string Node::get_info() {
@@ -297,11 +301,11 @@ using namespace geoflow;
       auto n = nodes_to_check.front();
       nodes_to_check.pop();
       
-      for (auto& oT : n->outputTerminals) {
-        if (oT.second.get() == &outputT){
+      n->for_each_output([nodes_to_check&, visited&](OutputTerminal& oT) {
+        if (&oT == &outputT){
           return true;
         }
-        for (auto& c :oT.second->connections) {
+        for (auto& c :oT.connections) {
           if (auto iT = c.lock()) {
             auto child_node = iT->parent.get_handle();
             if (visited.count(child_node)==0) {
@@ -310,7 +314,7 @@ using namespace geoflow;
             }
           }
         }
-      }
+      });
     }
     return false;
   }
