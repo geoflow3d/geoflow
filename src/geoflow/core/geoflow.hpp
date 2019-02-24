@@ -139,6 +139,7 @@ namespace geoflow {
     public:
     TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types)
     : parent(parent_gnode), name(name), types(types) {};
+    // ~TerminalGroup(){};
 
     TerminalClass& term(std::string term_name) {
       return *terminals.at(term_name);
@@ -197,10 +198,10 @@ namespace geoflow {
       return std::get<T>(parameters.at(name));
     }
     TerminalGroup<InputTerminal>& input_group(std::string group_name){
-      return inputGroups.at(group_name)
+      return inputGroups.at(group_name);
     }
     TerminalGroup<OutputTerminal>& output_group(std::string group_name){
-      return outputGroups.at(group_name)
+      return outputGroups.at(group_name);
     }
 
     void for_each_input(std::function<void(InputTerminal&)> f) {
@@ -208,7 +209,7 @@ namespace geoflow {
         f(*iT.second);
       }
       for (auto& iG : inputGroups) {
-        for (auto& iT : iG.terminals) {
+        for (auto& iT : iG.second.terminals) {
           f(*iT.second);
         }
       }
@@ -218,7 +219,7 @@ namespace geoflow {
         f(*iT.second);
       }
       for (auto& iG : outputGroups) {
-        for (auto& iT : iG.terminals) {
+        for (auto& iT : iG.second.terminals) {
           f(*iT.second);
         }
       }
@@ -231,10 +232,14 @@ namespace geoflow {
     void add_output(std::string name, TerminalType type);
 
     void add_input_group(std::string group_name, std::initializer_list<TerminalType> types) {
-      inputGroups[group_name] = TerminalGroup<InputTerminal>(*this, group_name, types);
+      inputGroups.emplace(
+        std::make_pair(group_name, TerminalGroup<InputTerminal>(*this, group_name, types))
+      );
     }
     void add_output_group(std::string group_name, std::initializer_list<TerminalType> types) {
-      outputGroups[group_name] = TerminalGroup<OutputTerminal>(*this, group_name, types);
+      outputGroups.emplace(
+        std::make_pair(group_name, TerminalGroup<OutputTerminal>(*this, group_name, types))
+      );
     }
 
     template<typename T> void add_param(std::string name, T value) {

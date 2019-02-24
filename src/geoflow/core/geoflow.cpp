@@ -125,13 +125,14 @@ using namespace geoflow;
   }
   bool Node::update() {
     bool success = true;
-    for_each_input([success&, status&](InputTerminal& iT) {
-      if(!iT.has_data()) {
-        status = WAITING;
+    for_each_input([&success](InputTerminal& iT) {
+      if(!iT.has_data())
         success &= false;
-      }
     });
-    if (!success) return false;
+    if (!success) {
+      status = WAITING;
+      return false;
+    }
 
     manager.queue(get_handle());
     status = READY;
@@ -151,7 +152,7 @@ using namespace geoflow;
       auto n = nodes_to_check.front();
       nodes_to_check.pop();
       
-      n->for_each_output([nodes_to_check&, visited&](OutputTerminal& oT) {
+      n->for_each_output([&nodes_to_check, &visited](OutputTerminal& oT) {
         oT.clear(); // clear output terminal
         for (auto& conn : oT.get_connections()) {
           auto iT = conn.lock();
@@ -301,7 +302,7 @@ using namespace geoflow;
       auto n = nodes_to_check.front();
       nodes_to_check.pop();
       
-      n->for_each_output([nodes_to_check&, visited&](OutputTerminal& oT) {
+      n->for_each_output([&outputT, &nodes_to_check, &visited](OutputTerminal& oT) {
         if (&oT == &outputT){
           return true;
         }
