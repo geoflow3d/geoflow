@@ -87,6 +87,13 @@ using namespace geoflow;
     in.parent.notify_children();
   }
 
+  Node::~Node() {
+    std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
+    notify_children();
+  }
+  void Node::remove_from_manager() {
+    manager.remove_node(get_handle());
+  }
   bool Node::set_name(std::string new_name) { 
     return manager.name_node(get_handle(), new_name); 
   };
@@ -298,13 +305,15 @@ using namespace geoflow;
     std::queue<std::shared_ptr<Node>> nodes_to_check;
     std::set<std::shared_ptr<Node>> visited;
     nodes_to_check.push(node);
+    bool loop_detected=false;
     while (!nodes_to_check.empty()) {
       auto n = nodes_to_check.front();
       nodes_to_check.pop();
       
-      n->for_each_output([&outputT, &nodes_to_check, &visited](OutputTerminal& oT) {
+      n->for_each_output([&outputT, &nodes_to_check, &visited, &loop_detected](OutputTerminal& oT) {
         if (&oT == &outputT){
-          return true;
+          loop_detected=true;
+          return;
         }
         for (auto& c :oT.connections) {
           if (auto iT = c.lock()) {
@@ -317,5 +326,5 @@ using namespace geoflow;
         }
       });
     }
-    return false;
+    return loop_detected;
   }

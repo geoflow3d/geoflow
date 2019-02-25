@@ -211,6 +211,7 @@ namespace ImGui
 				full_height = 0.0f;
 			}
 			~Node(){
+				gf_node->remove_from_manager();
 			}
 
 			Node* Get()

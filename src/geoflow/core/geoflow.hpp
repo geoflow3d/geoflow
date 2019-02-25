@@ -177,10 +177,9 @@ namespace geoflow {
     ImVec2 position;
 
     Node(NodeManager& manager, std::string type_name): manager(manager), type_name(type_name) {};
-    ~Node() {
-      // std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
-      notify_children();
-    }
+    ~Node();
+
+    void remove_from_manager();
 
     InputTerminal& input(std::string term_name) {
       if (inputTerminals.find(term_name) == inputTerminals.end()) {
