@@ -158,6 +158,22 @@ namespace ImGui
 			node->outputs_.push_back(std::move(connection));
 		}
 
+		// for (auto& [gname, group] : gf_node->inputGroups){
+		// 	for (auto& [tname, term] : group.terminals) {
+		// 		auto connection = std::make_unique<Connection>(term);
+		// 		connection->name_ = tname;
+				
+		// 		node->inputs_.push_back(std::move(connection));
+		// 	}
+		// }
+		// for (auto& [gname, group] : gf_node->outputGroups){
+		// 	for (auto& [tname, term] : group.terminals) {
+		// 		auto connection = std::make_unique<Connection>(term);
+		// 		connection->name_ = tname;
+
+		// 		node->outputs_.push_back(std::move(connection));
+		// 	}
+		// }
 		////////////////////////////////////////////////////////////////////////////////
 
 		ImVec2 title_size = ImGui::CalcTextSize(node->name_.c_str());

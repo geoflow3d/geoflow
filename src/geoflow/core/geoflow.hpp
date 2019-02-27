@@ -26,6 +26,7 @@
 #include <variant>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <set>
 #include <queue>
 #include <exception>
@@ -94,10 +95,11 @@ namespace geoflow {
   };
 
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
-    std::vector<TerminalType> types;
     public:
+    const std::vector<TerminalType> types;
     TerminalType connected_type;
     InputTerminal(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types): Terminal(parent_gnode, name), types(types) {};
+    InputTerminal(Node& parent_gnode, std::string name, TerminalType type): Terminal(parent_gnode, name), types({type}) {};
     
     std::weak_ptr<InputTerminal>  get_ptr(){
       return weak_from_this();
@@ -108,8 +110,8 @@ namespace geoflow {
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     typedef std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connection_set;
-    TerminalType type;
     public:
+    const TerminalType type;
     //use a set to make sure we don't get duplicate connection
     connection_set connections;
     
@@ -132,11 +134,11 @@ namespace geoflow {
 
   template <typename TerminalClass> class TerminalGroup {
     protected:
-    std::map<std::string,std::shared_ptr<TerminalClass> > terminals;
-    std::vector<TerminalType> types;
     std::string name;
     Node& parent;
     public:
+    std::unordered_set<TerminalType> types;
+    std::map<std::string,std::shared_ptr<TerminalClass> > terminals;
     TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types)
     : parent(parent_gnode), name(name), types(types) {};
     // ~TerminalGroup(){};
@@ -144,9 +146,10 @@ namespace geoflow {
     TerminalClass& term(std::string term_name) {
       return *terminals.at(term_name);
     }
-    void add(std::string term_name, TerminalType type) {
+    TerminalClass& add(std::string term_name, TerminalType type) {
       // TODO: check if term_name is unique and if type is in types
-      terminals[term_name] = std::make_shared<InputTerminal>(parent, name, type);
+      terminals[term_name] = std::make_shared<TerminalClass>(parent, term_name, type);
+      return *terminals[term_name];
     }
     void clear(std::string term_name) {
       terminals.erase(term_name);
@@ -155,6 +158,42 @@ namespace geoflow {
       terminals.clear();
     }
     friend class Node;
+  };
+  
+  class InputGroup : public TerminalGroup<InputTerminal>, public std::enable_shared_from_this<InputGroup> {
+  public:
+    using TerminalGroup<InputTerminal>::TerminalGroup;
+    
+    std::weak_ptr<InputGroup>  get_ptr(){
+      return weak_from_this();
+    }
+    
+  };
+  
+  class OutputGroup : public TerminalGroup<OutputTerminal>, public std::enable_shared_from_this<OutputGroup> {
+  typedef std::set<std::weak_ptr<InputGroup>, std::owner_less<std::weak_ptr<InputGroup>>> connection_set;
+    connection_set connections;
+  public:
+    using TerminalGroup<OutputTerminal>::TerminalGroup;
+    
+    void connect(InputGroup& ig) {
+      connections.insert(ig.get_ptr());
+    }
+    
+    void propagate() {
+      for (auto conn_ : connections) {
+        auto input_group = conn_.lock();
+//        input_group-> ->clear();
+        for (auto& [name, term] : terminals) {
+          if(input_group->types.count(term->type)) {
+            auto& iT = input_group->add(name, term->type);
+            iT.cdata = term->cdata;
+            iT.connected_type = term->type;
+          }
+        }
+      }
+    }
+    
   };
 
   enum node_status {
@@ -170,8 +209,8 @@ namespace geoflow {
     std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
     std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
 
-    std::map<std::string,TerminalGroup<InputTerminal>> inputGroups;
-    std::map<std::string,TerminalGroup<OutputTerminal>> outputGroups;
+    std::map<std::string,std::shared_ptr<InputGroup>> inputGroups;
+    std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
 
     ParameterMap parameters;
     ImVec2 position;
@@ -196,11 +235,11 @@ namespace geoflow {
     template<typename T> T& param(std::string name) {
       return std::get<T>(parameters.at(name));
     }
-    TerminalGroup<InputTerminal>& input_group(std::string group_name){
-      return inputGroups.at(group_name);
+    InputGroup& input_group(std::string group_name){
+      return *inputGroups.at(group_name);
     }
-    TerminalGroup<OutputTerminal>& output_group(std::string group_name){
-      return outputGroups.at(group_name);
+    OutputGroup& output_group(std::string group_name){
+      return *outputGroups.at(group_name);
     }
 
     void for_each_input(std::function<void(InputTerminal&)> f) {
@@ -208,7 +247,7 @@ namespace geoflow {
         f(*iT.second);
       }
       for (auto& iG : inputGroups) {
-        for (auto& iT : iG.second.terminals) {
+        for (auto& iT : iG.second->terminals) {
           f(*iT.second);
         }
       }
@@ -218,7 +257,7 @@ namespace geoflow {
         f(*iT.second);
       }
       for (auto& iG : outputGroups) {
-        for (auto& iT : iG.second.terminals) {
+        for (auto& iT : iG.second->terminals) {
           f(*iT.second);
         }
       }
@@ -232,12 +271,12 @@ namespace geoflow {
 
     void add_input_group(std::string group_name, std::initializer_list<TerminalType> types) {
       inputGroups.emplace(
-        std::make_pair(group_name, TerminalGroup<InputTerminal>(*this, group_name, types))
+        std::make_pair(group_name, std::make_shared<InputGroup>(*this, group_name, types))
       );
     }
     void add_output_group(std::string group_name, std::initializer_list<TerminalType> types) {
       outputGroups.emplace(
-        std::make_pair(group_name, TerminalGroup<OutputTerminal>(*this, group_name, types))
+        std::make_pair(group_name, std::make_shared<OutputGroup>(*this, group_name, types))
       );
     }
 
@@ -352,6 +391,7 @@ namespace geoflow {
   bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
   bool connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2);
   bool connect(Terminal& t1, Terminal& t2);
+  bool connect(OutputGroup& in, InputGroup& out);
   bool is_compatible(Terminal& t1, Terminal& t2);
   void disconnect(Terminal& t1, Terminal& t2);
   bool detect_loop(Terminal& t1, Terminal& t2);

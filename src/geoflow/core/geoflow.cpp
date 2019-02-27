@@ -49,7 +49,7 @@ using namespace geoflow;
     return connections;
   }
   void OutputTerminal::push(std::any data) {
-    cdata = data;
+    cdata = std::move(data);
   }
   void OutputTerminal::clear() {
     cdata.reset();
@@ -132,10 +132,11 @@ using namespace geoflow;
   }
   bool Node::update() {
     bool success = true;
-    for_each_input([&success](InputTerminal& iT) {
-      if(!iT.has_data())
+    for (auto& [name,iT] : inputTerminals) { // only check normal inputs, not input_groups!
+//    for_each_input([&success](InputTerminal& iT) {
+      if(!iT->has_data())
         success &= false;
-    });
+    }
     if (!success) {
       status = WAITING;
       return false;
@@ -149,6 +150,9 @@ using namespace geoflow;
     for_each_output([](OutputTerminal& oT) {
       oT.propagate();
     });
+    for(auto& [name,group] : outputGroups) {
+      group->propagate();
+    }
   }
   void Node::notify_children() {
     std::queue<Node*> nodes_to_check;
@@ -285,6 +289,15 @@ using namespace geoflow;
     auto& iT = dynamic_cast<InputTerminal&>(t2);
     return geoflow::connect(oT, iT);
   }
+//  bool geoflow::connect(TerminalGroup<OutputTerminal> input_group, TerminalGroup<InputTerminal> output_group) {
+//    for (auto& [name, iT] : input_group.terminals) {
+//      if(output_group.types.count(iT->type)) {
+//        auto& oT = output_group.add(name, iT->type);
+//        connect(oT, *iT);
+//      }
+//    }
+//    return true;
+//  }
   bool geoflow::is_compatible(Terminal& t1, Terminal& t2) {
     auto& oT = dynamic_cast<OutputTerminal&>(t1);
     auto& iT = dynamic_cast<InputTerminal&>(t2);

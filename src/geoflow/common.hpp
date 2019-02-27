@@ -31,6 +31,7 @@ namespace geoflow {
     TT_vec1ui,
     TT_vec1i,
     TT_vec1f,
+    TT_vec1s,
     TT_vec1b,
     TT_vec2f,
     TT_vec3f,
@@ -47,7 +48,7 @@ namespace geoflow {
     TT_line_string_collection,
     TT_linear_ring,
     TT_linear_ring_collection,
-    TT_attribute_map_f
+    TT_attribute_map_f,
   };
 
 typedef std::array<float,3> arr3f;
@@ -57,6 +58,7 @@ typedef std::vector<int> vec1i;
 typedef std::vector<bool> vec1b;
 typedef std::vector<float> vec1f;
 typedef std::vector<size_t> vec1ui;
+typedef std::vector<std::string> vec1s;
 
 typedef std::unordered_map< std::string, std::vector<float>> AttributeMap;
 
