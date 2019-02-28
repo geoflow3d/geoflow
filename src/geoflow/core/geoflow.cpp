@@ -87,8 +87,38 @@ using namespace geoflow;
     in.parent.notify_children();
   }
 
+  void OutputGroup::connect(InputGroup& ig) {
+      connections.insert(ig.get_ptr());
+    }
+
+  void OutputGroup::disconnect(InputGroup& ig) {
+    connections.erase(ig.get_ptr());
+    ig.clear();
+    ig.parent.notify_children();
+  }
+
+  void OutputGroup::propagate() {
+    for (auto conn_ : connections) {
+      auto input_group = conn_.lock();
+      //        input_group-> ->clear();
+      for (auto& [name, term] : terminals) {
+        if(input_group->types.count(term->type)) {
+          if(input_group->terminals.count(name)==0) {
+            auto& iT = input_group->add(name, term->type);
+            iT.cdata = term->cdata;
+            iT.connected_type = term->type;
+          } else {
+            auto& iT = *input_group->terminals[name];
+            iT.cdata = term->cdata;
+            iT.connected_type = term->type;
+          }
+        }
+      }
+    }
+  }
+
   Node::~Node() {
-    std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
+//    std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
     notify_children();
   }
   void Node::remove_from_manager() {

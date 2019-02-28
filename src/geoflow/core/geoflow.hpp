@@ -135,8 +135,8 @@ namespace geoflow {
   template <typename TerminalClass> class TerminalGroup {
     protected:
     std::string name;
-    Node& parent;
     public:
+    Node& parent;
     std::unordered_set<TerminalType> types;
     std::map<std::string,std::shared_ptr<TerminalClass> > terminals;
     TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types)
@@ -176,23 +176,9 @@ namespace geoflow {
   public:
     using TerminalGroup<OutputTerminal>::TerminalGroup;
     
-    void connect(InputGroup& ig) {
-      connections.insert(ig.get_ptr());
-    }
-    
-    void propagate() {
-      for (auto conn_ : connections) {
-        auto input_group = conn_.lock();
-//        input_group-> ->clear();
-        for (auto& [name, term] : terminals) {
-          if(input_group->types.count(term->type)) {
-            auto& iT = input_group->add(name, term->type);
-            iT.cdata = term->cdata;
-            iT.connected_type = term->type;
-          }
-        }
-      }
-    }
+    void connect(InputGroup& ig);
+    void disconnect(InputGroup& ig);
+    void propagate();
     
   };
 
