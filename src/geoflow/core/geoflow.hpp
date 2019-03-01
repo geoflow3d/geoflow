@@ -58,6 +58,8 @@ namespace geoflow {
   class NodeManager;
   class InputTerminal;
   class OutputTerminal;
+  class InputGroup;
+  class OutputGroup;
   // typedef std::weak_ptr<InputTerminal> InputHandle;
   // typedef std::weak_ptr<OutputTerminal> OutputHandle;
 
@@ -161,9 +163,11 @@ namespace geoflow {
   };
   
   class InputGroup : public TerminalGroup<InputTerminal>, public std::enable_shared_from_this<InputGroup> {
+  typedef std::set<std::weak_ptr<OutputGroup>, std::owner_less<std::weak_ptr<OutputGroup>>> connection_set;
   public:
     using TerminalGroup<InputTerminal>::TerminalGroup;
-    
+    connection_set connections;
+
     std::weak_ptr<InputGroup>  get_ptr(){
       return weak_from_this();
     }
@@ -176,9 +180,14 @@ namespace geoflow {
   public:
     using TerminalGroup<OutputTerminal>::TerminalGroup;
     
+    bool is_propagated=false;
     void connect(InputGroup& ig);
     void disconnect(InputGroup& ig);
     void propagate();
+
+    std::weak_ptr<OutputGroup>  get_ptr(){
+      return weak_from_this();
+    }
     
   };
 
@@ -286,6 +295,7 @@ namespace geoflow {
     bool update();
     void propagate_outputs();
     void notify_children();
+    void preprocess();
 
     // private:
 

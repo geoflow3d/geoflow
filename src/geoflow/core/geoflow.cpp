@@ -89,15 +89,18 @@ using namespace geoflow;
 
   void OutputGroup::connect(InputGroup& ig) {
       connections.insert(ig.get_ptr());
+      ig.connections.insert(get_ptr());
     }
 
   void OutputGroup::disconnect(InputGroup& ig) {
     connections.erase(ig.get_ptr());
-    ig.clear();
+    ig.connections.erase(get_ptr());
+    // ig.clear();
     ig.parent.notify_children();
   }
 
   void OutputGroup::propagate() {
+    is_propagated=true;
     for (auto conn_ : connections) {
       auto input_group = conn_.lock();
       //        input_group-> ->clear();
@@ -114,6 +117,7 @@ using namespace geoflow;
           }
         }
       }
+      input_group->parent.update();
     }
   }
 
@@ -160,12 +164,23 @@ using namespace geoflow;
       *this, name, type
     );
   }
+  void Node::preprocess() {
+    for (auto& [name, oG] : outputGroups) {
+      oG->is_propagated = false;
+    }
+  }
   bool Node::update() {
     bool success = true;
     for (auto& [name,iT] : inputTerminals) { // only check normal inputs, not input_groups!
 //    for_each_input([&success](InputTerminal& iT) {
-      if(!iT->has_data())
+      if (!iT->has_data())
         success &= false;
+    }
+    for (auto& [name, iG] : inputGroups) {
+      for (auto c : iG->connections) {
+        if (!c.lock()->is_propagated)
+          success &= false;
+      }
     }
     if (!success) {
       status = WAITING;
@@ -233,6 +248,7 @@ using namespace geoflow;
         auto n = node_queue.front();
         node_queue.pop();
         n->status = PROCESSING;
+        n->preprocess();
         // std::cout << "Starting node " << n->get_name();
         n->process();
         // std::cout << " ...processing complete\n";
