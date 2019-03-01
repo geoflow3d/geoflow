@@ -144,7 +144,7 @@ using namespace geoflow;
   }
   void Node::set_params(ParameterMap new_map, bool quiet) {
     for (auto& kv : new_map) {
-      set_param(kv.first, kv.second);
+      set_param(kv.first, kv.second, quiet);
     }
   }
   const ParameterMap& Node::dump_params() {
