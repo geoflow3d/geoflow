@@ -148,10 +148,8 @@ namespace geoflow::nodes::gui {
 
     void compute_histogram(float min, float max) {
       auto data = input("values").get<vec1f>();
-      histogram.resize(n_bins);
-      for(auto& el:histogram) {
-        el=0;
-      }
+      histogram.resize(n_bins, 0);
+
       bin_width = (max-min)/(n_bins-1);
       for(auto& val : data) {
         if(val>max || val<min) continue;
