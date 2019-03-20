@@ -34,6 +34,8 @@ int main(void) {
 
   number->set_param("number_value", (int) 5);
 
+  N.dump_json("out.json");
+
   bool success = N.run(number);
   if (success){
     std::cout << "Result: " << adder2->output("result").get<float>() << "\n";

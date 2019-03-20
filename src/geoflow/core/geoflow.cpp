@@ -14,8 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "geoflow.hpp"
 #include <iostream>
+#include <fstream>
+#include <iomanip>
+
+#include "geoflow.hpp"
 
 using namespace geoflow;
   // TODO: what happens if connect several output terminals to 1 input terminal? -> should clear other connections to same input terminal
@@ -187,6 +190,31 @@ using namespace geoflow;
     s << "\n";
     return s.str();
   }
+  json Node::dump_json() {
+    json n;
+    n["type"] = {node_register.get_name(), get_type_name()};
+    n["position"] = {position.x, position.y};
+    for ( const auto& [pname, pvalue] : parameters ) {
+      if (std::holds_alternative<bool>(pvalue))
+        n["parameters"][pname] = param<bool>(pname);
+      else if (std::holds_alternative<int>(pvalue))
+        n["parameters"][pname] = param<int>(pname);
+      else if (std::holds_alternative<float>(pvalue))
+        n["parameters"][pname] = param<float>(pname);
+      else if (std::holds_alternative<std::string>(pvalue))
+        n["parameters"][pname] = param<std::string>(pname);
+    }
+
+    for (const auto& [name, oTerm] : outputTerminals) {
+      std::vector<std::pair<std::string, std::string>> connection_vec;
+      for (auto& conn : oTerm->connections) {
+        if (auto iTerm = conn.lock())
+          connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
+      }
+      n["connections"][name] = connection_vec;
+    }
+    return n;
+  }
 
   void NodeManager::queue(std::shared_ptr<Node> n) {
     node_queue.push(n);
@@ -264,6 +292,15 @@ using namespace geoflow;
       }
     }
     return connections;
+  }
+  void NodeManager::dump_json(std::string filepath) {
+    json j;
+    j["nodes"] = json::object();
+    for (auto& [name, handle] : nodes) {
+      j["nodes"][name] = handle->dump_json();
+    }
+    std::ofstream o(filepath);
+    o << std::setw(2) << j << std::endl;
   }
 
   bool geoflow::connect(OutputTerminal& oT, InputTerminal& iT) {

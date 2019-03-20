@@ -39,6 +39,10 @@
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 namespace geoflow {
 
   class Exception: public std::exception
@@ -277,7 +281,9 @@ namespace geoflow {
     std::string get_info();
     const std::string get_name() { return name; };
     const std::string get_type_name() { return type_name; };
+    const NodeRegister& get_register() { return node_register; };
     bool set_name(std::string new_name);
+    json dump_json();
 
     protected:
     std::string name;
@@ -335,6 +341,9 @@ namespace geoflow {
     std::vector<NodeHandle> dump_nodes();
 
     ConnectionList dump_connections();
+
+    void load_json(std::string filepath);
+    void dump_json(std::string filepath);
 
     // load_json() {
 
