@@ -57,6 +57,7 @@ namespace geoflow {
 
   class Node;
   class NodeManager;
+  class NodeRegister;
   class InputTerminal;
   class OutputTerminal;
   // typedef std::weak_ptr<InputTerminal> InputHandle;
@@ -178,7 +179,7 @@ namespace geoflow {
     ParameterMap parameters;
     ImVec2 position;
 
-    Node(NodeManager& manager, std::string type_name): manager(manager), type_name(type_name) {};
+    Node(NodeRegister& node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
     ~Node();
 
     void remove_from_manager();
@@ -282,6 +283,7 @@ namespace geoflow {
     std::string name;
     const std::string type_name; // to be managed only by node manager because uniqueness constraint (among all nodes in the manager)
     NodeManager& manager;
+    NodeRegister& node_register;
 
     friend class NodeManager;
   };
@@ -290,15 +292,15 @@ namespace geoflow {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
     public:
     NodeRegister(std::string name):name(name) {};
-    std::map<std::string, std::function<NodeHandle(NodeManager&, std::string)>> node_types;
+    std::map<std::string, std::function<NodeHandle(NodeRegister&, NodeManager&, std::string)>> node_types;
 
     template<class NodeClass> void register_node(std::string type_name) {
       node_types[type_name] = create_node_type<NodeClass>;
     }
     std::string get_name() {return name;}
     protected:
-    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeManager& nm, std::string type_name){
-      auto node = std::make_shared<NodeClass>(nm, type_name);
+    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegister& nr, NodeManager& nm, std::string type_name){
+      auto node = std::make_shared<NodeClass>(nr, nm, type_name);
       node->init();
       return node;
     }
@@ -307,7 +309,7 @@ namespace geoflow {
         throw Exception("No such node type - \""+type_name+"\"");
 
       auto f = node_types[type_name];
-      auto n = f(nm, type_name);
+      auto n = f(*this, nm, type_name);
       return n;
     }
     const std::string name;
