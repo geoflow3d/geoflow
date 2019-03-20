@@ -29,6 +29,8 @@
 #include <set>
 #include <queue>
 #include <exception>
+#include <typeinfo>
+#include <typeindex>
 
 #include <iostream>
 #include <sstream>
@@ -94,26 +96,26 @@ namespace geoflow {
   };
 
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
-    std::vector<TerminalType> types;
+    std::vector<std::type_index> types;
     public:
-    TerminalType connected_type;
-    InputTerminal(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types): Terminal(parent_gnode, name), types(types) {};
+    std::type_index connected_type = typeid(void);
+    InputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types): Terminal(parent_gnode, name), types(types) {};
     
     std::weak_ptr<InputTerminal>  get_ptr(){
       return weak_from_this();
     }
-    std::vector<TerminalType> get_types() { return types; };
+    std::vector<std::type_index> get_types() { return types; };
     void push(std::any data);
     void clear();
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     typedef std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connection_set;
-    TerminalType type;
+    std::type_index type;
     public:
     //use a set to make sure we don't get duplicate connection
     connection_set connections;
     
-    OutputTerminal(Node& parent_gnode, std::string name, TerminalType type): Terminal(parent_gnode, name), type(type){};
+    OutputTerminal(Node& parent_gnode, std::string name, std::type_index type): Terminal(parent_gnode, name), type(type){};
     ~OutputTerminal();
     
     std::weak_ptr<OutputTerminal>  get_ptr(){
@@ -133,18 +135,18 @@ namespace geoflow {
   template <typename TerminalClass> class TerminalGroup {
     protected:
     std::map<std::string,std::shared_ptr<TerminalClass> > terminals;
-    std::vector<TerminalType> types;
+    std::vector<std::type_index> types;
     std::string name;
     Node& parent;
     public:
-    TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types)
+    TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types)
     : parent(parent_gnode), name(name), types(types) {};
     // ~TerminalGroup(){};
 
     TerminalClass& term(std::string term_name) {
       return *terminals.at(term_name);
     }
-    void add(std::string term_name, TerminalType type) {
+    void add(std::string term_name, std::type_index type) {
       // TODO: check if term_name is unique and if type is in types
       terminals[term_name] = std::make_shared<InputTerminal>(parent, name, type);
     }
@@ -226,16 +228,16 @@ namespace geoflow {
 
     node_status status=WAITING;
 
-    void add_input(std::string name, TerminalType type);
-    void add_input(std::string name, std::initializer_list<TerminalType> types);
-    void add_output(std::string name, TerminalType type);
+    void add_input(std::string name, std::type_index type);
+    void add_input(std::string name, std::initializer_list<std::type_index> types);
+    void add_output(std::string name, std::type_index type);
 
-    void add_input_group(std::string group_name, std::initializer_list<TerminalType> types) {
+    void add_input_group(std::string group_name, std::initializer_list<std::type_index> types) {
       inputGroups.emplace(
         std::make_pair(group_name, TerminalGroup<InputTerminal>(*this, group_name, types))
       );
     }
-    void add_output_group(std::string group_name, std::initializer_list<TerminalType> types) {
+    void add_output_group(std::string group_name, std::initializer_list<std::type_index> types) {
       outputGroups.emplace(
         std::make_pair(group_name, TerminalGroup<OutputTerminal>(*this, group_name, types))
       );

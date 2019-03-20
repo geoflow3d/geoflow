@@ -25,9 +25,9 @@ namespace geoflow::nodes::arithmetic {
     using Node::Node;
 
     void init() {
-      add_input("in1", TT_float);
-      add_input("in2", TT_float);
-      add_output("result", TT_float);
+      add_input("in1", typeid(float));
+      add_input("in2", typeid(float));
+      add_output("result", typeid(float));
     }
 
     void gui(){
@@ -51,7 +51,7 @@ namespace geoflow::nodes::arithmetic {
     using Node::Node;
 
     void init() {
-      add_output("result", TT_float);
+      add_output("result", typeid(float));
       
       add_param("number_value", (int) 42);
     }
@@ -71,7 +71,7 @@ namespace geoflow::nodes::arithmetic {
     public:
     using Node::Node;
     void init() {
-      add_output("result", TT_int);
+      add_output("result", typeid(int));
     }
 
     void process(){
@@ -85,7 +85,7 @@ namespace geoflow::nodes::arithmetic {
     NodeRegister R("Arithmetic");
     R.register_node<AdderNode>("Adder");
     R.register_node<NumberNode>("Number");
-    // R.register_node<NumberNodeI>("NumberI");
+    R.register_node<NumberNodeI>("NumberI");
     return R;
   }
 }

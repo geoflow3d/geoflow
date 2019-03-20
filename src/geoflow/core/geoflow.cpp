@@ -116,16 +116,16 @@ using namespace geoflow;
   const ParameterMap& Node::dump_params() {
     return parameters;
   }
-  void Node::add_input(std::string name, std::initializer_list<TerminalType> types) {
+  void Node::add_input(std::string name, std::initializer_list<std::type_index> types) {
     // TODO: check if name is unique key in inputTerminals map
     inputTerminals[name] = std::make_shared<InputTerminal>(
       *this, name, types
     );
   }
-  void Node::add_input(std::string name, TerminalType type) {
+  void Node::add_input(std::string name, std::type_index type) {
     add_input(name, {type});
   }
-  void Node::add_output(std::string name, TerminalType type) {
+  void Node::add_output(std::string name, std::type_index type) {
     outputTerminals[name] = std::make_shared<OutputTerminal>(
       *this, name, type
     );
