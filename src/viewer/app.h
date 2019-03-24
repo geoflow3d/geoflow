@@ -38,6 +38,7 @@ public:
    virtual void on_initialise(){};
    void run();
    void draw();
+   virtual void draw_menu_bar(){};
    virtual void on_draw(){};
   
    virtual void on_resize(int new_width, int new_height){};  
@@ -49,7 +50,7 @@ public:
 
   int width, height;
   int viewport_width, viewport_height;
-  ImVec4 clear_color;
+  bool show_demo_window = false;
 
 protected:
   static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);

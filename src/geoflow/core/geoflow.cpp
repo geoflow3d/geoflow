@@ -207,11 +207,13 @@ using namespace geoflow;
 
     for (const auto& [name, oTerm] : outputTerminals) {
       std::vector<std::pair<std::string, std::string>> connection_vec;
-      for (auto& conn : oTerm->connections) {
-        if (auto iTerm = conn.lock())
-          connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
+      if(oTerm->connections.size() > 0) {
+        for (auto& conn : oTerm->connections) {
+          if (auto iTerm = conn.lock())
+            connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
+        }
+        n["connections"][name] = connection_vec;
       }
-      n["connections"][name] = connection_vec;
     }
     return n;
   }
@@ -272,27 +274,6 @@ using namespace geoflow;
     }
     return node_dump;
   }
-  NodeManager::ConnectionList NodeManager::dump_connections() {
-    // collect all connections attached to nodes in this manager
-    // return tuples, one for each connection: <output_node, input_node, output_term, input_term>
-    ConnectionList connections;
-    for (auto& kv : nodes) {
-      auto node = kv.second;
-      for (auto& output_term : node->outputTerminals) {
-        for (auto& input_term : output_term.second->connections) {
-          auto iT = input_term.lock();
-          auto oT = output_term.second;
-          connections.push_back(std::make_tuple(
-            node->get_name(), 
-            iT->parent.get_name(),
-            oT->get_name(),
-            iT->get_name()
-          ));
-        }
-      }
-    }
-    return connections;
-  }
   void NodeManager::dump_json(std::string filepath) {
     json j;
     j["nodes"] = json::object();
@@ -301,6 +282,57 @@ using namespace geoflow;
     }
     std::ofstream o(filepath);
     o << std::setw(2) << j << std::endl;
+  }
+  std::vector<NodeHandle> NodeManager::load_json(std::string filepath, NodeRegisterMap& registers) {
+    json j;
+    std::ifstream i(filepath);
+    i >> j;
+    json nodes_j = j["nodes"];
+    std::vector<NodeHandle> new_nodes;
+    for (auto node_j : nodes_j.items()) {
+      auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
+      if (registers.count(tt[0])) {
+        std::array<float,2> pos = node_j.value().at("position");
+        auto nhandle = create_node(registers.at(tt[0]), tt[1], {pos[0], pos[1]});
+        new_nodes.push_back(nhandle);
+        std::string node_name = node_j.key();
+        name_node(nhandle, node_name);
+        if (node_j.value().count("parameters")) {
+          auto params_j = node_j.value().at("parameters");
+          for (auto& pel : params_j.items()) {
+            if (std::holds_alternative<bool>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<bool>());
+            else if (std::holds_alternative<int>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<int>());
+            else if (std::holds_alternative<float>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<float>());
+            else if (std::holds_alternative<std::string>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<std::string>());
+          }
+        }
+      } else {
+        std::cout << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
+      }
+    }
+    for (auto node_j : nodes_j.items()) {
+      auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
+      if (registers.count(tt[0])) {
+        auto nhandle = nodes[node_j.key()];
+        if (node_j.value().count("connections")) {
+          auto conns_j = node_j.value().at("connections");
+          for (json::const_iterator conn_j = conns_j.begin(); conn_j!= conns_j.end(); ++conn_j) {
+            for (json::const_iterator c=conn_j->begin(); c!=conn_j->end(); ++c) {
+              auto cval = c.value().get<std::array<std::string,2>>();
+              if (nodes.count(cval[0]))
+                nhandle->output(conn_j.key()).connect(nodes[cval[0]]->input(cval[1]));
+              else 
+                std::cout << "Could not connect output " << conn_j.key() << "\n";
+            }
+          }
+        }
+      }
+    }
+    return new_nodes;
   }
 
   bool geoflow::connect(OutputTerminal& oT, InputTerminal& iT) {
@@ -364,4 +396,24 @@ using namespace geoflow;
       });
     }
     return loop_detected;
+  }
+  geoflow::ConnectionList geoflow::dump_connections(std::vector<NodeHandle> node_vec) {
+    // collect all connections attached to nodes in this manager
+    // return tuples, one for each connection: <output_node, input_node, output_term, input_term>
+    ConnectionList connections;
+    for (auto& node : node_vec) {
+      for (auto& output_term : node->outputTerminals) {
+        for (auto& input_term : output_term.second->connections) {
+          auto iT = input_term.lock();
+          auto oT = output_term.second;
+          connections.push_back(std::make_tuple(
+            node->get_name(), 
+            iT->parent.get_name(),
+            oT->get_name(),
+            iT->get_name()
+          ));
+        }
+      }
+    }
+    return connections;
   }

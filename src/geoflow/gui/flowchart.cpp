@@ -7,11 +7,13 @@
 // @flix01 https://github.com/Flix01/imgui/blob/b248df2df98af13d4b7dbb70c92430afc47a038a/addons/imguinodegrapheditor/imguinodegrapheditor.cpp#L432
 
 #include "flowchart.hpp"
+#include "osdialog.h"
 #include <tuple>
+#include <cstdlib>
 
 namespace ImGui
 {
-	Nodes::Nodes(geoflow::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers)
+	Nodes::Nodes(geoflow::NodeManager& node_manager, poviApp& app, NodeRegisterMap& node_registers)
 		:gf_manager(node_manager), pv_app(app), registers(node_registers)
 	{
 		id_ = 0;
@@ -21,7 +23,7 @@ namespace ImGui
 		R.register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
     R.register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
     R.register_node<geoflow::nodes::gui::PainterNode>("Painter");
-		registers.push_back(R);
+		registers.emplace(R.get_name(), R);
 	}
 
 	Nodes::~Nodes()
@@ -142,6 +144,11 @@ namespace ImGui
 		node->id_ = -id_;
 		node->name_ = gf_node->get_name();
 		node->position_ = pos;
+
+		if (gf_node->get_type_name()=="Painter") {
+			auto& painter_node = dynamic_cast<geoflow::nodes::gui::PainterNode&>(*gf_node);
+			painter_node.add_to(pv_app, gf_node->get_name());
+		}
 
 		// std::cout << "reading inputs from " << type <<  "\n";
 		// std::cout << "\t has " << gf_node->inputTerminals.size() <<  " input terminals\n";
@@ -1095,6 +1102,90 @@ namespace ImGui
 		ImGui::End();
 	}
 
+	void Nodes::menu() {
+		{
+			if (ImGui::BeginMenu("Flowchart"))
+			{
+				if (ImGui::MenuItem("Save as JSON", "Ctrl+S")) {
+					char *filename_c = osdialog_file(OSDIALOG_SAVE, NULL, "flowchart.json", NULL);
+					if (filename_c) {
+						std::string filename(filename_c);
+						std::free(filename_c);
+						for (auto& node : nodes_) {
+							node->gf_node->position = node->position_;
+						}
+						gf_manager.dump_json(filename);
+					}
+				}
+				if (ImGui::MenuItem("Load from JSON", "Ctrl+O")) {
+					osdialog_filters *filters = osdialog_filters_parse("JSON:json");
+					char *filename_c = osdialog_file(OSDIALOG_OPEN, NULL, NULL, filters);
+					if (filename_c) {
+						std::string filename(filename_c);
+						std::free(filename_c);
+						osdialog_filters_free(filters);
+
+						auto new_nodes = gf_manager.load_json(filename, registers);
+						CreateNodesFromHandles(new_nodes);
+					}
+				}
+				if (ImGui::MenuItem("Center flowchart", "")) {
+					CenterScroll();
+				}
+				ImGui::EndMenu();
+			}
+		}
+	}
+
+	void Nodes::CreateNodesFromHandles(std::vector<geoflow::NodeHandle> node_vec) {
+		for(auto& gf_node : node_vec){
+			CreateNodeFromHandle(gf_node->position, gf_node);
+		}
+	
+		// map all nodes and input/output ports
+		std::unordered_map<std::string, std::pair<Node*,Connection*>> node_input_map, node_output_map;
+		for(auto& node : nodes_) {
+			for(auto& conn : node->inputs_) {
+				node_input_map[node->name_+conn->name_] = std::make_pair(node.get(),conn.get());
+			}
+			for(auto& conn : node->outputs_) {
+				node_output_map[node->name_+conn->name_] = std::make_pair(node.get(),conn.get());
+			}
+		}
+		for(auto& link : geoflow::dump_connections(node_vec)){
+			auto source = std::get<0>(link)+std::get<2>(link);
+			auto target = std::get<1>(link)+std::get<3>(link);
+			Node *node_source, *node_target;
+			Connection *conn_source, *conn_target;
+			std::tie(node_source, conn_source) = node_output_map[source];
+			std::tie(node_target, conn_target) = node_input_map[target];
+			conn_source->target_ = node_target;
+			conn_source->input_ = conn_target;
+			conn_target->target_ = node_source;
+			conn_target->input_ = conn_source;
+			conn_source->connections_++;
+			conn_target->connections_++;
+
+			geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
+			gf_manager.run(conn_target->gf_terminal->parent);
+		}
+	}
+
+	void Nodes::CenterScroll() {
+		if(nodes_.size()) {
+			float min_x, max_x, min_y, max_y;
+			min_x = max_x = nodes_[0]->position_.x;
+			min_y = max_y = nodes_[0]->position_.y;
+			for (auto& node : nodes_) {
+				min_x = std::min(node->position_.x, min_x);
+				max_x = std::max(node->position_.x, max_x);
+			}
+			canvas_scroll_.x = (max_x-min_x)/2 + canvas_size_.x/2;
+			canvas_scroll_.y = (max_y-min_y)/2 + canvas_size_.y/2;
+		}
+		// ImVec2 offset = canvas_position_ + canvas_scroll_;
+	}
+
 	void Nodes::ProcessNodes()
 	{
 		////////////////////////////////////////////////////////////////////////////////
@@ -1152,39 +1243,7 @@ namespace ImGui
 		}
 
 		if(!gf_manager_checked) {
-			for(auto& kv : gf_manager.nodes){
-				auto gf_node = kv.second;
-				auto pos = gf_node->get_position();
-				CreateNodeFromHandle({pos.first, pos.second}, gf_node);
-			}
-		
-			// map all nodes and input/output ports
-			std::unordered_map<std::string, std::pair<Node*,Connection*>> node_input_map, node_output_map;
-			for(auto& node : nodes_) {
-				for(auto& conn : node->inputs_) {
-					node_input_map[node->name_+conn->name_] = std::make_pair(node.get(),conn.get());
-				}
-				for(auto& conn : node->outputs_) {
-					node_output_map[node->name_+conn->name_] = std::make_pair(node.get(),conn.get());
-				}
-			}
-			for(auto& link : gf_manager.dump_connections()){
-				auto source = std::get<0>(link)+std::get<2>(link);
-				auto target = std::get<1>(link)+std::get<3>(link);
-				Node *node_source, *node_target;
-				Connection *conn_source, *conn_target;
-				std::tie(node_source, conn_source) = node_output_map[source];
-				std::tie(node_target, conn_target) = node_input_map[target];
-				conn_source->target_ = node_target;
-				conn_source->input_ = conn_target;
-				conn_target->target_ = node_source;
-				conn_target->input_ = conn_source;
-				conn_source->connections_++;
-				conn_target->connections_++;
-
-				geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
-				gf_manager.run(conn_target->gf_terminal->parent);
-			}
+			CreateNodesFromHandles(gf_manager.dump_nodes());
 			gf_manager_checked = true;
 		}
 		////////////////////////////////////////////////////////////////////////////////
@@ -1223,17 +1282,13 @@ namespace ImGui
 				element_.Reset(NodesState_Block);
 				// add nodes where the popup was opened
 				auto popup_mouse = ImGui::GetMousePosOnOpeningCurrentPopup() - canvas_position_;
-				for(auto& node_register : registers) {
+				for(auto& [name, node_register] : registers) {
 					if ( ImGui::BeginMenu(node_register.get_name().c_str())) {
 						for (auto& kv : node_register.node_types) {
 							auto type_name = kv.first;
 							if (ImGui::MenuItem(type_name.c_str())) {	
 								element_.Reset();
 								auto handle = gf_manager.create_node(node_register, type_name);
-								if (type_name=="Painter") {
-									auto& painter_node = dynamic_cast<geoflow::nodes::gui::PainterNode&>(*handle);
-									painter_node.add_to(pv_app, handle->get_name());
-								}
 								element_.node_ = CreateNodeFromHandle(
 									(popup_mouse - canvas_scroll_) / canvas_scale_, 
 									handle
@@ -1251,6 +1306,7 @@ namespace ImGui
 				auto node = element_.node_slot0_->gf_node;
 				element_.Reset(NodesState_Block);
 				ImGui::Text("%s", node->get_info().c_str());
+				ImGui::Text("position: %.2f, %.2f", element_.node_slot0_->position_.x, element_.node_slot0_->position_.y);
 				node->gui();
 				if (ImGui::MenuItem("Run")) {		
 					gf_manager.run(*node);
@@ -1299,10 +1355,10 @@ namespace ImGui
 		
 			// ImGui::Text("");
 		
-			// ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
-			// ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
-			// ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
-			// ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
+			ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
+			ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
+			ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
+			ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
 			// ImGui::Text("Canvas_scale: %.2f", canvas_scale_);
 
 			// ImGui::Text("");
@@ -1333,8 +1389,12 @@ namespace ImGui
 
 namespace geoflow {
 	void launch_flowchart(NodeManager& manager, std::initializer_list<NodeRegister> registers) {
+		NodeRegisterMap nrm;
+		for (auto& r : registers) {
+			nrm.emplace(r.get_name(),r);
+		}
 		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
-		ImGui::Nodes nodes(manager, *a, registers);
+		ImGui::Nodes nodes(manager, *a, nrm);
 		a->draw_that(&nodes);
 		a->run();
 	}

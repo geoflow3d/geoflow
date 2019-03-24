@@ -30,6 +30,7 @@
 
 int main(int ac, const char * av[])
 {
+    NodeRegisterMap RM;
     NodeRegister R("Arithmetic");
     R.register_node<nodes::arithmetic::AdderNode>("Adder");
     R.register_node<nodes::arithmetic::NumberNode>("Number");
@@ -37,17 +38,20 @@ int main(int ac, const char * av[])
     R_gui.register_node<nodes::gui::CubeNode>("Cube");
     R_gui.register_node<nodes::gui::TriangleNode>("Triangle");
 
+    RM.emplace(R.get_name(), R);
+    RM.emplace(R_gui.get_name(), R_gui);
     NodeManager N;
-    N.create_node(R_gui, "Cube", {0,-200});
-    auto adder = N.create_node(R, "Adder", {300,0});
-    auto number = N.create_node(R, "Number", {0, 000});
+    // N.create_node(R_gui, "Cube", {0,-200});
+    // auto adder = N.create_node(R, "Adder", {300,0});
+    // auto number = N.create_node(R, "Number", {0, 000});
 
-    number->set_params({
-        {"number_value", (int) 5}
-    });
+    // number->set_params({
+    //     {"number_value", (int) 5}
+    // });
+    N.load_json("/Users/ravi/git/geoflow/debug/out.json", RM);
 
-    connect(number->output("result"), adder->input("in1"));
-    connect(number->output("result"), adder->input("in2"));
+    // connect(number->output("result"), adder->input("in1"));
+    // connect(number->output("result"), adder->input("in2"));
 
     launch_flowchart(N, {R,R_gui});
 

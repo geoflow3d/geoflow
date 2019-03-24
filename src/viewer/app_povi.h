@@ -54,6 +54,7 @@ inline glm::quat arcball(xy_pos p){
 class RenderObject {
 	public:
 	virtual void render() = 0;
+	virtual void menu(){};
 };
 
 class poviApp: public std::enable_shared_from_this<poviApp>, public App {
@@ -72,6 +73,7 @@ std::shared_ptr<poviApp> get_ptr() {
 };
 
 protected:
+void draw_menu_bar();
 void on_initialise();
 void on_resize(int new_width, int new_height);
 void on_draw();
@@ -84,6 +86,7 @@ void on_mouse_press(int button, int action, int mods);
 // Buffer buffer;
 private:
 GLuint FramebufferName, renderedTexture, depthrenderbuffer;
+ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 std::vector< std::tuple<std::shared_ptr<Painter>,std::string,bool> > painters;
 std::vector<RenderObject*> render_objects;

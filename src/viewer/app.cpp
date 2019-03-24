@@ -20,7 +20,7 @@
 using namespace std::chrono_literals;
 
 App::App(int width, int height, std::string title)
-	:width(width), height(height), clear_color(ImVec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+	:width(width), height(height) {
 
     glfwSetErrorCallback(error_callback);
     
@@ -108,7 +108,6 @@ App::App(int width, int height, std::string title)
 void App::run(){
     
 	on_initialise();
-    bool show_demo_window = false;
 
     // we'll try to make each iteration last at least this long, ie a limit on the FPS
     auto target_frame_duration = 16ms; // ~60FPS
@@ -126,8 +125,8 @@ void App::run(){
             // get framebuffer size, which could be different from the window size in case of eg a retina display  
             glfwGetFramebufferSize(window, &viewport_width, &viewport_height);
             glViewport(0, 0, viewport_width, viewport_height);
-            glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-            glClear(GL_COLOR_BUFFER_BIT);
+            // glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+            // glClear(GL_COLOR_BUFFER_BIT);
 
             // process events:
             // if(!glfwGetWindowAttrib(window, GLFW_FOCUSED)) // don't do anything if window not in focus
@@ -143,7 +142,7 @@ void App::run(){
 
             // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
             // because it would be confusing to have two docking targets within each others.
-            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking; //ImGuiWindowFlags_MenuBar
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_MenuBar;
 
             ImGuiViewport* viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->Pos);
@@ -157,21 +156,20 @@ void App::run(){
             // When using ImGuiDockNodeFlags_PassthruDockspace, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
             // ImGui::SetNextWindowBgAlpha(0.0f);
 
+
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
             bool p_open;
             ImGui::Begin("GeoflowDockSpace", &p_open, window_flags);
-            ImGui::PopStyleVar();
-
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar(3);
 
             // Dockspace
             ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
+            draw_menu_bar();
             ImGui::End();
             
             on_draw();
-            ImGui::ColorEdit4("Clear color", (float*)&clear_color);
-            ImGui::Checkbox("Show demo window", &show_demo_window);
 
             if (show_demo_window)
             {

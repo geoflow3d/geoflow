@@ -141,7 +141,7 @@ namespace ImGui
 
 		geoflow::NodeManager& gf_manager;
 		poviApp& pv_app;
-		std::vector<geoflow::NodeRegister> registers;
+		NodeRegisterMap& registers;
 
 		struct Node;
 
@@ -358,6 +358,7 @@ namespace ImGui
 
 		////////////////////////////////////////////////////////////////////////////////
 		
+		void CenterScroll();
 		void UpdateScroll();
 		void UpdateState(ImVec2 offset);
 		void RenderLines(ImDrawList* draw_list, ImVec2 offset);
@@ -370,11 +371,14 @@ namespace ImGui
 
 		bool gf_manager_checked = false;
 
+		void CreateNodesFromHandles(std::vector<geoflow::NodeHandle> node_vec);
+
 	public:
-		explicit Nodes(geoflow::NodeManager& node_manager, poviApp& app, std::initializer_list<NodeRegister> node_registers);
+		explicit Nodes(geoflow::NodeManager& node_manager, poviApp& app, NodeRegisterMap& node_registers);
 		~Nodes();
 
 		void render();
+		void menu();
 		void ProcessNodes();
 		// void PreloadNodes(NodeStore nodes);
 		// void PreloadLinks(LinkStore links);

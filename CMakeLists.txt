@@ -42,6 +42,7 @@ include_directories(
   thirdparty/imgui/examples
   thirdparty/glm
   thirdparty/json/include
+  thirdparty/osdialog
 )
 
 add_definitions(
@@ -82,6 +83,8 @@ if(${GF_BUILD_GUI})
     src/geoflow/core/geoflow.cpp
     src/geoflow/gui/flowchart.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
+    thirdparty/osdialog/osdialog.c
+    thirdparty/osdialog/osdialog_mac.m
   )
   target_link_libraries(geoflow-gui viewer)
 

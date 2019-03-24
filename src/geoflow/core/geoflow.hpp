@@ -303,7 +303,7 @@ namespace geoflow {
     template<class NodeClass> void register_node(std::string type_name) {
       node_types[type_name] = create_node_type<NodeClass>;
     }
-    std::string get_name() {return name;}
+    std::string get_name() const {return name;}
     protected:
     template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegister& nr, NodeManager& nm, std::string type_name){
       auto node = std::make_shared<NodeClass>(nr, nm, type_name);
@@ -318,13 +318,13 @@ namespace geoflow {
       auto n = f(*this, nm, type_name);
       return n;
     }
-    const std::string name;
+    std::string name;
     friend class NodeManager;
   };
+  typedef std::unordered_map<std::string, NodeRegister> NodeRegisterMap;
 
   class NodeManager {
     // manages a set of nodes that form one flowchart. Every node must linked to a NodeManager.
-    typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> ConnectionList;
     public:
     size_t ID=0;
 
@@ -340,9 +340,8 @@ namespace geoflow {
 
     std::vector<NodeHandle> dump_nodes();
 
-    ConnectionList dump_connections();
 
-    void load_json(std::string filepath);
+    std::vector<NodeHandle> load_json(std::string filepath, NodeRegisterMap& registers);
     void dump_json(std::string filepath);
 
     // load_json() {
@@ -361,6 +360,8 @@ namespace geoflow {
     friend class Node;
   };
 
+  typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> ConnectionList;
+  ConnectionList dump_connections(std::vector<NodeHandle>);
   bool connect(OutputTerminal& oT, InputTerminal& iT);
   bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
   bool connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2);
