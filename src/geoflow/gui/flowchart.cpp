@@ -7,9 +7,8 @@
 // @flix01 https://github.com/Flix01/imgui/blob/b248df2df98af13d4b7dbb70c92430afc47a038a/addons/imguinodegrapheditor/imguinodegrapheditor.cpp#L432
 
 #include "flowchart.hpp"
-#include "osdialog.h"
+#include "osdialog.hpp"
 #include <tuple>
-#include <cstdlib>
 
 namespace ImGui
 {
@@ -23,7 +22,7 @@ namespace ImGui
 		R.register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
     R.register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
     R.register_node<geoflow::nodes::gui::PainterNode>("Painter");
-		registers.emplace(R.get_name(), R);
+		registers.emplace(R);
 	}
 
 	Nodes::~Nodes()
@@ -328,9 +327,7 @@ namespace ImGui
 			{
 				if (ImGui::IsMouseClicked(0) && !ImGui::IsMouseDown(1) && !ImGui::IsMouseDown(2))
 				{
-					ImRect canvas = ImRect(ImVec2(0.0f, 0.0f), canvas_size_);
-
-					if (!canvas.Contains(canvas_mouse_))
+					if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows))
 					{
 						break;
 					}
@@ -554,8 +551,14 @@ namespace ImGui
 					break;
 				}
 
+				if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows))
+				{
+					break;
+				}
+
 				element_.Reset();
 				auto hovered = GetHoverNode(offset, ImGui::GetIO().MousePos);
+				
 
 				// empty area under the mouse
 				if (!hovered)
@@ -1104,37 +1107,36 @@ namespace ImGui
 
 	void Nodes::menu() {
 		{
-			if (ImGui::BeginMenu("Flowchart"))
+			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Save as JSON", "Ctrl+S")) {
-					char *filename_c = osdialog_file(OSDIALOG_SAVE, NULL, "flowchart.json", NULL);
-					if (filename_c) {
-						std::string filename(filename_c);
-						std::free(filename_c);
+				if (ImGui::MenuItem("Save to JSON", "Ctrl+S")) {
+					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
+					if (result.has_value()) {
 						for (auto& node : nodes_) {
 							node->gf_node->position = node->position_;
 						}
-						gf_manager.dump_json(filename);
+						gf_manager.dump_json(result.value());
 					}
 				}
 				if (ImGui::MenuItem("Load from JSON", "Ctrl+O")) {
-					osdialog_filters *filters = osdialog_filters_parse("JSON:json");
-					char *filename_c = osdialog_file(OSDIALOG_OPEN, NULL, NULL, filters);
-					if (filename_c) {
-						std::string filename(filename_c);
-						std::free(filename_c);
-						osdialog_filters_free(filters);
-
+					auto result = osdialog_file(OSDIALOG_OPEN, NULL, "JSON:json");
+					if (result.has_value()) {
 						nodes_.clear();
 						element_.Reset();
 						gf_manager.clear();
 
-						auto new_nodes = gf_manager.load_json(filename, registers);
+						auto new_nodes = gf_manager.load_json(result.value(), registers);
 						CreateNodesFromHandles(new_nodes);
 						CenterScroll();
 					}
 				}
-				if (ImGui::MenuItem("Center flowchart", "")) {
+				ImGui::Separator();
+				if (ImGui::MenuItem("Clear flowchart")) {
+					nodes_.clear();
+					element_.Reset();
+					gf_manager.clear();
+				}
+				if (ImGui::MenuItem("Center flowchart")) {
 					CenterScroll();
 				}
 				ImGui::EndMenu();
@@ -1249,7 +1251,7 @@ namespace ImGui
 			draw_list->AddRect(element_.rect_.Min, element_.rect_.Max, ImColor(200.0f, 200.0f, 0.0f, 0.5f));
 		}
 
-		if(!gf_manager_checked) {
+		if(!gf_manager_checked && canvas_size_.x>0) {
 			CreateNodesFromHandles(gf_manager.dump_nodes());
 			CenterScroll();
 			gf_manager_checked = true;
@@ -1396,11 +1398,7 @@ namespace ImGui
 }
 
 namespace geoflow {
-	void launch_flowchart(NodeManager& manager, std::initializer_list<NodeRegister> registers) {
-		NodeRegisterMap nrm;
-		for (auto& r : registers) {
-			nrm.emplace(r.get_name(),r);
-		}
+	void launch_flowchart(NodeManager& manager, NodeRegisterMap nrm) {
 		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
 		ImGui::Nodes nodes(manager, *a, nrm);
 		a->draw_that(&nodes);

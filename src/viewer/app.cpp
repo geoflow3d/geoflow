@@ -19,6 +19,42 @@
 #include <thread>
 using namespace std::chrono_literals;
 
+const std::string imgui_default_ini =
+"[Window][GeoflowDockSpace]\n"
+"Pos=0,0\n"
+"Size=1280,800\n"
+"Collapsed=0\n"
+"\n"
+"[Window][Debug##Default]\n"
+"Pos=60,60\n"
+"Size=400,400\n"
+"Collapsed=0\n"
+"\n"
+"[Window][3D Viewer]\n"
+"Pos=0,367\n"
+"Size=997,433\n"
+"Collapsed=0\n"
+"DockId=0x00000003,0\n"
+"\n"
+"[Window][Flowchart]\n"
+"Pos=0,19\n"
+"Size=1280,346\n"
+"Collapsed=0\n"
+"DockId=0x00000001,0\n"
+"\n"
+"[Window][Painters]\n"
+"Pos=999,367\n"
+"Size=281,433\n"
+"Collapsed=0\n"
+"DockId=0x00000004,0\n"
+"\n"
+"[Docking][Data]\n"
+"DockSpace     ID=0x72B5E78C Pos=0,19 Size=1280,781 Split=Y SelectedTab=0x26ED15F2\n"
+"  DockNode    ID=0x00000001 Parent=0x72B5E78C SizeRef=1280,346 SelectedTab=0x84680795\n"
+"  DockNode    ID=0x00000002 Parent=0x72B5E78C SizeRef=1280,433 Split=X SelectedTab=0x26ED15F2\n"
+"    DockNode  ID=0x00000003 Parent=0x00000002 SizeRef=997,509 CentralNode=1 SelectedTab=0x26ED15F2\n"
+"    DockNode  ID=0x00000004 Parent=0x00000002 SizeRef=281,509 SelectedTab=0x6A78F9B2\n";
+
 App::App(int width, int height, std::string title)
 	:width(width), height(height) {
 
@@ -66,6 +102,9 @@ App::App(int width, int height, std::string title)
     // Setup Dear ImGui binding
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    // Load default layout if we can't find the default imgui.ini
+    if (!std::ifstream("imgui.ini"))
+        ImGui::LoadIniSettingsFromMemory(imgui_default_ini.c_str(), imgui_default_ini.size());
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigDockingWithShift = false;
@@ -213,8 +252,8 @@ void App::key_callback(
     ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
     if (ImGui::GetIO().WantCaptureKeyboard) return;
 
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
+	// if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    //     glfwSetWindowShouldClose(window, GL_TRUE);
 
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);

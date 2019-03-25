@@ -386,5 +386,5 @@ namespace ImGui
 
 }
 namespace geoflow {
-	void launch_flowchart(NodeManager&, std::initializer_list<NodeRegister>);
+	void launch_flowchart(NodeManager& manager, NodeRegisterMap nrm);
 }

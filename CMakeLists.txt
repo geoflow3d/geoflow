@@ -83,6 +83,7 @@ if(${GF_BUILD_GUI})
     src/geoflow/core/geoflow.cpp
     src/geoflow/gui/flowchart.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
+    src/geoflow/gui/osdialog.cpp
     thirdparty/osdialog/osdialog.c
     thirdparty/osdialog/osdialog_mac.m
   )

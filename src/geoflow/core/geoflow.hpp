@@ -321,7 +321,21 @@ namespace geoflow {
     std::string name;
     friend class NodeManager;
   };
-  typedef std::unordered_map<std::string, NodeRegister> NodeRegisterMap;
+  typedef std::unordered_map<std::string, NodeRegister> Map;
+  class NodeRegisterMap : public Map {
+    private:
+    using Map::emplace;
+    public:;
+    using Map::Map;
+    NodeRegisterMap(std::initializer_list<NodeRegister> registers) {
+      for (auto& r : registers) {
+        emplace(r);
+      }
+    }
+    std::pair<std::unordered_map<std::string, NodeRegister>::iterator,bool> emplace(NodeRegister reg) {
+      return emplace(reg.get_name(), reg);
+    }
+  };
 
   class NodeManager {
     // manages a set of nodes that form one flowchart. Every node must linked to a NodeManager.

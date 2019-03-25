@@ -110,7 +110,8 @@ void poviApp::draw_menu_bar() {
         // }
         if (ImGui::BeginMenu("Debug"))
         {
-            ImGui::Checkbox("Show ImGui demo window", &show_demo_window);
+            if (ImGui::MenuItem("ImGui demo window", ""))
+                show_demo_window=true;
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();

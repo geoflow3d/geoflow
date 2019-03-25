@@ -18,6 +18,7 @@
 #include <fstream>
 
 #include <geoflow/gui/flowchart.hpp>
+#include <geoflow/gui/osdialog.hpp>
 
 #include "basic_nodes.hpp"
 
@@ -27,19 +28,38 @@
 
 // #include <boost/program_options.hpp>
 
+  class FileOpenNode:public Node {
+    public:
+    using Node::Node;
+    void init() {
+      add_output("result", typeid(int));
+      add_param("path", (std::string) "");
+    }
+
+    void gui() {
+        ImGui::FilePicker(OSDIALOG_OPEN, param<std::string>("path"));
+    }
+
+    void process(){
+      std::cout << param<std::string>("path");
+      output("result").set(1);
+    }
+  };
+
 
 int main(int ac, const char * av[])
 {
-    NodeRegisterMap RM;
     NodeRegister R("Arithmetic");
     R.register_node<nodes::arithmetic::AdderNode>("Adder");
     R.register_node<nodes::arithmetic::NumberNode>("Number");
     NodeRegister R_gui("BasicShapes");
     R_gui.register_node<nodes::gui::CubeNode>("Cube");
     R_gui.register_node<nodes::gui::TriangleNode>("Triangle");
+    R_gui.register_node<FileOpenNode>("FileOpen");
 
-    RM.emplace(R.get_name(), R);
-    RM.emplace(R_gui.get_name(), R_gui);
+    NodeRegisterMap RM;
+    RM.emplace(R);
+    RM.emplace(R_gui);
     NodeManager N;
     // N.create_node(R_gui, "Cube", {0,-200});
     // auto adder = N.create_node(R, "Adder", {300,0});
@@ -54,27 +74,5 @@ int main(int ac, const char * av[])
     // connect(number->output("result"), adder->input("in2"));
 
     launch_flowchart(N, {R,R_gui});
-
-    // std::ifstream i("../examples/basic.gf.json");
-    // json j;
-    // i >> j;
-
-    // ImGui::NodeStore ns;
-    // auto& nodes = j["nodes"];
-    // for (json::iterator it = nodes.begin(); it != nodes.end(); ++it) {
-    //     auto node = it.value();
-    //     ns.push_back(std::make_tuple(node["type"], it.key(), ImVec2(node["canvas-pos"][0],node["canvas-pos"][1])));
-    // }
-    // nodes_.PreloadNodes(ns);
-    
-    // ImGui::LinkStore ls;
-    // for (auto& link : j["links"]) {
-    //     std::string source=link["source"];
-    //     std::string target=link["target"];
-    //     auto ns = source.find("::");
-    //     auto nt = target.find("::");
-    //     ls.push_back(std::make_tuple(source.substr(0,ns), target.substr(0,nt), source.substr(ns+2), target.substr(nt+2)));
-    // }
-    // nodes_.PreloadLinks(ls);
 
 }
