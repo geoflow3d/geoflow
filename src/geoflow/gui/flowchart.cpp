@@ -1125,8 +1125,13 @@ namespace ImGui
 						std::free(filename_c);
 						osdialog_filters_free(filters);
 
+						nodes_.clear();
+						element_.Reset();
+						gf_manager.clear();
+
 						auto new_nodes = gf_manager.load_json(filename, registers);
 						CreateNodesFromHandles(new_nodes);
+						CenterScroll();
 					}
 				}
 				if (ImGui::MenuItem("Center flowchart", "")) {
@@ -1174,14 +1179,16 @@ namespace ImGui
 	void Nodes::CenterScroll() {
 		if(nodes_.size()) {
 			float min_x, max_x, min_y, max_y;
-			min_x = max_x = nodes_[0]->position_.x;
-			min_y = max_y = nodes_[0]->position_.y;
+			min_x = max_x = nodes_[0]->position_.x+nodes_[0]->size_.x/2;
+			min_y = max_y = nodes_[0]->position_.y+nodes_[0]->size_.y/2;
 			for (auto& node : nodes_) {
-				min_x = std::min(node->position_.x, min_x);
-				max_x = std::max(node->position_.x, max_x);
+				min_x = std::min(node->position_.x+node->size_.x/2, min_x);
+				max_x = std::max(node->position_.x+node->size_.x/2, max_x);
+				min_y = std::min(node->position_.y+node->size_.y/2, min_y);
+				max_y = std::max(node->position_.y+node->size_.y/2, max_y);
 			}
-			canvas_scroll_.x = (max_x-min_x)/2 + canvas_size_.x/2;
-			canvas_scroll_.y = (max_y-min_y)/2 + canvas_size_.y/2;
+			canvas_scroll_.x = -(max_x+min_x)/2 + canvas_size_.x/2;
+			canvas_scroll_.y = -(max_y+min_y)/2 + canvas_size_.y/2;
 		}
 		// ImVec2 offset = canvas_position_ + canvas_scroll_;
 	}
@@ -1244,6 +1251,7 @@ namespace ImGui
 
 		if(!gf_manager_checked) {
 			CreateNodesFromHandles(gf_manager.dump_nodes());
+			CenterScroll();
 			gf_manager_checked = true;
 		}
 		////////////////////////////////////////////////////////////////////////////////
@@ -1355,10 +1363,10 @@ namespace ImGui
 		
 			// ImGui::Text("");
 		
-			ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
-			ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
-			ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
-			ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
+			// ImGui::Text("Canvas_mouse: %.2f, %.2f", canvas_mouse_.x, canvas_mouse_.y);
+			// ImGui::Text("Canvas_position: %.2f, %.2f", canvas_position_.x, canvas_position_.y);
+			// ImGui::Text("Canvas_size: %.2f, %.2f", canvas_size_.x, canvas_size_.y);
+			// ImGui::Text("Canvas_scroll: %.2f, %.2f", canvas_scroll_.x, canvas_scroll_.y);
 			// ImGui::Text("Canvas_scale: %.2f", canvas_scale_);
 
 			// ImGui::Text("");

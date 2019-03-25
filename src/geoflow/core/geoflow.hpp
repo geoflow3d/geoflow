@@ -335,6 +335,7 @@ namespace geoflow {
     NodeHandle create_node(NodeRegister& node_register, std::string type_name);
     NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);
     void remove_node(NodeHandle node);
+    void clear();
 
     bool name_node(NodeHandle node, std::string new_name);
 

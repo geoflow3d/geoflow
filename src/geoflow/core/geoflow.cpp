@@ -255,6 +255,11 @@ using namespace geoflow;
   void NodeManager::remove_node(NodeHandle node) {
     nodes.erase(node->get_name());
   }
+  void NodeManager::clear() {
+    nodes.clear();
+    data_offset.reset();
+    ID=0;
+  }
   bool NodeManager::name_node(NodeHandle node, std::string new_name) {
     // rename a node, ensure uniqueness of name, return true if it wasn't already used
     if(nodes.find(new_name)==nodes.end()) // check if new_name already exists
