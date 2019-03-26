@@ -30,6 +30,8 @@
 #include <set>
 #include <queue>
 #include <exception>
+#include <typeinfo>
+#include <typeindex>
 
 #include <iostream>
 #include <sstream>
@@ -37,6 +39,10 @@
 #include "../common.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
+
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 namespace geoflow {
 
@@ -56,6 +62,7 @@ namespace geoflow {
 
   class Node;
   class NodeManager;
+  class NodeRegister;
   class InputTerminal;
   class OutputTerminal;
   class InputGroup;
@@ -98,26 +105,26 @@ namespace geoflow {
 
   class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
     public:
-    const std::vector<TerminalType> types;
-    TerminalType connected_type;
-    InputTerminal(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types): Terminal(parent_gnode, name), types(types) {};
-    InputTerminal(Node& parent_gnode, std::string name, TerminalType type): Terminal(parent_gnode, name), types({type}) {};
+    std::vector<std::type_index> types;
+    std::type_index connected_type = typeid(void);
+    InputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types): Terminal(parent_gnode, name), types(types) {};
+    InputTerminal(Node& parent_gnode, std::string name, std::type_index type): Terminal(parent_gnode, name), types({type}) {};
     
     std::weak_ptr<InputTerminal>  get_ptr(){
       return weak_from_this();
     }
-    std::vector<TerminalType> get_types() { return types; };
+    std::vector<std::type_index> get_types() { return types; };
     void push(std::any data);
     void clear();
   };
   class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
     typedef std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connection_set;
     public:
-    const TerminalType type;
+    std::type_index type;
     //use a set to make sure we don't get duplicate connection
     connection_set connections;
     
-    OutputTerminal(Node& parent_gnode, std::string name, TerminalType type): Terminal(parent_gnode, name), type(type){};
+    OutputTerminal(Node& parent_gnode, std::string name, std::type_index type): Terminal(parent_gnode, name), type(type){};
     ~OutputTerminal();
     
     std::weak_ptr<OutputTerminal>  get_ptr(){
@@ -139,16 +146,16 @@ namespace geoflow {
     std::string name;
     public:
     Node& parent;
-    std::unordered_set<TerminalType> types;
+    std::unordered_set<std::type_index> types;
     std::map<std::string,std::shared_ptr<TerminalClass> > terminals;
-    TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<TerminalType> types)
+    TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types)
     : parent(parent_gnode), name(name), types(types) {};
     // ~TerminalGroup(){};
 
     TerminalClass& term(std::string term_name) {
       return *terminals.at(term_name);
     }
-    TerminalClass& add(std::string term_name, TerminalType type) {
+    TerminalClass& add(std::string term_name, std::type_index type) {
       // TODO: check if term_name is unique and if type is in types
       terminals[term_name] = std::make_shared<TerminalClass>(parent, term_name, type);
       return *terminals[term_name];
@@ -210,7 +217,7 @@ namespace geoflow {
     ParameterMap parameters;
     ImVec2 position;
 
-    Node(NodeManager& manager, std::string type_name): manager(manager), type_name(type_name) {};
+    Node(NodeRegister& node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
     ~Node();
 
     void remove_from_manager();
@@ -260,16 +267,16 @@ namespace geoflow {
 
     node_status status=WAITING;
 
-    void add_input(std::string name, TerminalType type);
-    void add_input(std::string name, std::initializer_list<TerminalType> types);
-    void add_output(std::string name, TerminalType type);
+    void add_input(std::string name, std::type_index type);
+    void add_input(std::string name, std::initializer_list<std::type_index> types);
+    void add_output(std::string name, std::type_index type);
 
-    void add_input_group(std::string group_name, std::initializer_list<TerminalType> types) {
+    void add_input_group(std::string group_name, std::initializer_list<std::type_index> types) {
       inputGroups.emplace(
         std::make_pair(group_name, std::make_shared<InputGroup>(*this, group_name, types))
       );
     }
-    void add_output_group(std::string group_name, std::initializer_list<TerminalType> types) {
+    void add_output_group(std::string group_name, std::initializer_list<std::type_index> types) {
       outputGroups.emplace(
         std::make_pair(group_name, std::make_shared<OutputGroup>(*this, group_name, types))
       );
@@ -309,12 +316,15 @@ namespace geoflow {
     std::string get_info();
     const std::string get_name() { return name; };
     const std::string get_type_name() { return type_name; };
+    const NodeRegister& get_register() { return node_register; };
     bool set_name(std::string new_name);
+    json dump_json();
 
     protected:
     std::string name;
     const std::string type_name; // to be managed only by node manager because uniqueness constraint (among all nodes in the manager)
     NodeManager& manager;
+    NodeRegister& node_register;
 
     friend class NodeManager;
   };
@@ -323,15 +333,15 @@ namespace geoflow {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
     public:
     NodeRegister(std::string name):name(name) {};
-    std::map<std::string, std::function<NodeHandle(NodeManager&, std::string)>> node_types;
+    std::map<std::string, std::function<NodeHandle(NodeRegister&, NodeManager&, std::string)>> node_types;
 
     template<class NodeClass> void register_node(std::string type_name) {
       node_types[type_name] = create_node_type<NodeClass>;
     }
-    std::string get_name() {return name;}
+    std::string get_name() const {return name;}
     protected:
-    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeManager& nm, std::string type_name){
-      auto node = std::make_shared<NodeClass>(nm, type_name);
+    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegister& nr, NodeManager& nm, std::string type_name){
+      auto node = std::make_shared<NodeClass>(nr, nm, type_name);
       node->init();
       return node;
     }
@@ -340,16 +350,30 @@ namespace geoflow {
         throw Exception("No such node type - \""+type_name+"\"");
 
       auto f = node_types[type_name];
-      auto n = f(nm, type_name);
+      auto n = f(*this, nm, type_name);
       return n;
     }
-    const std::string name;
+    std::string name;
     friend class NodeManager;
+  };
+  typedef std::unordered_map<std::string, NodeRegister> Map;
+  class NodeRegisterMap : public Map {
+    private:
+    using Map::emplace;
+    public:;
+    using Map::Map;
+    NodeRegisterMap(std::initializer_list<NodeRegister> registers) {
+      for (auto& r : registers) {
+        emplace(r);
+      }
+    }
+    std::pair<std::unordered_map<std::string, NodeRegister>::iterator,bool> emplace(NodeRegister reg) {
+      return emplace(reg.get_name(), reg);
+    }
   };
 
   class NodeManager {
     // manages a set of nodes that form one flowchart. Every node must linked to a NodeManager.
-    typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> ConnectionList;
     public:
     size_t ID=0;
 
@@ -360,12 +384,15 @@ namespace geoflow {
     NodeHandle create_node(NodeRegister& node_register, std::string type_name);
     NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);
     void remove_node(NodeHandle node);
+    void clear();
 
     bool name_node(NodeHandle node, std::string new_name);
 
     std::vector<NodeHandle> dump_nodes();
 
-    ConnectionList dump_connections();
+
+    std::vector<NodeHandle> load_json(std::string filepath, NodeRegisterMap& registers);
+    void dump_json(std::string filepath);
 
     // load_json() {
 
@@ -383,6 +410,8 @@ namespace geoflow {
     friend class Node;
   };
 
+  typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> ConnectionList;
+  ConnectionList dump_connections(std::vector<NodeHandle>);
   bool connect(OutputTerminal& oT, InputTerminal& iT);
   bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
   bool connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2);

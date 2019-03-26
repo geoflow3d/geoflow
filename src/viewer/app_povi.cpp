@@ -97,12 +97,37 @@ void poviApp::on_resize(int new_width, int new_height) {
 //     width = new_width;
 //     height = new_height;
 }
+void poviApp::draw_menu_bar() {
+    if (ImGui::BeginMenuBar())
+    {
+        for (auto& render_object : render_objects) {
+            render_object->menu();
+        }
+        // if (ImGui::BeginMenu("3D Viewer"))
+        // {
+            
+        //     ImGui::EndMenu();
+        // }
+        if (ImGui::BeginMenu("Debug"))
+        {
+            if (ImGui::MenuItem("ImGui demo window", ""))
+                show_demo_window=true;
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+}
 
 void poviApp::on_draw(){
     // Render painters
     // Render to framebuffer
     ImGui::Begin("3D Viewer");
     ImGui::BeginChild("3DChild", ImVec2(0,0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking);
+        
+        if (ImGui::IsMouseReleased(1) && ImGui::IsWindowHovered()) {
+            ImGui::OpenPopup("3DViewConfig");
+        }
+
         auto size = ImGui::GetContentRegionAvail();
         width = size.x;
         height = size.y;
@@ -142,6 +167,7 @@ void poviApp::on_draw(){
 
         update_view_matrix();
         update_projection_matrix();
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         GLbitfield bits = 0;
         bits |= GL_COLOR_BUFFER_BIT;
         bits |= GL_DEPTH_BUFFER_BIT;
@@ -155,28 +181,40 @@ void poviApp::on_draw(){
             ch_painter.render(model, view, projection);
 
         ImGui::Image((void*)(intptr_t)renderedTexture, size, ImVec2(0,1), ImVec2(1,0));
+
+        if (ImGui::BeginPopup("3DViewConfig")) {
+            if (ImGui::Button("Center (c)")) {
+                center();
+            }
+            if (ImGui::Button("Reset rotation (t)")) {
+                rotation = glm::quat();
+            }
+            ImGui::Separator();
+            // ImGui::Begin("View parameters");
+            // xy_pos p0 = screen2view(last_mouse_pos);
+            // ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);
+            // ImGui::Text("Mouse pos [view]: (%g, %g)", p0.x, p0.y);
+            ImGui::SliderFloat("Field of view", &fov, 1, 180);
+            ImGui::SliderFloat("Clip near", &clip_near, 0.01, 100);
+            ImGui::SliderFloat("Clip far", &clip_far, 1, 1000);
+            ImGui::SliderFloat("Zoom speed", &zoom_speed, 1, 1000);
+            ImGui::ColorEdit4("Clear color", (float*)&clear_color);
+            // ImGui::SliderFloat("Camera position", &cam_pos, -200, -1);
+            cam_pos->gui();
+            light_color->gui();
+            light_direction->gui();
+            // ImGui::SliderFloat("Scale", &scale, 0.01, 100);
+            // ImGui::End();
+            ImGui::EndPopup();
+        }
     ImGui::EndChild();
     ImGui::End();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    for (auto render_object : render_objects) {
+    for (auto& render_object : render_objects) {
         render_object->render();
     }
 
-    // ImGui::Begin("View parameters");
-    // xy_pos p0 = screen2view(last_mouse_pos);
-    // ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);
-    // ImGui::Text("Mouse pos [view]: (%g, %g)", p0.x, p0.y);
-    ImGui::SliderFloat("Field of view", &fov, 1, 180);
-    ImGui::SliderFloat("Clip near", &clip_near, 0.01, 100);
-    ImGui::SliderFloat("Clip far", &clip_far, 1, 1000);
-    ImGui::SliderFloat("Zoom speed", &zoom_speed, 1, 1000);
-    // ImGui::SliderFloat("Camera position", &cam_pos, -200, -1);
-    cam_pos->gui();
-    light_color->gui();
-    light_direction->gui();
-    // ImGui::SliderFloat("Scale", &scale, 0.01, 100);
-    // ImGui::End();
 
     ImGui::Begin("Painters");
     for(auto &painter:painters){

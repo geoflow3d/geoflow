@@ -42,6 +42,7 @@ include_directories(
   thirdparty/imgui/examples
   thirdparty/glm
   thirdparty/json/include
+  thirdparty/osdialog
 )
 
 add_definitions(
@@ -78,12 +79,35 @@ if(${GF_BUILD_GUI})
     thirdparty/imgui/examples/imgui_impl_opengl3.cpp
   )
   target_link_libraries(viewer ${GLFW_LIBS})
-  add_library(geoflow-gui STATIC
+  
+  SET(GEOFLOW_GUI_SOURCES 
     src/geoflow/core/geoflow.cpp
     src/geoflow/gui/flowchart.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
-  )
-  target_link_libraries(geoflow-gui viewer)
+    thirdparty/osdialog/osdialog.c
+    src/geoflow/gui/osdialog.cpp)
+  SET(GEOFLOW_GUI_LIBS viewer)
+  if(APPLE)
+    SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
+      thirdparty/osdialog/osdialog_mac.m)
+  elseif(MSVC)
+    SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
+      thirdparty/osdialog/osdialog_win.c)
+    SET(GEOFLOW_GUI_LIBS ${GEOFLOW_GUI_LIBS}
+      comdlg32)
+  else()
+    execute_process (
+      COMMAND "pkg-config --libs gtk+-2.0"
+      OUTPUT_VARIABLE gtklib
+    )
+    SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
+      thirdparty/osdialog/osdialog_gtk2.c)
+    SET(GEOFLOW_GUI_LIBS ${GEOFLOW_GUI_LIBS}
+      gtklib)
+  endif()
+
+  add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
+  target_link_libraries(geoflow-gui ${GEOFLOW_GUI_LIBS})
 
   add_executable(
     gui 

@@ -14,8 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "geoflow.hpp"
 #include <iostream>
+#include <fstream>
+#include <iomanip>
+
+#include "geoflow.hpp"
 
 using namespace geoflow;
   // TODO: what happens if connect several output terminals to 1 input terminal? -> should clear other connections to same input terminal
@@ -150,16 +153,16 @@ using namespace geoflow;
   const ParameterMap& Node::dump_params() {
     return parameters;
   }
-  void Node::add_input(std::string name, std::initializer_list<TerminalType> types) {
+  void Node::add_input(std::string name, std::initializer_list<std::type_index> types) {
     // TODO: check if name is unique key in inputTerminals map
     inputTerminals[name] = std::make_shared<InputTerminal>(
       *this, name, types
     );
   }
-  void Node::add_input(std::string name, TerminalType type) {
+  void Node::add_input(std::string name, std::type_index type) {
     add_input(name, {type});
   }
-  void Node::add_output(std::string name, TerminalType type) {
+  void Node::add_output(std::string name, std::type_index type) {
     outputTerminals[name] = std::make_shared<OutputTerminal>(
       *this, name, type
     );
@@ -236,6 +239,33 @@ using namespace geoflow;
     s << "\n";
     return s.str();
   }
+  json Node::dump_json() {
+    json n;
+    n["type"] = {node_register.get_name(), get_type_name()};
+    n["position"] = {position.x, position.y};
+    for ( const auto& [pname, pvalue] : parameters ) {
+      if (std::holds_alternative<bool>(pvalue))
+        n["parameters"][pname] = param<bool>(pname);
+      else if (std::holds_alternative<int>(pvalue))
+        n["parameters"][pname] = param<int>(pname);
+      else if (std::holds_alternative<float>(pvalue))
+        n["parameters"][pname] = param<float>(pname);
+      else if (std::holds_alternative<std::string>(pvalue))
+        n["parameters"][pname] = param<std::string>(pname);
+    }
+
+    for (const auto& [name, oTerm] : outputTerminals) {
+      std::vector<std::pair<std::string, std::string>> connection_vec;
+      if(oTerm->connections.size() > 0) {
+        for (auto& conn : oTerm->connections) {
+          if (auto iTerm = conn.lock())
+            connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
+        }
+        n["connections"][name] = connection_vec;
+      }
+    }
+    return n;
+  }
 
   void NodeManager::queue(std::shared_ptr<Node> n) {
     node_queue.push(n);
@@ -275,6 +305,11 @@ using namespace geoflow;
   void NodeManager::remove_node(NodeHandle node) {
     nodes.erase(node->get_name());
   }
+  void NodeManager::clear() {
+    nodes.clear();
+    data_offset.reset();
+    ID=0;
+  }
   bool NodeManager::name_node(NodeHandle node, std::string new_name) {
     // rename a node, ensure uniqueness of name, return true if it wasn't already used
     if(nodes.find(new_name)==nodes.end()) // check if new_name already exists
@@ -294,26 +329,65 @@ using namespace geoflow;
     }
     return node_dump;
   }
-  NodeManager::ConnectionList NodeManager::dump_connections() {
-    // collect all connections attached to nodes in this manager
-    // return tuples, one for each connection: <output_node, input_node, output_term, input_term>
-    ConnectionList connections;
-    for (auto& kv : nodes) {
-      auto node = kv.second;
-      for (auto& output_term : node->outputTerminals) {
-        for (auto& input_term : output_term.second->connections) {
-          auto iT = input_term.lock();
-          auto oT = output_term.second;
-          connections.push_back(std::make_tuple(
-            node->get_name(), 
-            iT->parent.get_name(),
-            oT->get_name(),
-            iT->get_name()
-          ));
+  void NodeManager::dump_json(std::string filepath) {
+    json j;
+    j["nodes"] = json::object();
+    for (auto& [name, handle] : nodes) {
+      j["nodes"][name] = handle->dump_json();
+    }
+    std::ofstream o(filepath);
+    o << std::setw(2) << j << std::endl;
+  }
+  std::vector<NodeHandle> NodeManager::load_json(std::string filepath, NodeRegisterMap& registers) {
+    json j;
+    std::ifstream i(filepath);
+    i >> j;
+    json nodes_j = j["nodes"];
+    std::vector<NodeHandle> new_nodes;
+    for (auto node_j : nodes_j.items()) {
+      auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
+      if (registers.count(tt[0])) {
+        std::array<float,2> pos = node_j.value().at("position");
+        auto nhandle = create_node(registers.at(tt[0]), tt[1], {pos[0], pos[1]});
+        new_nodes.push_back(nhandle);
+        std::string node_name = node_j.key();
+        name_node(nhandle, node_name);
+        if (node_j.value().count("parameters")) {
+          auto params_j = node_j.value().at("parameters");
+          for (auto& pel : params_j.items()) {
+            if (std::holds_alternative<bool>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<bool>());
+            else if (std::holds_alternative<int>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<int>());
+            else if (std::holds_alternative<float>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<float>());
+            else if (std::holds_alternative<std::string>(nhandle->parameters[pel.key()]))
+              nhandle->set_param(pel.key(), pel.value().get<std::string>());
+          }
+        }
+      } else {
+        std::cout << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
+      }
+    }
+    for (auto node_j : nodes_j.items()) {
+      auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
+      if (registers.count(tt[0])) {
+        auto nhandle = nodes[node_j.key()];
+        if (node_j.value().count("connections")) {
+          auto conns_j = node_j.value().at("connections");
+          for (json::const_iterator conn_j = conns_j.begin(); conn_j!= conns_j.end(); ++conn_j) {
+            for (json::const_iterator c=conn_j->begin(); c!=conn_j->end(); ++c) {
+              auto cval = c.value().get<std::array<std::string,2>>();
+              if (nodes.count(cval[0]))
+                nhandle->output(conn_j.key()).connect(nodes[cval[0]]->input(cval[1]));
+              else 
+                std::cout << "Could not connect output " << conn_j.key() << "\n";
+            }
+          }
         }
       }
     }
-    return connections;
+    return new_nodes;
   }
 
   bool geoflow::connect(OutputTerminal& oT, InputTerminal& iT) {
@@ -386,4 +460,24 @@ using namespace geoflow;
       });
     }
     return loop_detected;
+  }
+  geoflow::ConnectionList geoflow::dump_connections(std::vector<NodeHandle> node_vec) {
+    // collect all connections attached to nodes in this manager
+    // return tuples, one for each connection: <output_node, input_node, output_term, input_term>
+    ConnectionList connections;
+    for (auto& node : node_vec) {
+      for (auto& output_term : node->outputTerminals) {
+        for (auto& input_term : output_term.second->connections) {
+          auto iT = input_term.lock();
+          auto oT = output_term.second;
+          connections.push_back(std::make_tuple(
+            node->get_name(), 
+            iT->parent.get_name(),
+            oT->get_name(),
+            iT->get_name()
+          ));
+        }
+      }
+    }
+    return connections;
   }

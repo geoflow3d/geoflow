@@ -19,8 +19,44 @@
 #include <thread>
 using namespace std::chrono_literals;
 
+const std::string imgui_default_ini =
+"[Window][GeoflowDockSpace]\n"
+"Pos=0,0\n"
+"Size=1280,800\n"
+"Collapsed=0\n"
+"\n"
+"[Window][Debug##Default]\n"
+"Pos=60,60\n"
+"Size=400,400\n"
+"Collapsed=0\n"
+"\n"
+"[Window][3D Viewer]\n"
+"Pos=0,367\n"
+"Size=997,433\n"
+"Collapsed=0\n"
+"DockId=0x00000003,0\n"
+"\n"
+"[Window][Flowchart]\n"
+"Pos=0,19\n"
+"Size=1280,346\n"
+"Collapsed=0\n"
+"DockId=0x00000001,0\n"
+"\n"
+"[Window][Painters]\n"
+"Pos=999,367\n"
+"Size=281,433\n"
+"Collapsed=0\n"
+"DockId=0x00000004,0\n"
+"\n"
+"[Docking][Data]\n"
+"DockSpace     ID=0x72B5E78C Pos=0,19 Size=1280,781 Split=Y SelectedTab=0x26ED15F2\n"
+"  DockNode    ID=0x00000001 Parent=0x72B5E78C SizeRef=1280,346 SelectedTab=0x84680795\n"
+"  DockNode    ID=0x00000002 Parent=0x72B5E78C SizeRef=1280,433 Split=X SelectedTab=0x26ED15F2\n"
+"    DockNode  ID=0x00000003 Parent=0x00000002 SizeRef=997,509 CentralNode=1 SelectedTab=0x26ED15F2\n"
+"    DockNode  ID=0x00000004 Parent=0x00000002 SizeRef=281,509 SelectedTab=0x6A78F9B2\n";
+
 App::App(int width, int height, std::string title)
-	:width(width), height(height), clear_color(ImVec4(0.0f, 0.0f, 0.0f, 1.0f)) {
+	:width(width), height(height) {
 
     glfwSetErrorCallback(error_callback);
     
@@ -66,6 +102,9 @@ App::App(int width, int height, std::string title)
     // Setup Dear ImGui binding
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    // Load default layout if we can't find the default imgui.ini
+    if (!std::ifstream("imgui.ini"))
+        ImGui::LoadIniSettingsFromMemory(imgui_default_ini.c_str(), imgui_default_ini.size());
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigDockingWithShift = false;
@@ -108,7 +147,6 @@ App::App(int width, int height, std::string title)
 void App::run(){
     
 	on_initialise();
-    bool show_demo_window = false;
 
     // we'll try to make each iteration last at least this long, ie a limit on the FPS
     auto target_frame_duration = 16ms; // ~60FPS
@@ -126,8 +164,8 @@ void App::run(){
             // get framebuffer size, which could be different from the window size in case of eg a retina display  
             glfwGetFramebufferSize(window, &viewport_width, &viewport_height);
             glViewport(0, 0, viewport_width, viewport_height);
-            glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-            glClear(GL_COLOR_BUFFER_BIT);
+            // glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+            // glClear(GL_COLOR_BUFFER_BIT);
 
             // process events:
             // if(!glfwGetWindowAttrib(window, GLFW_FOCUSED)) // don't do anything if window not in focus
@@ -143,7 +181,7 @@ void App::run(){
 
             // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
             // because it would be confusing to have two docking targets within each others.
-            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking; //ImGuiWindowFlags_MenuBar
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_MenuBar;
 
             ImGuiViewport* viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->Pos);
@@ -157,21 +195,20 @@ void App::run(){
             // When using ImGuiDockNodeFlags_PassthruDockspace, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
             // ImGui::SetNextWindowBgAlpha(0.0f);
 
+
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
             bool p_open;
             ImGui::Begin("GeoflowDockSpace", &p_open, window_flags);
-            ImGui::PopStyleVar();
-
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar(3);
 
             // Dockspace
             ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
+            draw_menu_bar();
             ImGui::End();
             
             on_draw();
-            ImGui::ColorEdit4("Clear color", (float*)&clear_color);
-            ImGui::Checkbox("Show demo window", &show_demo_window);
 
             if (show_demo_window)
             {
@@ -215,8 +252,8 @@ void App::key_callback(
     ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
     if (ImGui::GetIO().WantCaptureKeyboard) return;
 
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
+	// if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    //     glfwSetWindowShouldClose(window, GL_TRUE);
 
     void *data = glfwGetWindowUserPointer(window);  
     App *a = static_cast<App *>(data);

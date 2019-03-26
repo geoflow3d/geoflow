@@ -1,12 +1,18 @@
 {
   "nodes": {
     "MyCube": {
-      "type": "Cube",
+      "type": ["GL", "Cube"],
+      "position":[0,75],
       "parameters":{
         "file_path": "some/path/to/ogr.dataset",
         "layer": "thatone"
       },
-      "canvas-pos":[0,75]
+      "connections": {
+        "vertices" : [
+          ["TrianglePainter", "vertices"], 
+          ["CubePainter", "vertices"]
+        ]
+      }
     },
     "MyTriangle": {
       "type": "Triangle",
@@ -14,7 +20,7 @@
         "file_path": "some/path/to/ogr.dataset",
         "layer": "thatone"
       },
-      "canvas-pos":[0,-100]
+      "position":[0,-100]
     },
     "CubePainter": {
       "type": "Painter",
@@ -22,7 +28,7 @@
         "radius": 2,
         "subdivision": 16
       },
-      "canvas-pos":[300,75]
+      "position":[300,75]
     },
     "TrianglePainter": {
       "type": "PoviPainter",
@@ -30,7 +36,7 @@
         "radius": 2,
         "subdivision": 16
       },
-      "canvas-pos":[300,-100]
+      "position":[300,-100]
     }
   },
 

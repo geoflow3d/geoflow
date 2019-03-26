@@ -45,8 +45,8 @@ namespace geoflow::nodes::gui {
     using Node::Node;
     
     void init() {
-      add_input("values", TT_vec1i);
-      add_output("colormap", TT_colmap);
+      add_input("values", typeid(vec1i));
+      add_output("colormap", typeid(ColorMap));
       texture = std::make_shared<Texture1D>();
       texture->set_interpolation_nearest();
       colors.fill(0);
@@ -133,8 +133,8 @@ namespace geoflow::nodes::gui {
     using Node::Node;
     
     void init() {
-      add_input("values", TT_vec1f);
-      add_output("colormap", TT_colmap);
+      add_input("values", typeid(vec1f));
+      add_output("colormap", typeid(ColorMap));
       texture = std::make_shared<Texture1D>();
       u_maxval = std::make_shared<Uniform1f>("u_value_max");
       u_minval = std::make_shared<Uniform1f>("u_value_min");
@@ -200,7 +200,7 @@ namespace geoflow::nodes::gui {
     
     public:
     // using Node::Node;
-     PainterNode (NodeManager &nm, std::string type_name):Node(nm,type_name){
+     PainterNode (NodeRegister &nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name){
       painter = std::make_shared<Painter>();
       // painter->set_attribute("position", nullptr, 0, {3});
       // painter->set_attribute("value", nullptr, 0, {1});
@@ -209,17 +209,17 @@ namespace geoflow::nodes::gui {
       painter->set_drawmode(GL_TRIANGLES);
       // a.add_painter(painter, "mypainter");
       add_input("geometries", {
-        TT_point_collection, 
-        TT_triangle_collection,
-        TT_segment_collection,
-        TT_line_string_collection,
-        TT_linear_ring_collection,
-        TT_linear_ring
+        typeid(PointCollection), 
+        typeid(TriangleCollection),
+        typeid(SegmentCollection),
+        typeid(LineStringCollection),
+        typeid(LinearRingCollection),
+        typeid(LinearRing)
         });
-      add_input("normals", TT_vec3f);
-      add_input("colormap", TT_colmap);
-      add_input("values", TT_vec1f);
-      add_input("identifiers", TT_vec1i);
+      add_input("normals", typeid(vec3f));
+      add_input("colormap", typeid(ColorMap));
+      add_input("values", typeid(vec1f));
+      add_input("identifiers", typeid(vec1i));
     }
     ~PainterNode() {
       // note: this assumes we have only attached this painter to one poviapp
@@ -252,27 +252,27 @@ namespace geoflow::nodes::gui {
       // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
       if(t.has_data() && painter->is_initialised()) {
         if(inputTerminals["geometries"].get() == &t) {
-          if (t.connected_type == TT_point_collection) {
+          if (t.connected_type == typeid(PointCollection)) {
             auto& gc = t.get<PointCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_POINTS);
-          } else if (t.connected_type == TT_triangle_collection) {
+          } else if (t.connected_type == typeid(TriangleCollection)) {
             auto& gc = t.get<TriangleCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_TRIANGLES);
-          } else if(t.connected_type == TT_line_string_collection) {
+          } else if(t.connected_type == typeid(LineStringCollection)) {
             auto& gc = t.get<LineStringCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINE_STRIP);
-          } else if(t.connected_type == TT_segment_collection) {
+          } else if(t.connected_type == typeid(SegmentCollection)) {
             auto& gc = t.get<SegmentCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINES);
-          } else if (t.connected_type == TT_linear_ring_collection) {
+          } else if (t.connected_type == typeid(LinearRingCollection)) {
             auto& gc = t.get<LinearRingCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINE_LOOP);
-          } else if (t.connected_type == TT_linear_ring) {
+          } else if (t.connected_type == typeid(LinearRing)) {
             auto& gc = t.get<LinearRing&>();
             LinearRingCollection lrc;
             lrc.push_back(gc);
@@ -340,11 +340,11 @@ namespace geoflow::nodes::gui {
       painter->attach_shader("basic.frag");
       painter->set_drawmode(GL_TRIANGLES);
       // a.add_painter(painter, "mypainter");
-      add_input("vertices", TT_vec3f);
-      add_input("normals", TT_vec3f);
-      add_input("colormap", TT_colmap);
-      add_input("values", TT_vec1f);
-      add_input("identifiers", TT_vec1i);
+      add_input("vertices", typeid(vec3f));
+      add_input("normals", typeid(vec3f));
+      add_input("colormap", typeid(ColorMap));
+      add_input("values", typeid(vec1f));
+      add_input("identifiers", typeid(vec1i));
     }
     ~PoviPainterNode() {
       // note: this assumes we have only attached this painter to one poviapp
@@ -429,10 +429,10 @@ namespace geoflow::nodes::gui {
   //   public:
 
   //   Vec3SplitterNode(NodeManager& manager):Node(manager) {
-  //     add_input("vec3f", TT_vec3f);
-  //     add_output("x", TT_vec1f);
-  //     add_output("y", TT_vec1f);
-  //     add_output("z", TT_vec1f);
+  //     add_input("vec3f", typeid(vec3f));
+  //     add_output("x", typeid(vec1f));
+  //     add_output("y", typeid(vec1f));
+  //     add_output("z", typeid(vec1f));
   //   }
 
   //   void gui(){
@@ -472,10 +472,10 @@ namespace geoflow::nodes::gui {
     vec1i attri = {1,42,42};
 
     void init() {
-      add_output("vertices", TT_vec3f);
-      add_output("colors", TT_vec3f);
-      add_output("attrf", TT_vec1f);
-      add_output("attri", TT_vec1i);
+      add_output("vertices", typeid(vec3f));
+      add_output("colors", typeid(vec3f));
+      add_output("attrf", typeid(vec1f));
+      add_output("attri", typeid(vec1i));
     }
 
     void gui(){
@@ -496,8 +496,8 @@ namespace geoflow::nodes::gui {
     public:
     using Node::Node;
     void init() {
-      add_output("triangle_collection", TT_triangle_collection);
-      add_output("normals", TT_vec3f);
+      add_output("triangle_collection", typeid(TriangleCollection));
+      add_output("normals", typeid(vec3f));
     }
 
     void gui(){
