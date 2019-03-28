@@ -63,6 +63,7 @@ namespace geoflow {
   class Node;
   class NodeManager;
   class NodeRegister;
+  typedef std::shared_ptr<NodeRegister> NodeRegisterHandle;
   class InputTerminal;
   class OutputTerminal;
   class InputGroup;
@@ -217,7 +218,7 @@ namespace geoflow {
     ParameterMap parameters;
     ImVec2 position;
 
-    Node(NodeRegister& node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
+    Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
     ~Node();
 
     void remove_from_manager();
@@ -316,7 +317,7 @@ namespace geoflow {
     std::string get_info();
     const std::string get_name() { return name; };
     const std::string get_type_name() { return type_name; };
-    const NodeRegister& get_register() { return node_register; };
+    const NodeRegister& get_register() { return *node_register; };
     bool set_name(std::string new_name);
     json dump_json();
 
@@ -324,23 +325,30 @@ namespace geoflow {
     std::string name;
     const std::string type_name; // to be managed only by node manager because uniqueness constraint (among all nodes in the manager)
     NodeManager& manager;
-    NodeRegister& node_register;
+    NodeRegisterHandle node_register;
 
     friend class NodeManager;
   };
 
-  class NodeRegister {
+  class NodeRegister : public std::enable_shared_from_this<NodeRegister> {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
+    private:
+    NodeRegister(const std::string& name):name(name) {};
+    NodeRegister();
     public:
-    NodeRegister(std::string name):name(name) {};
-    std::map<std::string, std::function<NodeHandle(NodeRegister&, NodeManager&, std::string)>> node_types;
+
+    template<typename ... T> static NodeRegisterHandle create(T&& ... t) {
+      return std::shared_ptr<NodeRegister>(new NodeRegister(std::forward<T>(t)...));
+    }
+
+    std::map<std::string, std::function<NodeHandle(NodeRegisterHandle, NodeManager&, std::string)>> node_types;
 
     template<class NodeClass> void register_node(std::string type_name) {
       node_types[type_name] = create_node_type<NodeClass>;
     }
     std::string get_name() const {return name;}
     protected:
-    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegister& nr, NodeManager& nm, std::string type_name){
+    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegisterHandle nr, NodeManager& nm, std::string type_name){
       auto node = std::make_shared<NodeClass>(nr, nm, type_name);
       node->init();
       return node;
@@ -350,25 +358,25 @@ namespace geoflow {
         throw Exception("No such node type - \""+type_name+"\"");
 
       auto f = node_types[type_name];
-      auto n = f(*this, nm, type_name);
+      auto n = f(shared_from_this(), nm, type_name);
       return n;
     }
     std::string name;
     friend class NodeManager;
   };
-  typedef std::unordered_map<std::string, NodeRegister> Map;
-  class NodeRegisterMap : public Map {
+  typedef std::unordered_map<std::string, NodeRegisterHandle> NodeRegisterMap_;
+  class NodeRegisterMap : public NodeRegisterMap_ {
     private:
-    using Map::emplace;
+    using NodeRegisterMap_::emplace;
     public:;
-    using Map::Map;
-    NodeRegisterMap(std::initializer_list<NodeRegister> registers) {
+    using NodeRegisterMap_::NodeRegisterMap_;
+    NodeRegisterMap(std::initializer_list<NodeRegisterHandle> registers) {
       for (auto& r : registers) {
         emplace(r);
       }
     }
-    std::pair<std::unordered_map<std::string, NodeRegister>::iterator,bool> emplace(NodeRegister reg) {
-      return emplace(reg.get_name(), reg);
+    std::pair<NodeRegisterMap_::iterator,bool> emplace(NodeRegisterHandle reg) {
+      return emplace(reg->get_name(), reg);
     }
   };
 
@@ -382,7 +390,9 @@ namespace geoflow {
     std::unordered_map<std::string, NodeHandle> nodes;
 
     NodeHandle create_node(NodeRegister& node_register, std::string type_name);
+    NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name);
     NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);
+    NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name, std::pair<float,float> pos);
     void remove_node(NodeHandle node);
     void clear();
 

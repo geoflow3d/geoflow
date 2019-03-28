@@ -48,13 +48,13 @@
 
 int main(int ac, const char * av[])
 {
-    NodeRegister R("Arithmetic");
-    R.register_node<nodes::arithmetic::AdderNode>("Adder");
-    R.register_node<nodes::arithmetic::NumberNode>("Number");
-    NodeRegister R_gui("BasicShapes");
-    R_gui.register_node<nodes::gui::CubeNode>("Cube");
-    R_gui.register_node<nodes::gui::TriangleNode>("Triangle");
-    R_gui.register_node<FileOpenNode>("FileOpen");
+    auto R = NodeRegister::create("Arithmetic");
+    R->register_node<nodes::arithmetic::AdderNode>("Adder");
+    R->register_node<nodes::arithmetic::NumberNode>("Number");
+    auto R_gui = NodeRegister::create("BasicShapes");
+    R_gui->register_node<nodes::gui::CubeNode>("Cube");
+    R_gui->register_node<nodes::gui::TriangleNode>("Triangle");
+    R_gui->register_node<FileOpenNode>("FileOpen");
 
     NodeRegisterMap RM;
     RM.emplace(R);

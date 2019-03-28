@@ -241,7 +241,7 @@ using namespace geoflow;
   }
   json Node::dump_json() {
     json n;
-    n["type"] = {node_register.get_name(), get_type_name()};
+    n["type"] = {node_register->get_name(), get_type_name()};
     n["position"] = {position.x, position.y};
     for ( const auto& [pname, pvalue] : parameters ) {
       if (std::holds_alternative<bool>(pvalue))
@@ -297,7 +297,20 @@ using namespace geoflow;
     nodes[new_name] = handle;
     return handle;
   }
+  NodeHandle NodeManager::create_node(NodeRegisterHandle node_register, std::string type_name) {
+    // add node through a node register
+    NodeHandle handle = node_register->create(type_name, *this);
+    std::string new_name = type_name + "(" + std::to_string(++ID) + ")";
+    handle->name = new_name;
+    nodes[new_name] = handle;
+    return handle;
+  }
   NodeHandle NodeManager::create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos) {
+    auto handle = create_node(node_register, type_name);
+    handle->set_position(pos.first, pos.second);
+    return handle;
+  }
+  NodeHandle NodeManager::create_node(NodeRegisterHandle node_register, std::string type_name, std::pair<float,float> pos) {
     auto handle = create_node(node_register, type_name);
     handle->set_position(pos.first, pos.second);
     return handle;

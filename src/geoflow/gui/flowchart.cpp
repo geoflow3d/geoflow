@@ -18,10 +18,10 @@ namespace ImGui
 		id_ = 0;
 		element_.Reset();
 		canvas_scale_ = 1.0f;
-		geoflow::NodeRegister R("Visualisation");
-		R.register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
-    R.register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
-    R.register_node<geoflow::nodes::gui::PainterNode>("Painter");
+		auto R = geoflow::NodeRegister::create("Visualisation");
+		R->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
+    R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
+    R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
 		registers.emplace(R);
 	}
 
@@ -1309,8 +1309,8 @@ namespace ImGui
 				// add nodes where the popup was opened
 				auto popup_mouse = ImGui::GetMousePosOnOpeningCurrentPopup() - canvas_position_;
 				for(auto& [name, node_register] : registers) {
-					if ( ImGui::BeginMenu(node_register.get_name().c_str())) {
-						for (auto& kv : node_register.node_types) {
+					if ( ImGui::BeginMenu(node_register->get_name().c_str())) {
+						for (auto& kv : node_register->node_types) {
 							auto type_name = kv.first;
 							if (ImGui::MenuItem(type_name.c_str())) {	
 								element_.Reset();

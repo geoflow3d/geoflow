@@ -200,7 +200,7 @@ namespace geoflow::nodes::gui {
     
     public:
     // using Node::Node;
-     PainterNode (NodeRegister &nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name){
+     PainterNode (NodeRegisterHandle nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name){
       painter = std::make_shared<Painter>();
       // painter->set_attribute("position", nullptr, 0, {3});
       // painter->set_attribute("value", nullptr, 0, {1});

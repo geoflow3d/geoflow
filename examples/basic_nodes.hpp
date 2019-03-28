@@ -81,11 +81,11 @@ namespace geoflow::nodes::arithmetic {
     }
   };
 
-  NodeRegister create_register() {
-    NodeRegister R("Arithmetic");
-    R.register_node<AdderNode>("Adder");
-    R.register_node<NumberNode>("Number");
-    R.register_node<NumberNodeI>("NumberI");
+  NodeRegisterHandle create_register() {
+    auto R = NodeRegister::create("Arithmetic");
+    R->register_node<AdderNode>("Adder");
+    R->register_node<NumberNode>("Number");
+    R->register_node<NumberNodeI>("NumberI");
     return R;
   }
 }
