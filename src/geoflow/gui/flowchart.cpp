@@ -1129,7 +1129,7 @@ namespace ImGui
 					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
 					if (result.has_value()) {
 						for (auto& node : nodes_) {
-							node->gf_node->position = node->position_;
+							node->gf_node->position = node->position_+node->size_/2;
 						}
 						gf_manager.dump_json(result.value());
 					}
@@ -1195,6 +1195,7 @@ namespace ImGui
 	}
 
 	void Nodes::CenterScroll() {
+		canvas_scale_=1.0f;
 		if(nodes_.size()) {
 			float min_x, max_x, min_y, max_y;
 			min_x = max_x = nodes_[0]->position_.x+nodes_[0]->size_.x/2;
