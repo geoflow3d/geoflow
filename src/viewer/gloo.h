@@ -66,7 +66,7 @@ public:
     // void bind(unsigned int location, glm::vec3 const & vector);
 
     void bind(unsigned int location, float value) 
-    { 
+    {   
         glUniform1f(location, value); 
     }
     void bind(unsigned int location, int value) 
@@ -153,7 +153,8 @@ class Texture1D
     public:
     Texture1D(){}
     ~Texture1D(){
-        glDeleteTextures(1, &mTexture);
+        if(initialised)
+            glDeleteTextures(1, &mTexture);
     }
     void activate();
     void deactivate();
@@ -162,10 +163,13 @@ class Texture1D
     void set_data(unsigned char * image, int width);
     void set_interpolation_nearest(){interpolation_nearest=true;};
     void set_interpolation_linear(){interpolation_nearest=false;};
+    void set_wrap_repeat(){wrap_repeat=true;};
+    void set_wrap_clamp(){wrap_repeat=false;};
 
     private:
     // GLint width;
     bool interpolation_nearest=false;
+    bool wrap_repeat=false;
     GLuint mTexture;
     bool initialised=false;
 };
@@ -338,5 +342,5 @@ class Painter : public BasePainter {
     void init();
     geoflow::Box bbox;
     std::weak_ptr<Texture1D> texture;
-    std::unordered_map<std::shared_ptr<Uniform>, std::shared_ptr<Uniform>> uniforms_external;
+    std::unordered_map<std::string, std::shared_ptr<Uniform>> uniforms_external;
 };

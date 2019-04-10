@@ -104,7 +104,11 @@ Shader & Shader::link()
 void Texture1D::activate() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, mTexture);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    if(wrap_repeat) {
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    } else {
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    }
     if(interpolation_nearest) {
         glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);    
@@ -224,11 +228,13 @@ void BasePainter::enable_attribute(const std::string name) {
     glBindVertexArray(mVertexArray);
     auto loc = glGetAttribLocation(shader->get(), name.c_str());
     glEnableVertexAttribArray(loc);
+    // std::cout << "enabling attr " << name << " at loc " << loc << "\n";
 }
 void BasePainter::disable_attribute(const std::string name) {
     glBindVertexArray(mVertexArray);
     auto loc = glGetAttribLocation(shader->get(), name.c_str());
     glDisableVertexAttribArray(loc);
+    // std::cout << "disabling attr " << name << "\n";
 }
 
 void BasePainter::setup_VertexArray()
@@ -296,7 +302,6 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, size_t st
         }
         std::cout << bbox.center()[0] << " " << bbox.center()[1] << " " << bbox.center()[2] << "\n";
     }
-
     attributes[name]->set_data(data, n, stride);
     enable_attribute(name);
 }
@@ -362,10 +367,10 @@ void Painter::set_texture(std::weak_ptr<Texture1D> tex) {
     texture = tex;
 }
 void Painter::register_uniform(std::shared_ptr<Uniform> uniform) {
-    uniforms_external[uniform] = uniform;
+    uniforms_external[uniform->get_name()] = uniform;
 }
 void Painter::unregister_uniform(std::shared_ptr<Uniform> uniform) {
-    uniforms_external.erase(uniform);
+    uniforms_external.erase(uniform->get_name());
 }
 void Painter::remove_texture() {
     if (auto t = texture.lock()) {

@@ -26,9 +26,9 @@
 
 namespace geoflow::nodes::gui {
   struct ColorMap {
-    std::shared_ptr<Uniform> u_valmax, u_valmin;
+    std::shared_ptr<Uniform1f> u_valmax, u_valmin;
     bool is_gradient=false;
-    std::weak_ptr<Texture1D> tex;
+    std::shared_ptr<Texture1D> tex;
     std::unordered_map<int,int> mapping;
   };
   class ColorMapperNode:public Node {
@@ -49,6 +49,7 @@ namespace geoflow::nodes::gui {
       add_output("colormap", typeid(ColorMap));
       texture = std::make_shared<Texture1D>();
       texture->set_interpolation_nearest();
+      texture->set_wrap_repeat();
       colors.fill(0);
     }
     void update_texture(){
@@ -115,16 +116,16 @@ namespace geoflow::nodes::gui {
   };
 
   class GradientMapperNode:public Node {
-    std::shared_ptr<Texture1D> texture;
-    std::shared_ptr<Uniform1f> u_maxval, u_minval;
+    // std::shared_ptr<Texture1D> texture;
+    // std::shared_ptr<Uniform1f> u_maxval, u_minval;
     unsigned char tex[256*3];
-    ColorMap colormap;
+    ColorMap cmap;
 
     ImGradient gradient;
     ImGradientMark* draggingMark = nullptr;
     ImGradientMark* selectedMark = nullptr;
 
-    int n_bins=100;
+    int n_bins=30;
     float minval, maxval, bin_width;
     size_t max_bin_count;
     vec1f histogram;
@@ -135,25 +136,30 @@ namespace geoflow::nodes::gui {
     void init() {
       add_input("values", typeid(vec1f));
       add_output("colormap", typeid(ColorMap));
-      texture = std::make_shared<Texture1D>();
-      u_maxval = std::make_shared<Uniform1f>("u_value_max");
-      u_minval = std::make_shared<Uniform1f>("u_value_min");
+      cmap.tex = std::make_shared<Texture1D>();
+      cmap.tex->set_wrap_clamp();
+      cmap.tex->set_interpolation_linear();
+      cmap.is_gradient = true;
+      cmap.u_valmax = std::make_shared<Uniform1f>("u_value_max");
+      cmap.u_valmin = std::make_shared<Uniform1f>("u_value_min");
     }
 
     void update_texture(){
       gradient.getTexture(tex);
-      if (texture->is_initialised())
-        texture->set_data(tex, 256);
+      if (cmap.tex->is_initialised())
+        cmap.tex->set_data(tex, 256);
     }
 
     void compute_histogram(float min, float max) {
-      auto data = input("values").get<vec1f>();
-      histogram.resize(n_bins, 0);
+      if(!input("values").has_data()) return;
+      auto& data = input("values").get<vec1f&>();
+      histogram.resize(n_bins);
+      std::fill(histogram.begin(), histogram.end(), 0);
 
-      bin_width = (max-min)/(n_bins-1);
+      bin_width = (max-min)/(n_bins);
       for(auto& val : data) {
         if(val>max || val<min) continue;
-        auto bin = std::floor((val-minval)/bin_width);
+        auto bin = std::floor((val-cmap.u_valmin->get_value())/bin_width);
         if(bin>=0 && bin<n_bins)
           histogram[bin]++;
       }
@@ -166,31 +172,27 @@ namespace geoflow::nodes::gui {
         minval = *std::min_element(d.begin(), d.end());
         maxval = *std::max_element(d.begin(), d.end());
         compute_histogram(minval, maxval);
-        u_maxval->set_value(maxval);
-        u_minval->set_value(minval);
+        cmap.u_valmax->set_value(maxval);
+        cmap.u_valmin->set_value(minval);
       }
     }
 
-    void gui(){
-      ImGui::DragFloatRange2("range", &u_minval->get_value(), &u_maxval->get_value(), 0.1f, minval, maxval, "Min: %.2f", "Max: %.2f");
-      ImGui::DragInt("N of bins", &n_bins);
-      if(input("values").has_data())
-        if(ImGui::Button("Rescale histogram")){
-          compute_histogram(u_minval->get_value(), u_maxval->get_value());
-        }
+    void gui() {
+      if(ImGui::DragFloatRange2("range", &cmap.u_valmin->get_value(), &cmap.u_valmax->get_value(), 0.1f, minval, maxval, "Min: %.2f", "Max: %.2f") )
+        compute_histogram(cmap.u_valmin->get_value(), cmap.u_valmax->get_value());
+      if(ImGui::DragInt("N of bins", &n_bins, 1, 2, 100))
+        compute_histogram(cmap.u_valmin->get_value(), cmap.u_valmax->get_value());
+
       ImGui::PlotHistogram("Histogram", histogram.data(), histogram.size(), 0, NULL, 0.0f, (float)max_bin_count, ImVec2(200,80));
-      if(ImGui::GradientEditor("Colormap", &gradient, draggingMark, selectedMark, ImVec2(200,80))){
+      if(ImGui::GradientEditor("Colormap", &gradient, draggingMark, selectedMark, ImVec2(200,80))) {
         update_texture();
       }
     }
 
-    void process(){
+    void process() {
       update_texture();
-      colormap.tex = texture;
-      colormap.is_gradient = true;
-      colormap.u_valmax = u_maxval;
-      colormap.u_valmin = u_minval;
-      output("colormap").set(colormap);
+      // cmap.tex = cmap.tex;
+      output("colormap").set(cmap);
     }
   };
 
@@ -200,7 +202,7 @@ namespace geoflow::nodes::gui {
     
     public:
     // using Node::Node;
-     PainterNode (NodeRegisterHandle nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name){
+     PainterNode (NodeRegisterHandle nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name) {
       painter = std::make_shared<Painter>();
       // painter->set_attribute("position", nullptr, 0, {3});
       // painter->set_attribute("value", nullptr, 0, {1});
@@ -215,7 +217,7 @@ namespace geoflow::nodes::gui {
         typeid(LineStringCollection),
         typeid(LinearRingCollection),
         typeid(LinearRing)
-        });
+      });
       add_input("normals", typeid(vec3f));
       add_input("colormap", typeid(ColorMap));
       add_input("values", typeid(vec1f));
@@ -228,7 +230,7 @@ namespace geoflow::nodes::gui {
         a->remove_painter(painter);
       } else std::cout << "remove painter failed\n";
     }
-    void init(){}
+    void init() {}
 
     void add_to(poviApp& a, std::string name) {
       a.add_painter(painter, name);
@@ -241,7 +243,7 @@ namespace geoflow::nodes::gui {
         if (cmap.is_gradient) return;
         auto values = input("identifiers").get<vec1i>();
         vec1f mapped;
-        for(auto& v : values){
+        for(auto& v : values) {
           mapped.push_back(float(cmap.mapping[v])/256);
         }
         painter->set_attribute("identifier", mapped.data(), mapped.size(), 1);
@@ -280,10 +282,10 @@ namespace geoflow::nodes::gui {
             painter->set_drawmode(GL_LINE_LOOP);
           }
         } else if(&input("normals") == &t) {
-          auto& d = std::any_cast<vec3f&>(t.cdata);
+          auto& d = t.get<vec3f&>();
           painter->set_attribute("normal", d[0].data(), d.size(), 3);
         } else if(&input("values") == &t) {
-          auto& d = std::any_cast<vec1f&>(t.cdata);
+          auto d = t.get<vec1f>();
           painter->set_attribute("value", d.data(), d.size(), 1);
         } else if(&input("identifiers") == &t) {
           map_identifiers();
@@ -309,21 +311,23 @@ namespace geoflow::nodes::gui {
         } else if(&input("colormap") == &t) {
           if(t.cdata.has_value()) {
             auto& cmap = t.get<ColorMap&>();
-            painter->unregister_uniform(cmap.u_valmax);
-            painter->unregister_uniform(cmap.u_valmin);
+            if (cmap.is_gradient) {
+              painter->unregister_uniform(cmap.u_valmax);
+              painter->unregister_uniform(cmap.u_valmin);
+            }
           }
           painter->remove_texture();
         }
     }
 
-    void gui(){
+    void gui() {
       painter->gui();
       // type: points, lines, triangles
       // fp_painter->attach_shader("basic.vert");
       // fp_painter->attach_shader("basic.frag");
       // fp_painter->set_drawmode(GL_LINE_STRIP);
     }
-    void process(){};
+    void process() {};
   };
 
   class PoviPainterNode:public Node {
@@ -365,7 +369,7 @@ namespace geoflow::nodes::gui {
         if (cmap.is_gradient) return;
         auto values = input("identifiers").get<vec1i>();
         vec1f mapped;
-        for(auto& v : values){
+        for(auto& v : values) {
           mapped.push_back(float(cmap.mapping[v])/256);
         }
         painter->set_attribute("identifier", mapped.data(), mapped.size(), 1);
@@ -415,14 +419,14 @@ namespace geoflow::nodes::gui {
         }
     }
 
-    void gui(){
+    void gui() {
       painter->gui();
       // type: points, lines, triangles
       // fp_painter->attach_shader("basic.vert");
       // fp_painter->attach_shader("basic.frag");
       // fp_painter->set_drawmode(GL_LINE_STRIP);
     }
-    void process(){};
+    void process() {};
   };
 
   // class Vec3SplitterNode:public Node {
@@ -435,10 +439,10 @@ namespace geoflow::nodes::gui {
   //     add_output("z", typeid(vec1f));
   //   }
 
-  //   void gui(){
+  //   void gui() {
   //   }
 
-  //   void process(){
+  //   void process() {
   //     auto v = input("vec3f").get<vec3f>();
   //     vec1f x,y,z;
   //     const size_t size = v.size();
@@ -478,13 +482,13 @@ namespace geoflow::nodes::gui {
       add_output("attri", typeid(vec1i));
     }
 
-    void gui(){
+    void gui() {
       ImGui::ColorEdit3("col1", colors[0].data());
       ImGui::ColorEdit3("col2", colors[1].data());
       ImGui::ColorEdit3("col3", colors[2].data());
     }
 
-    void process(){
+    void process() {
       output("vertices").set(vertices);
       output("colors").set(colors);
       output("attrf").set(attrf);
@@ -500,10 +504,10 @@ namespace geoflow::nodes::gui {
       add_output("normals", typeid(vec3f));
     }
 
-    void gui(){
+    void gui() {
     }
 
-    void process(){
+    void process() {
       typedef std::array<float, 3> point;
       point p0 = {-1.0f, -1.0f, -1.0f};
       point p1 = {1.0f, -1.0f, -1.0f};
