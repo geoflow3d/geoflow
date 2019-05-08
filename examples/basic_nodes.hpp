@@ -30,13 +30,13 @@ namespace geoflow::nodes::arithmetic {
       add_output("result", typeid(float));
     }
 
-    void gui(){
+    void gui() {
       if (output("result").has_data()) {
         ImGui::Text("Result %f", output("result").get<float>());
       }
     }
 
-    void process(){
+    void process() {
       std::cout << "begin AddderNode::process()" << "\n";
       auto in1 = input("in1").get<float>();
       auto in2 = input("in2").get<float>();
@@ -56,11 +56,11 @@ namespace geoflow::nodes::arithmetic {
       add_param("number_value", (int) 42);
     }
 
-    void gui(){
+    void gui() {
       ImGui::InputInt("Number value", &param<int>("number_value"));
     }
 
-    void process(){
+    void process() {
       std::cout << "begin NumberNode::process()" << "\n";
       output("result").set(float(param<int>("number_value")));
       std::cout << "end NumberNode::process()" << "\n";
@@ -74,7 +74,7 @@ namespace geoflow::nodes::arithmetic {
       add_output("result", typeid(int));
     }
 
-    void process(){
+    void process() {
       std::cout << "begin NumberNode::process()" << "\n";
       output("result").set(1);
       std::cout << "end NumberNode::process()" << "\n";
