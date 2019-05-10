@@ -304,7 +304,7 @@ namespace ImGui
         if (BeginPopup("picker"))
             {
                 ImGuiColorEditFlags picker_flags_to_forward = ImGuiColorEditFlags__DataTypeMask | ImGuiColorEditFlags__PickerMask | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar;
-                ImGuiColorEditFlags picker_flags = (picker_flags_to_forward) | ImGuiColorEditFlags__InputsMask | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf;
+                ImGuiColorEditFlags picker_flags = (picker_flags_to_forward) | ImGuiColorEditFlags__InputMask | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf;
                 PushItemWidth(150.0f); // Use 256 + bar sizes?
                 ColorPicker4("##picker", selectedMark->color);
                 PopItemWidth();
