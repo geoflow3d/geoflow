@@ -332,10 +332,10 @@ namespace geoflow {
 
   class NodeRegister : public std::enable_shared_from_this<NodeRegister> {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
-    private:
+    // private:
+    public:
     NodeRegister(const std::string& name):name(name) {};
     NodeRegister();
-    public:
 
     template<typename ... T> static NodeRegisterHandle create(T&& ... t) {
       return std::shared_ptr<NodeRegister>(new NodeRegister(std::forward<T>(t)...));

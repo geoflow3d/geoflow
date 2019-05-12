@@ -31,13 +31,37 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
     )
 endif()
 
+# DLLoader
+if (WIN32)
+	# set(DLLOADER_SRC
+	# 	Core/DLLoader/Windows/DLLoader.h
+	# )
+	
+	include_directories(
+		src/DLLoader/Windows/
+	)
+
+endif(WIN32)
+
+if(UNIX)
+	# set(DLLOADER_SRC
+	# 	Core/DLLoader/Unix/DLLoader.h
+	# )
+
+	include_directories(
+		src/DLLoader/Unix/
+	)
+
+    # set (CMAKE_CXX_FLAGS "-W -Wall -Wextra")
+endif(UNIX)
+
 # nlohmann's json
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(thirdparty/json)
 
 include_directories(
   src
-  thirdparty/glad/include 
+  thirdparty/glad/include
   thirdparty/imgui
   thirdparty/imgui/examples
   thirdparty/glm
@@ -108,32 +132,6 @@ if(${GF_BUILD_GUI})
 
   add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
   target_link_libraries(geoflow-gui ${GEOFLOW_GUI_LIBS})
-
-  add_executable(
-    gui 
-    examples/gui.cpp 
-  )
-  target_link_libraries(gui geoflow-gui)
-  # add_executable(
-  #   viewer-test 
-  #   src/viewer/main.cpp 
-  # )
-  # target_link_libraries(viewer-test viewer)
-
-  set_target_properties(
-    viewer
-    geoflow-gui
-    # viewer-test
-    gui 
-    PROPERTIES CXX_STANDARD 17
-  )
 endif()
 
-add_executable(basic examples/basic.cpp)
-target_link_libraries(basic geoflow-core)
-
-set_target_properties(
-  geoflow-core
-  basic
-  PROPERTIES CXX_STANDARD 17
-)
+add_subdirectory(examples)
