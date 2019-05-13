@@ -353,10 +353,14 @@ using namespace geoflow;
   }
   std::vector<NodeHandle> NodeManager::load_json(std::string filepath, NodeRegisterMap& registers) {
     json j;
+    std::vector<NodeHandle> new_nodes;
     std::ifstream i(filepath);
+    if (i.peek() == std::ifstream::traits_type::eof()) {
+      std::cout << "bad json file\n";
+      return new_nodes;
+    }
     i >> j;
     json nodes_j = j["nodes"];
-    std::vector<NodeHandle> new_nodes;
     for (auto node_j : nodes_j.items()) {
       auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
       if (registers.count(tt[0])) {

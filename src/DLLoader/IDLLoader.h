@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 
+struct ImGuiContext;
+
 namespace dlloader
 {
 
@@ -22,6 +24,11 @@ namespace dlloader
 		**
 		*/
 		virtual void DLOpenLib() = 0;
+
+		/*
+		**
+		*/
+		virtual void DLSetImGuiContext(ImGuiContext*) = 0;
 
 		/*
 		** Return a shared pointer on an instance of class loaded through

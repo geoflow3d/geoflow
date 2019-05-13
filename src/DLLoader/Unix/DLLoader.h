@@ -60,6 +60,18 @@ namespace dlloader
 					[deleteFunc](T *p){ deleteFunc(p); });
 		}
 
+		void DLSetImGuiContext(ImGuiContext* ctx) override {
+			using SetCtxfunc = void (*)(ImGuiContext*);
+			
+			auto Func = reinterpret_cast<SetCtxfunc>(
+				dlsym(_handle, "SetImGuiContext"));
+			if (!Func) {
+				std::cerr << dlerror() << std::endl;
+				DLCloseLib();
+			}
+			Func(ctx);
+		}
+
 		void DLCloseLib() override
 		{
 			if (dlclose(_handle) != 0) {

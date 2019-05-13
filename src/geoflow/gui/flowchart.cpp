@@ -18,11 +18,15 @@ namespace ImGui
 		id_ = 0;
 		element_.Reset();
 		canvas_scale_ = 1.0f;
-		auto R = geoflow::NodeRegister::create("Visualisation");
-		R->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
-    R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
-    R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
-		registers.emplace(R);
+
+		// ensure visualisation nodes are available
+		if(registers.find("Visualisation")==registers.end()) {
+			auto R = geoflow::NodeRegister::create("Visualisation");
+			R->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
+			R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
+			R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
+			registers.emplace(R);
+		}
 	}
 
 	Nodes::~Nodes()

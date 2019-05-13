@@ -78,6 +78,9 @@ add_definitions(
 if(MSVC)
   add_definitions(-DNOMINMAX)
 endif()
+if(GF_BUILD_GUI)
+  add_definitions(-DGF_BUILD_GUI)
+endif()
 
 add_library(geoflow-core STATIC
   src/geoflow/core/geoflow.cpp
@@ -134,4 +137,5 @@ if(${GF_BUILD_GUI})
   target_link_libraries(geoflow-gui ${GEOFLOW_GUI_LIBS})
 endif()
 
+add_subdirectory(apps)
 add_subdirectory(examples)

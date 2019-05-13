@@ -239,7 +239,6 @@ void App::run(){
     }
     glfwDestroyWindow(window);
     glfwTerminate();
-    exit(EXIT_SUCCESS);
 }
 
 void App::draw(){

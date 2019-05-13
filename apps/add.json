@@ -1,0 +1,66 @@
+{
+  "nodes": {
+    "Adder(2)": {
+      "position": [
+        370.0,
+        142.0
+      ],
+      "type": [
+        "Arithmetic",
+        "Adder"
+      ]
+    },
+    "Number(1)": {
+      "connections": {
+        "result": [
+          [
+            "Adder(2)",
+            "in1"
+          ]
+        ]
+      },
+      "parameters": {
+        "number_value": 40
+      },
+      "position": [
+        191.0,
+        79.0
+      ],
+      "type": [
+        "Arithmetic",
+        "Number"
+      ]
+    },
+    "Number(3)": {
+      "connections": {
+        "result": [
+          [
+            "Adder(2)",
+            "in2"
+          ]
+        ]
+      },
+      "parameters": {
+        "number_value": 42
+      },
+      "position": [
+        186.0,
+        178.0
+      ],
+      "type": [
+        "Arithmetic",
+        "Number"
+      ]
+    },
+    "Painter(4)": {
+      "position": [
+        620.0,
+        90.0
+      ],
+      "type": [
+        "Visualisation",
+        "Painter"
+      ]
+    }
+  }
+}
