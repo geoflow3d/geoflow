@@ -1,3 +1,3 @@
 {
-  "node-libs": ["/Users/ravi/git/geoflow/debug/examples/libbasic_plugin.dylib"]
+  "node-libs": ["/Users/ravi/git/geoflow/debug/examples/Arithmetic/libgf_arithmetic.dylib"]
 }

@@ -91,6 +91,11 @@ add_library(geoflow-core STATIC
 )
 target_link_libraries(geoflow-core nlohmann_json::nlohmann_json)
 
+set_target_properties(
+geoflow-core
+PROPERTIES CXX_STANDARD 17
+)
+
 if(${GF_BUILD_GUI})
   add_library(viewer STATIC 
     src/viewer/app.cpp 
@@ -135,6 +140,13 @@ if(${GF_BUILD_GUI})
 
   add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
   target_link_libraries(geoflow-gui ${GEOFLOW_GUI_LIBS})
+
+
+  set_target_properties(
+    viewer
+    geoflow-gui
+    PROPERTIES CXX_STANDARD 17
+  )
 endif()
 
 add_subdirectory(apps)

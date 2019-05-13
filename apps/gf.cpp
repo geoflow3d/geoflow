@@ -26,6 +26,8 @@ int main(int ac, const char * av[]) {
       R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
       R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
       node_registers.emplace(R);
+      
+      ImGui::CreateContext();
     #endif
     
     json j;
@@ -33,18 +35,17 @@ int main(int ac, const char * av[]) {
     i >> j;
     auto node_paths = j.at("node-libs").get<std::vector<std::string>>();
 
-    ImGui::CreateContext();
     for (const auto& path : node_paths)  {
       node_libs.emplace(path, std::make_unique<node_lib>(path));
       // auto lib = ;
       std::cout << "Loading " << path << std::endl;
       node_libs[path]->DLOpenLib();
 
-      node_libs[path]->DLSetImGuiContext(ImGui::GetCurrentContext());
+      #ifdef GF_BUILD_GUI
+        node_libs[path]->DLSetImGuiContext(ImGui::GetCurrentContext());
+      #endif
 
       node_registers.emplace( node_libs[path]->DLGetInstance() );
-
-      // node_libs[path] = lib;
     }
 
     // load flowchart from file
