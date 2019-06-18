@@ -82,7 +82,7 @@ if(GF_BUILD_GUI)
   add_definitions(-DGF_BUILD_GUI)
 endif()
 
-add_library(geoflow-core STATIC
+add_library(geoflow-core SHARED
   src/geoflow/core/geoflow.cpp
   thirdparty/imgui/imgui.cpp
   thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
@@ -97,28 +97,20 @@ PROPERTIES CXX_STANDARD 17
 )
 
 if(${GF_BUILD_GUI})
-  add_library(viewer STATIC 
+  SET(GEOFLOW_GUI_SOURCES
     src/viewer/app.cpp 
     src/viewer/app_povi.cpp 
     thirdparty/glad/src/glad.c 
     src/viewer/gloo.cpp
-    thirdparty/imgui/imgui.cpp
-    thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
     thirdparty/imgui/imgui_demo.cpp
-    thirdparty/imgui/imgui_draw.cpp
-    thirdparty/imgui/imgui_widgets.cpp
     thirdparty/imgui/examples/imgui_impl_glfw.cpp
     thirdparty/imgui/examples/imgui_impl_opengl3.cpp
-  )
-  target_link_libraries(viewer ${GLFW_LIBS})
-  
-  SET(GEOFLOW_GUI_SOURCES 
     src/geoflow/core/geoflow.cpp
     src/geoflow/gui/flowchart.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
     thirdparty/osdialog/osdialog.c
     src/geoflow/gui/osdialog.cpp)
-  SET(GEOFLOW_GUI_LIBS viewer)
+  SET(GEOFLOW_GUI_LIBS geoflow-core ${GLFW_LIBS})
   if(APPLE)
     SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
       thirdparty/osdialog/osdialog_mac.m)
@@ -138,12 +130,9 @@ if(${GF_BUILD_GUI})
       gtklib)
   endif()
 
-  add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
+  add_library(geoflow-gui SHARED ${GEOFLOW_GUI_SOURCES})
   target_link_libraries(geoflow-gui ${GEOFLOW_GUI_LIBS})
-
-
   set_target_properties(
-    viewer
     geoflow-gui
     PROPERTIES CXX_STANDARD 17
   )
