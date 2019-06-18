@@ -1193,7 +1193,7 @@ namespace ImGui
 			conn_source->connections_++;
 			conn_target->connections_++;
 
-			geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
+			// geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
 			gf_manager.run(conn_target->gf_terminal->parent);
 		}
 	}

@@ -422,8 +422,8 @@ using namespace geoflow;
     return geoflow::connect(n1->output(s1), n2->input(s2));
   }
   bool geoflow::connect(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     return geoflow::connect(oT, iT);
   }
 //  bool geoflow::connect(TerminalGroup<OutputTerminal> input_group, TerminalGroup<InputTerminal> output_group) {
@@ -436,18 +436,18 @@ using namespace geoflow;
 //    return true;
 //  }
   bool geoflow::is_compatible(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     return oT.is_compatible(iT);
   }
   void geoflow::disconnect(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     oT.disconnect(iT);
   }
   bool geoflow::detect_loop(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     return detect_loop(oT, iT);
   }
   bool geoflow::detect_loop(OutputTerminal& outputT, InputTerminal& inputT) {

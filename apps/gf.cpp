@@ -8,14 +8,14 @@
     #include <geoflow/gui/flowchart.hpp>
 #endif
 
-typedef dlloader::DLLoader<geoflow::NodeRegister> node_lib;
 
 int main(int ac, const char * av[]) {
 
   const std::string config_path = "/Users/ravi/git/geoflow/apps/geoflow-config.json";
   const std::string flowchart_path = "/Users/ravi/git/geoflow/apps/add.json";
 
-  std::unordered_map<std::string, std::unique_ptr<node_lib>> node_libs;
+  typedef dlloader::DLLoader<geoflow::NodeRegister> DLLoader;
+  std::unordered_map<std::string, std::unique_ptr<DLLoader>> dloaders;
 
   // load node registers from libraries
   {
@@ -36,16 +36,16 @@ int main(int ac, const char * av[]) {
     auto node_paths = j.at("node-libs").get<std::vector<std::string>>();
 
     for (const auto& path : node_paths)  {
-      node_libs.emplace(path, std::make_unique<node_lib>(path));
+      dloaders.emplace(path, std::make_unique<DLLoader>(path));
       // auto lib = ;
       std::cout << "Loading " << path << std::endl;
-      node_libs[path]->DLOpenLib();
+      dloaders[path]->DLOpenLib();
 
       #ifdef GF_BUILD_GUI
-        node_libs[path]->DLSetImGuiContext(ImGui::GetCurrentContext());
+        dloaders[path]->DLSetImGuiContext(ImGui::GetCurrentContext());
       #endif
 
-      node_registers.emplace( node_libs[path]->DLGetInstance() );
+      node_registers.emplace( dloaders[path]->DLGetInstance() );
     }
 
     // load flowchart from file
@@ -61,8 +61,8 @@ int main(int ac, const char * av[]) {
   }
 
   // unload node libraries
-  for ( auto& [path, lib] : node_libs) {
+  for ( auto& [path, loader] : dloaders) {
     std::cout << "Unloading " << path << std::endl;
-    lib->DLCloseLib();
+    loader->DLCloseLib();
   }
 }
