@@ -17,3 +17,5 @@ set_target_properties(
   gf
   PROPERTIES CXX_STANDARD 17
 )
+
+install(TARGETS gf DESTINATION bin)

@@ -138,5 +138,11 @@ if(${GF_BUILD_GUI})
   )
 endif()
 
+install(TARGETS geoflow-core DESTINATION lib)
+install(TARGETS geoflow-gui DESTINATION lib)
+install(FILES common.hpp DESTINATION lib)
+install(FILES geoflow.hpp DESTINATION lib)
+
 add_subdirectory(apps)
 add_subdirectory(examples)
+

@@ -31,10 +31,11 @@ class AdderNode:public Node {
     add_output("result", typeid(float));
   }
 
-  void gui() {
-    if (output("result").has_data()) {
-      ImGui::Text("Result %f", output("result").get<float>());
-    }
+  std::string info() {
+    std::string s;
+    if (output("result").has_data())
+      s = std::to_string(output("result").get<float>());
+    return s;
   }
 
   void process() {
@@ -48,22 +49,19 @@ class AdderNode:public Node {
 };
 
 class NumberNode:public Node {
+  int value=21;
   public:
   using Node::Node;
 
   void init() {
     add_output("result", typeid(float));
     
-    add_param("number_value", (int) 42);
+    add_param("number_value", ParamInt(value));
   }
-
-  void gui() {
-    ImGui::InputInt("Number value", &param<int>("number_value"));
-  }
-
+  
   void process() {
     std::cout << "begin NumberNode::process()" << "\n";
-    output("result").set(float(param<int>("number_value")));
+    output("result").set(float(value));
     std::cout << "end NumberNode::process()" << "\n";
   }
 };

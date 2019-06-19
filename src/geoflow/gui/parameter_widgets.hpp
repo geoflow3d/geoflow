@@ -1,0 +1,24 @@
+#pragma once
+
+#include "../parameters.hpp"
+#include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
+#include "osdialog.hpp"
+
+namespace geoflow {
+	void draw_parameters(ParameterSet& parameters_set) {
+		for(auto& [name, param] : parameters_set) {
+			if( auto valptr = std::get_if<ParamInt>(&param) ) {
+				ImGui::InputInt(name.c_str(), &valptr->get());
+			} else if( auto valptr = std::get_if<ParamFloat>(&param) ) {
+				ImGui::InputFloat(name.c_str(), &valptr->get());
+			} else if( auto valptr = std::get_if<ParamPath>(&param) ) {
+        ImGui::FilePicker(OSDIALOG_OPEN, valptr->get());
+			} else if( auto valptr = std::get_if<ParamBool>(&param) ) {
+				ImGui::Checkbox(name.c_str(), &valptr->get());
+			} else {
+				ImGui::Text("%s", name.c_str());
+			}
+		}
+	};
+}

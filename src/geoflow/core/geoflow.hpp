@@ -37,11 +37,11 @@
 #include <sstream>
 
 #include "../common.hpp"
+#include "../parameters.hpp"
+
 #include "imgui.h"
-#include "misc/cpp/imgui_stdlib.h"
 
 #include <nlohmann/json.hpp>
-
 using json = nlohmann::json;
 
 namespace geoflow {
@@ -49,12 +49,12 @@ namespace geoflow {
   class Exception: public std::exception
   {
   public:
-      explicit Exception(const std::string& message):
-        msg_(message)
-        {}
-      virtual const char* what() const throw (){
-        return msg_.c_str();
-      }
+    explicit Exception(const std::string& message):
+      msg_(message)
+      {}
+    virtual const char* what() const throw (){
+      return msg_.c_str();
+    }
 
   protected:
       std::string msg_;
@@ -71,8 +71,8 @@ namespace geoflow {
   // typedef std::weak_ptr<InputTerminal> InputHandle;
   // typedef std::weak_ptr<OutputTerminal> OutputHandle;
 
-  typedef std::variant<bool,int,float,std::string> Parameter;
-  typedef std::unordered_map<std::string, Parameter> ParameterMap;
+  
+  
   typedef std::shared_ptr<Node> NodeHandle;
   
   class Terminal {
@@ -215,7 +215,7 @@ namespace geoflow {
     std::map<std::string,std::shared_ptr<InputGroup>> inputGroups;
     std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
 
-    ParameterMap parameters;
+    ParameterSet parameters;
     ImVec2 position;
 
     Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
@@ -235,9 +235,9 @@ namespace geoflow {
       }
       return *outputTerminals[term_name];
     }
-    template<typename T> T& param(std::string name) {
-      return std::get<T>(parameters.at(name));
-    }
+    // template<typename T> T& param(std::string name) {
+    //   return std::get<T>(parameters.at(name));
+    // }
     InputGroup& input_group(std::string group_name){
       return *inputGroups.at(group_name);
     }
@@ -284,11 +284,11 @@ namespace geoflow {
     }
 
     template<typename T> void add_param(std::string name, T value) {
-      parameters[name] = value;
+      parameters.emplace(name, value);
     }
-    void set_param(std::string name, Parameter param, bool quiet=false);
-    void set_params(ParameterMap param_map, bool quiet=false);
-    const ParameterMap&  dump_params();
+    // void set_param(std::string name, Parameter param, bool quiet=false);
+    // void set_params(ParameterMap param_map, bool quiet=false);
+    const ParameterSet&  dump_params();
 
     void set_position(float x, float y) {
       position.x=x;
@@ -308,13 +308,16 @@ namespace geoflow {
     // private:
 
     virtual void init() = 0;
+    // virtual ParameterSet init_parameters(){};
+    // virtual ParameterSet init_inputs(){};
+    // virtual ParameterSet init_outputs(){};
     virtual void process() = 0;
-    virtual void gui(){};
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
     virtual void on_connect(OutputTerminal& ot){};
+    virtual std::string info() {return std::string();};
 
-    std::string get_info();
+    std::string debug_info();
     const std::string get_name() { return name; };
     const std::string get_type_name() { return type_name; };
     const NodeRegister& get_register() { return *node_register; };

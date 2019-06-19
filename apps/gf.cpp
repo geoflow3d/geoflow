@@ -50,7 +50,7 @@ int main(int ac, const char * av[]) {
 
     // load flowchart from file
     geoflow::NodeManager node_manager;
-    node_manager.load_json(flowchart_path, node_registers);
+    // node_manager.load_json(flowchart_path, node_registers);
 
     // launch gui or just run the flowchart in cli mode
     #ifdef GF_BUILD_GUI

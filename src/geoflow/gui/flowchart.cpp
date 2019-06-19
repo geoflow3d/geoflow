@@ -8,6 +8,7 @@
 
 #include "flowchart.hpp"
 #include "osdialog.hpp"
+#include "parameter_widgets.hpp"
 #include <tuple>
 
 namespace ImGui
@@ -1336,9 +1337,11 @@ namespace ImGui
 			{
 				auto node = element_.node_slot0_->gf_node;
 				element_.Reset(NodesState_Block);
-				ImGui::Text("%s", node->get_info().c_str());
-				ImGui::Text("position: %.2f, %.2f", element_.node_slot0_->position_.x, element_.node_slot0_->position_.y);
-				node->gui();
+				ImGui::Text("%s", node->debug_info().c_str());
+				// ImGui::Text("position: %.2f, %.2f", element_.node_slot0_->position_.x, element_.node_slot0_->position_.y);
+				// node->gui();
+				geoflow::draw_parameters(node->parameters);
+				ImGui::Text("%s", node->info().c_str());
 				if (ImGui::MenuItem("Run")) {		
 					gf_manager.run(*node);
 				}

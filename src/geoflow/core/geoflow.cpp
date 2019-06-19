@@ -134,23 +134,23 @@ using namespace geoflow;
   bool Node::set_name(std::string new_name) { 
     return manager.name_node(get_handle(), new_name); 
   };
-  void Node::set_param(std::string name, Parameter param, bool quiet) {
-    if (parameters.find(name) != parameters.end()) {
-      if(parameters[name].index() == param.index())
-        parameters[name] = param;
-      else {
-        std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
-      }
-    } else if(!quiet) {
-      std::cout << "No such parameter in this node: '" << name <<"', node type: " << type_name << "\n";
-    }
-  }
-  void Node::set_params(ParameterMap new_map, bool quiet) {
-    for (auto& kv : new_map) {
-      set_param(kv.first, kv.second, quiet);
-    }
-  }
-  const ParameterMap& Node::dump_params() {
+  // void Node::set_param(std::string name, Parameter param, bool quiet) {
+  //   if (parameters.find(name) != parameters.end()) {
+  //     if(parameters[name].index() == param.index())
+  //       parameters[name] = param;
+  //     else {
+  //       std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
+  //     }
+  //   } else if(!quiet) {
+  //     std::cout << "No such parameter in this node: '" << name <<"', node type: " << type_name << "\n";
+  //   }
+  // }
+  // void Node::set_params(ParameterMap new_map, bool quiet) {
+  //   for (auto& kv : new_map) {
+  //     set_param(kv.first, kv.second, quiet);
+  //   }
+  // }
+  const ParameterSet& Node::dump_params() {
     return parameters;
   }
   void Node::add_input(std::string name, std::initializer_list<std::type_index> types) {
@@ -226,7 +226,7 @@ using namespace geoflow;
 
     }
   }
-  std::string Node::get_info() {
+  std::string Node::debug_info() {
     std::stringstream s;
     s << "status: ";
     switch (status) {
@@ -243,15 +243,15 @@ using namespace geoflow;
     json n;
     n["type"] = {node_register->get_name(), get_type_name()};
     n["position"] = {position.x, position.y};
-    for ( const auto& [pname, pvalue] : parameters ) {
-      if (std::holds_alternative<bool>(pvalue))
-        n["parameters"][pname] = param<bool>(pname);
-      else if (std::holds_alternative<int>(pvalue))
-        n["parameters"][pname] = param<int>(pname);
-      else if (std::holds_alternative<float>(pvalue))
-        n["parameters"][pname] = param<float>(pname);
-      else if (std::holds_alternative<std::string>(pvalue))
-        n["parameters"][pname] = param<std::string>(pname);
+    for ( auto& [pname, pvalue] : parameters ) {
+      if (auto ptr = std::get_if<ParamBool>(&pvalue))
+        n["parameters"][pname] = ptr->get();
+      else if (auto ptr = std::get_if<ParamInt>(&pvalue))
+        n["parameters"][pname] = ptr->get();
+      else if (auto ptr = std::get_if<ParamFloat>(&pvalue))
+        n["parameters"][pname] = ptr->get();
+      else if (auto ptr = std::get_if<ParamPath>(&pvalue))
+        n["parameters"][pname] = ptr->get();
     }
 
     for (const auto& [name, oTerm] : outputTerminals) {
@@ -372,14 +372,14 @@ using namespace geoflow;
         if (node_j.value().count("parameters")) {
           auto params_j = node_j.value().at("parameters");
           for (auto& pel : params_j.items()) {
-            if (std::holds_alternative<bool>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<bool>());
-            else if (std::holds_alternative<int>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<int>());
-            else if (std::holds_alternative<float>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<float>());
-            else if (std::holds_alternative<std::string>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<std::string>());
+            if (auto param_ptr = std::get_if<ParamBool>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<bool>());
+            else if (auto param_ptr = std::get_if<ParamInt>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<int>());
+            else if (auto param_ptr = std::get_if<ParamFloat>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<float>());
+            else if (auto param_ptr = std::get_if<ParamPath>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<std::string>());
           }
         }
       } else {
