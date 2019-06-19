@@ -312,6 +312,7 @@ namespace geoflow {
     // virtual ParameterSet init_inputs(){};
     // virtual ParameterSet init_outputs(){};
     virtual void process() = 0;
+    virtual void gui() {};
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
     virtual void on_connect(OutputTerminal& ot){};

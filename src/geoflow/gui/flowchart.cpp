@@ -150,7 +150,7 @@ namespace ImGui
 		node->position_ = pos;
 
 		if (gf_node->get_type_name()=="Painter") {
-			auto& painter_node = dynamic_cast<geoflow::nodes::gui::PainterNode&>(*gf_node);
+			auto& painter_node = static_cast<geoflow::nodes::gui::PainterNode&>(*gf_node);
 			painter_node.add_to(pv_app, gf_node->get_name());
 		}
 
@@ -1340,8 +1340,12 @@ namespace ImGui
 				ImGui::Text("%s", node->debug_info().c_str());
 				// ImGui::Text("position: %.2f, %.2f", element_.node_slot0_->position_.x, element_.node_slot0_->position_.y);
 				// node->gui();
-				geoflow::draw_parameters(node->parameters);
-				ImGui::Text("%s", node->info().c_str());
+				if (node->get_register().get_name() == "Visualisation") {
+					node->gui();
+				} else { 
+					geoflow::draw_parameters(node->parameters);
+					ImGui::Text("%s", node->info().c_str());
+				}
 				if (ImGui::MenuItem("Run")) {		
 					gf_manager.run(*node);
 				}
