@@ -51,6 +51,7 @@ namespace geoflow {
   //   TT_attribute_map_f
   // };
 
+typedef std::array<float,2> arr2f;
 typedef std::array<float,3> arr3f;
 typedef std::vector<arr3f> vec3f;
 typedef std::vector<std::array<float,2>> vec2f;

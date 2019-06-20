@@ -83,7 +83,7 @@ if(GF_BUILD_GUI)
 endif()
 
 add_library(geoflow-core SHARED
-  src/geoflow/core/geoflow.cpp
+  src/geoflow/geoflow.cpp
   thirdparty/imgui/imgui.cpp
   thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
   thirdparty/imgui/imgui_draw.cpp
@@ -105,7 +105,7 @@ if(${GF_BUILD_GUI})
     thirdparty/imgui/imgui_demo.cpp
     thirdparty/imgui/examples/imgui_impl_glfw.cpp
     thirdparty/imgui/examples/imgui_impl_opengl3.cpp
-    src/geoflow/core/geoflow.cpp
+    src/geoflow/geoflow.cpp
     src/geoflow/gui/flowchart.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
     thirdparty/osdialog/osdialog.c
@@ -138,11 +138,13 @@ if(${GF_BUILD_GUI})
   )
 endif()
 
-install(TARGETS geoflow-core DESTINATION lib)
-install(TARGETS geoflow-gui DESTINATION lib)
-install(FILES common.hpp DESTINATION lib)
-install(FILES geoflow.hpp DESTINATION lib)
+install(FILES src/geoflow/common.hpp DESTINATION include/geoflow)
+install(FILES src/geoflow/parameters.hpp DESTINATION include/geoflow)
+install(FILES src/geoflow/geoflow.hpp DESTINATION include/geoflow)
+
+install(TARGETS geoflow-gui glfw geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
+install(EXPORT geoflow-targets DESTINATION lib/geoflow)
+install(FILES geoflow-config.cmake DESTINATION lib/geoflow)
 
 add_subdirectory(apps)
 add_subdirectory(examples)
-

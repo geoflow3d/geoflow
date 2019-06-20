@@ -1,9 +1,25 @@
+// This file is part of Geoflow
+// Copyright (C) 2018-2019  Ravi Peters, 3D geoinformation TU Delft
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <iostream>
 #include <fstream>
 
 #include "DLLoader.h"
 
-#include <geoflow/core/geoflow.hpp>
+#include <geoflow/geoflow.hpp>
 #ifdef GF_BUILD_GUI
     #include <geoflow/gui/flowchart.hpp>
 #endif
@@ -40,10 +56,6 @@ int main(int ac, const char * av[]) {
       // auto lib = ;
       std::cout << "Loading " << path << std::endl;
       dloaders[path]->DLOpenLib();
-
-      #ifdef GF_BUILD_GUI
-        dloaders[path]->DLSetImGuiContext(ImGui::GetCurrentContext());
-      #endif
 
       node_registers.emplace( dloaders[path]->DLGetInstance() );
     }

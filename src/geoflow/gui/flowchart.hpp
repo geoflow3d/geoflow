@@ -13,7 +13,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-#include "../core/geoflow.hpp"
+#include <geoflow/geoflow.hpp>
 #include "povi_nodes.hpp"
 
 #include <memory>

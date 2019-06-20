@@ -36,10 +36,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "../common.hpp"
-#include "../parameters.hpp"
-
-#include "imgui.h"
+#include "common.hpp"
+#include "parameters.hpp"
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -216,7 +214,7 @@ namespace geoflow {
     std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
 
     ParameterSet parameters;
-    ImVec2 position;
+    arr2f position;
 
     Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
     ~Node();
@@ -291,11 +289,11 @@ namespace geoflow {
     const ParameterSet&  dump_params();
 
     void set_position(float x, float y) {
-      position.x=x;
-      position.y=y;
+      position[0]=x;
+      position[1]=y;
     }
     std::pair<float,float> get_position() {
-      return std::make_pair(position.x, position.y);
+      return std::make_pair(position[0], position[1]);
     }
 
     NodeHandle get_handle(){return shared_from_this();};

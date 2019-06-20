@@ -19,7 +19,7 @@
 #include <chrono>
 #include <algorithm>
 #include <random>
-#include "../core/geoflow.hpp"
+#include <geoflow/geoflow.hpp>
 #include "../../viewer/gloo.h"
 #include "../../viewer/app_povi.h"
 #include "imgui_color_gradient.h"

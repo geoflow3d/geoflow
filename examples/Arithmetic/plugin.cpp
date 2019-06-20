@@ -1,7 +1,5 @@
 #include "nodes.hpp"
 
-struct ImGuiContext;
-
 #define WIN_DECLSPEC
 #ifdef WIN32
 	#define WIN_DECLSPEC __declspec (dllexport)
@@ -20,9 +18,5 @@ extern "C"
 	WIN_DECLSPEC void deleter(geoflow::NodeRegister *ptr)
 	{
 		delete ptr;
-	}
-
-	WIN_DECLSPEC void SetImGuiContext(ImGuiContext* ctx) {
-		ImGui::SetCurrentContext(ctx);
 	}
 }

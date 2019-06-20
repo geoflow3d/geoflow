@@ -1134,7 +1134,8 @@ namespace ImGui
 					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
 					if (result.has_value()) {
 						for (auto& node : nodes_) {
-							node->gf_node->position = node->position_+node->size_/2;
+							ImVec2 new_position = node->position_+node->size_/2;
+							node->gf_node->set_position(new_position.x, new_position.y);
 						}
 						gf_manager.dump_json(result.value());
 					}
@@ -1167,7 +1168,8 @@ namespace ImGui
 
 	void Nodes::CreateNodesFromHandles(std::vector<geoflow::NodeHandle> node_vec) {
 		for(auto& gf_node : node_vec){
-			CreateNodeFromHandle(gf_node->position, gf_node);
+			 auto pos = gf_node->get_position();
+			CreateNodeFromHandle(ImVec2(pos.first, pos.second), gf_node);
 		}
 	
 		// map all nodes and input/output ports

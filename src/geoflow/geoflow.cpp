@@ -242,7 +242,7 @@ using namespace geoflow;
   json Node::dump_json() {
     json n;
     n["type"] = {node_register->get_name(), get_type_name()};
-    n["position"] = {position.x, position.y};
+    n["position"] = {position[0], position[1]};
     for ( auto& [pname, pvalue] : parameters ) {
       if (auto ptr = std::get_if<ParamBool>(&pvalue))
         n["parameters"][pname] = ptr->get();
