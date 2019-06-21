@@ -20,6 +20,9 @@
 #include "DLLoader.h"
 
 #include <geoflow/geoflow.hpp>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #ifdef GF_BUILD_GUI
     #include <geoflow/gui/flowchart.hpp>
 #endif

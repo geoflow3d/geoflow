@@ -20,6 +20,9 @@
 
 #include "geoflow.hpp"
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 using namespace geoflow;
   // TODO: what happens if connect several output terminals to 1 input terminal? -> should clear other connections to same input terminal
   void InputTerminal::push(std::any data) {
@@ -239,33 +242,6 @@ using namespace geoflow;
     s << "\n";
     return s.str();
   }
-  json Node::dump_json() {
-    json n;
-    n["type"] = {node_register->get_name(), get_type_name()};
-    n["position"] = {position[0], position[1]};
-    for ( auto& [pname, pvalue] : parameters ) {
-      if (auto ptr = std::get_if<ParamBool>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamInt>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamFloat>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamPath>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-    }
-
-    for (const auto& [name, oTerm] : outputTerminals) {
-      std::vector<std::pair<std::string, std::string>> connection_vec;
-      if(oTerm->connections.size() > 0) {
-        for (auto& conn : oTerm->connections) {
-          if (auto iTerm = conn.lock())
-            connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
-        }
-        n["connections"][name] = connection_vec;
-      }
-    }
-    return n;
-  }
 
   void NodeManager::queue(std::shared_ptr<Node> n) {
     node_queue.push(n);
@@ -345,8 +321,31 @@ using namespace geoflow;
   void NodeManager::dump_json(std::string filepath) {
     json j;
     j["nodes"] = json::object();
-    for (auto& [name, handle] : nodes) {
-      j["nodes"][name] = handle->dump_json();
+    for (auto& [name, node_handle] : nodes) {
+      json n;
+      n["type"] = {node_handle->node_register->get_name(), node_handle->get_type_name()};
+      n["position"] = {node_handle->position[0], node_handle->position[1]};
+      for ( auto& [pname, pvalue] : node_handle->parameters ) {
+        if (auto ptr = std::get_if<ParamBool>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamInt>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamFloat>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamPath>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+      }
+      for (const auto& [name, oTerm] : node_handle->outputTerminals) {
+        std::vector<std::pair<std::string, std::string>> connection_vec;
+        if(oTerm->connections.size() > 0) {
+          for (auto& conn : oTerm->connections) {
+            if (auto iTerm = conn.lock())
+              connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
+          }
+          n["connections"][name] = connection_vec;
+        }
+      }
+      j["nodes"][name] = n;
     }
     std::ofstream o(filepath);
     o << std::setw(2) << j << std::endl;

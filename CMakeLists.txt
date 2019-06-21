@@ -56,8 +56,9 @@ if(UNIX)
 endif(UNIX)
 
 # nlohmann's json
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(thirdparty/json)
+# set(JSON_BuildTests OFF CACHE INTERNAL "")
+# add_subdirectory(thirdparty/json)
+find_package(nlohmann_json)
 
 include_directories(
   src
@@ -65,7 +66,6 @@ include_directories(
   thirdparty/imgui
   thirdparty/imgui/examples
   thirdparty/glm
-  thirdparty/json/include
   thirdparty/osdialog
 )
 
@@ -89,7 +89,7 @@ add_library(geoflow-core SHARED
   thirdparty/imgui/imgui_draw.cpp
   thirdparty/imgui/imgui_widgets.cpp
 )
-target_link_libraries(geoflow-core nlohmann_json::nlohmann_json)
+target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json)
 
 set_target_properties(
 geoflow-core
@@ -105,12 +105,11 @@ if(${GF_BUILD_GUI})
     thirdparty/imgui/imgui_demo.cpp
     thirdparty/imgui/examples/imgui_impl_glfw.cpp
     thirdparty/imgui/examples/imgui_impl_opengl3.cpp
-    src/geoflow/geoflow.cpp
     src/geoflow/gui/flowchart.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
     thirdparty/osdialog/osdialog.c
     src/geoflow/gui/osdialog.cpp)
-  SET(GEOFLOW_GUI_LIBS geoflow-core ${GLFW_LIBS})
+  SET(GEOFLOW_GUI_LIBS geoflow-core )
   if(APPLE)
     SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
       thirdparty/osdialog/osdialog_mac.m)
@@ -131,7 +130,8 @@ if(${GF_BUILD_GUI})
   endif()
 
   add_library(geoflow-gui SHARED ${GEOFLOW_GUI_SOURCES})
-  target_link_libraries(geoflow-gui ${GEOFLOW_GUI_LIBS})
+  # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
+  target_link_libraries(geoflow-gui PUBLIC ${GEOFLOW_GUI_LIBS} PRIVATE ${GLFW_LIBS})
   set_target_properties(
     geoflow-gui
     PROPERTIES CXX_STANDARD 17
@@ -142,7 +142,7 @@ install(FILES src/geoflow/common.hpp DESTINATION include/geoflow)
 install(FILES src/geoflow/parameters.hpp DESTINATION include/geoflow)
 install(FILES src/geoflow/geoflow.hpp DESTINATION include/geoflow)
 
-install(TARGETS geoflow-gui glfw geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
+install(TARGETS geoflow-gui geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
 install(EXPORT geoflow-targets DESTINATION lib/geoflow)
 install(FILES geoflow-config.cmake DESTINATION lib/geoflow)
 
