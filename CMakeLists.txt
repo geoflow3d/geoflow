@@ -3,28 +3,13 @@ cmake_minimum_required (VERSION 3.10)
 project (Geoflow VERSION 0.0.1)
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
-# set_property(CXX_STANDARD_REQUIRED ON)
 
 # configure GLFW
-if(${GF_BUILD_GUI})
-  execute_process(
-    COMMAND             git submodule update --init --recursive thirdparty/glfw
-    WORKING_DIRECTORY   ${PROJECT_SOURCE_DIR}
-    OUTPUT_QUIET
-    ERROR_QUIET
-  )
-  set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
-  set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
-  set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation" FORCE)
-  set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target" FORCE)
-  add_subdirectory(thirdparty/glfw)
-  set(GLFW_LIBS glfw ${GLFW_LIBRARIES})
-  include_directories(SYSTEM "thirdparty/glfw/include")
-endif()
+find_package(glfw3 3.3 REQUIRED)
 
 if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
     execute_process(
-            COMMAND             git submodule update --init --recursive thirdparty/glm thirdparty/imgui thirdparty/json
+            COMMAND             git submodule update --init --recursive thirdparty/glm thirdparty/imgui
             WORKING_DIRECTORY   ${PROJECT_SOURCE_DIR}
             OUTPUT_QUIET
             ERROR_QUIET
@@ -33,31 +18,19 @@ endif()
 
 # DLLoader
 if (WIN32)
-	# set(DLLOADER_SRC
-	# 	Core/DLLoader/Windows/DLLoader.h
-	# )
-	
 	include_directories(
 		src/DLLoader/Windows/
 	)
-
 endif(WIN32)
 
 if(UNIX)
-	# set(DLLOADER_SRC
-	# 	Core/DLLoader/Unix/DLLoader.h
-	# )
-
 	include_directories(
 		src/DLLoader/Unix/
 	)
-
     # set (CMAKE_CXX_FLAGS "-W -Wall -Wextra")
 endif(UNIX)
 
 # nlohmann's json
-# set(JSON_BuildTests OFF CACHE INTERNAL "")
-# add_subdirectory(thirdparty/json)
 find_package(nlohmann_json)
 
 include_directories(
@@ -93,8 +66,8 @@ add_library(geoflow-core SHARED
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json)
 
 set_target_properties(
-geoflow-core
-PROPERTIES CXX_STANDARD 17
+  geoflow-core
+  PROPERTIES CXX_STANDARD 17
 )
 
 if(${GF_BUILD_GUI})
@@ -132,7 +105,7 @@ if(${GF_BUILD_GUI})
 
   add_library(geoflow-gui SHARED ${GEOFLOW_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
-  target_link_libraries(geoflow-gui PUBLIC ${GEOFLOW_GUI_LIBS} PRIVATE ${GLFW_LIBS})
+  target_link_libraries(geoflow-gui PUBLIC ${GEOFLOW_GUI_LIBS} PRIVATE glfw)
   set_target_properties(
     geoflow-gui
     PROPERTIES CXX_STANDARD 17
