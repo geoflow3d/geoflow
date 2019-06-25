@@ -127,6 +127,7 @@ namespace geoflow {
       return weak_from_this();
     }
 
+    void set_type(std::type_index t);
     bool is_compatible(InputTerminal& in);
     void connect(InputTerminal& in);
     void disconnect(InputTerminal& in);
@@ -310,7 +311,8 @@ namespace geoflow {
     virtual void gui() {};
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
-    virtual void on_connect(OutputTerminal& ot){};
+    virtual void on_connect_input(InputTerminal& ot){};
+    virtual void on_connect_output(OutputTerminal& ot){};
     virtual std::string info() {return std::string();};
 
     std::string debug_info();

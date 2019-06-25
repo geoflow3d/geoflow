@@ -76,7 +76,7 @@ namespace geoflow::nodes::gui {
       }
     }
 
-    void on_connect(OutputTerminal& t) {
+    void on_connect_output(OutputTerminal& t) {
       if(&output("colormap") == &t) {
         update_texture();
       }

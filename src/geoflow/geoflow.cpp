@@ -80,7 +80,7 @@ using namespace geoflow;
       throw Exception("Failed to connect ouput " +get_name()+ " from "+parent.get_name()+" to input " + in.get_name() + " from " +in.parent.get_name()+ ". Loop detected!");
     
     in.connected_type = type;
-    parent.on_connect(*this);
+    parent.on_connect_output(*this);
     connections.insert(in.get_ptr());
     if (has_data()) {
       in.push(cdata);
@@ -92,6 +92,11 @@ using namespace geoflow;
     in.clear();
     in.parent.notify_children();
   }
+  void OutputTerminal::set_type(std::type_index t) {
+    // TODO: disconnect incompatible connections, also in gui
+    type=t;
+  };
+
 
   void OutputGroup::connect(InputGroup& ig) {
       connections.insert(ig.get_ptr());
