@@ -210,7 +210,7 @@ namespace geoflow {
     std::map<std::string,std::shared_ptr<InputGroup>> inputGroups;
     std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
 
-    ParameterSet parameters;
+    ParameterMap parameters;
     arr2f position;
 
     Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
@@ -281,9 +281,9 @@ namespace geoflow {
     template<typename T> void add_param(std::string name, T value) {
       parameters.emplace(name, value);
     }
-    // void set_param(std::string name, Parameter param, bool quiet=false);
-    // void set_params(ParameterMap param_map, bool quiet=false);
-    const ParameterSet&  dump_params();
+    void set_param(std::string name, ParameterVariant param, bool quiet=false);
+    void set_params(ParameterMap param_map, bool quiet=false);
+    const ParameterMap&  dump_params();
 
     void set_position(float x, float y) {
       position[0]=x;
@@ -303,9 +303,9 @@ namespace geoflow {
     // private:
 
     virtual void init() = 0;
-    // virtual ParameterSet init_parameters(){};
-    // virtual ParameterSet init_inputs(){};
-    // virtual ParameterSet init_outputs(){};
+    // virtual ParameterMap init_parameters(){};
+    // virtual ParameterMap init_inputs(){};
+    // virtual ParameterMap init_outputs(){};
     virtual void process() = 0;
     virtual void gui() {};
     virtual void on_push(InputTerminal& it){};
