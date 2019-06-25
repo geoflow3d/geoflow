@@ -304,9 +304,9 @@ namespace geoflow {
     // private:
 
     virtual void init() = 0;
-    // virtual ParameterMap init_parameters(){};
-    // virtual ParameterMap init_inputs(){};
-    // virtual ParameterMap init_outputs(){};
+    // virtual std::map<std::string,std::shared_ptr<InputTerminal>> init_inputs() {};
+    // virtual std::map<std::string,std::shared_ptr<OutputTerminal>> init_outputs() {};
+    // virtual ParameterMap init_parameters() {};
     virtual void process() = 0;
     virtual void gui() {};
     virtual void on_push(InputTerminal& it){};
@@ -334,7 +334,7 @@ namespace geoflow {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
     // private:
     public:
-    NodeRegister(const std::string& name):name(name) {};
+    NodeRegister(const std::string& name) : name(name) {};
     NodeRegister();
 
     template<typename ... T> static NodeRegisterHandle create(T&& ... t) {

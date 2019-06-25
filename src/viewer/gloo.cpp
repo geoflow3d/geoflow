@@ -41,8 +41,9 @@ Shader & Shader::activate()
 Shader & Shader::attach(std::string const & filename)
 {
     // Load GLSL Shader Source from File
-    std::string path = PROJECT_SOURCE_DIR "/src/viewer/shaders/";
+    std::string path = CMAKE_INSTALL_PREFIX "/share/geoflow/";
     path += filename;
+    std::cout << path << "\n";
     sources.push_back(path);
     return *this;
 }
