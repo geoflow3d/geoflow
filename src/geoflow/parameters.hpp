@@ -50,7 +50,7 @@ namespace geoflow {
   typedef ParameterBase<std::string> ParamString;
 
   typedef std::variant<ParamBool, ParamInt, ParamFloat, ParamIntRange, ParamFloatRange, ParamPath> ParameterVariant;
-  typedef std::map<std::string, ParameterVariant> ParameterSet;
+  typedef std::map<std::string, ParameterVariant> ParameterMap;
   // class ParameterSet : public ParameterMap {
 
   // };

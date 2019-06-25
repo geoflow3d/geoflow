@@ -80,7 +80,7 @@ using namespace geoflow;
       throw Exception("Failed to connect ouput " +get_name()+ " from "+parent.get_name()+" to input " + in.get_name() + " from " +in.parent.get_name()+ ". Loop detected!");
     
     in.connected_type = type;
-    parent.on_connect(*this);
+    parent.on_connect_output(*this);
     connections.insert(in.get_ptr());
     if (has_data()) {
       in.push(cdata);
@@ -92,6 +92,11 @@ using namespace geoflow;
     in.clear();
     in.parent.notify_children();
   }
+  void OutputTerminal::set_type(std::type_index t) {
+    // TODO: disconnect incompatible connections, also in gui
+    type=t;
+  };
+
 
   void OutputGroup::connect(InputGroup& ig) {
       connections.insert(ig.get_ptr());
@@ -137,23 +142,23 @@ using namespace geoflow;
   bool Node::set_name(std::string new_name) { 
     return manager.name_node(get_handle(), new_name); 
   };
-  // void Node::set_param(std::string name, Parameter param, bool quiet) {
-  //   if (parameters.find(name) != parameters.end()) {
-  //     if(parameters[name].index() == param.index())
-  //       parameters[name] = param;
-  //     else {
-  //       std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
-  //     }
-  //   } else if(!quiet) {
-  //     std::cout << "No such parameter in this node: '" << name <<"', node type: " << type_name << "\n";
-  //   }
-  // }
-  // void Node::set_params(ParameterMap new_map, bool quiet) {
-  //   for (auto& kv : new_map) {
-  //     set_param(kv.first, kv.second, quiet);
-  //   }
-  // }
-  const ParameterSet& Node::dump_params() {
+  void Node::set_param(std::string name, ParameterVariant param, bool quiet) {
+    if (parameters.find(name) != parameters.end()) {
+      if(parameters.at(name).index() == param.index()) {
+        parameters.emplace(name, param);
+      } else {
+        std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
+      }
+    } else if(!quiet) {
+      std::cout << "No such parameter in this node: '" << name <<"', node type: " << type_name << "\n";
+    }
+  }
+  void Node::set_params(ParameterMap new_map, bool quiet) {
+    for (auto& kv : new_map) {
+      set_param(kv.first, kv.second, quiet);
+    }
+  }
+  const ParameterMap& Node::dump_params() {
     return parameters;
   }
   void Node::add_input(std::string name, std::initializer_list<std::type_index> types) {

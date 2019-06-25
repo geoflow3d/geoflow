@@ -6,8 +6,8 @@
 #include "osdialog.hpp"
 
 namespace geoflow {
-	void draw_parameters(ParameterSet& parameters_set) {
-		for(auto& [name, param] : parameters_set) {
+	void draw_parameters(ParameterMap& parameters) {
+		for(auto& [name, param] : parameters) {
 			if( auto valptr = std::get_if<ParamInt>(&param) ) {
 				ImGui::InputInt(name.c_str(), &valptr->get());
 			} else if( auto valptr = std::get_if<ParamFloat>(&param) ) {
