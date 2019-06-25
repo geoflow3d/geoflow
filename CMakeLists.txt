@@ -126,23 +126,24 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/geoflow")
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-
 install(FILES 
   src/geoflow/common.hpp
   src/geoflow/parameters.hpp
   src/geoflow/geoflow.hpp 
   DESTINATION include/geoflow)
 
-install(TARGETS geoflow-gui geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
+install(TARGETS geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
+if(${GF_BUILD_GUI})
+  install(TARGETS geoflow-gui EXPORT geoflow-targets DESTINATION lib/geoflow)
+  install(FILES 
+    src/viewer/shaders/crosshair.frag 
+    src/viewer/shaders/crosshair.vert 
+    src/viewer/shaders/basic.frag 
+    src/viewer/shaders/basic.vert 
+    DESTINATION share/geoflow)
+endif()
 install(EXPORT geoflow-targets DESTINATION lib/geoflow)
 install(FILES geoflow-config.cmake DESTINATION lib/geoflow)
-
-install(FILES 
-  src/viewer/shaders/crosshair.frag 
-  src/viewer/shaders/crosshair.vert 
-  src/viewer/shaders/basic.frag 
-  src/viewer/shaders/basic.vert 
-  DESTINATION share/geoflow)
 
 add_subdirectory(apps)
 add_subdirectory(examples)
