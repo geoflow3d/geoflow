@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #include "DLLoader.h"
 
@@ -27,6 +28,7 @@ using json = nlohmann::json;
     #include <geoflow/gui/flowchart.hpp>
 #endif
 
+namespace fs = std::filesystem;
 
 int main(int ac, const char * av[]) {
 
@@ -49,20 +51,31 @@ int main(int ac, const char * av[]) {
       ImGui::CreateContext();
     #endif
     
-    json j;
-    std::ifstream i(config_path);
-    i >> j;
-    auto node_paths = j.at("node-libs").get<std::vector<std::string>>();
-
-    for (const auto& path : node_paths)  {
-      dloaders.emplace(path, std::make_unique<DLLoader>(path));
-      // auto lib = ;
-      std::cout << "Loading " << path << std::endl;
-      dloaders[path]->DLOpenLib();
-
-      node_registers.emplace( dloaders[path]->DLGetInstance() );
+    for(auto& p: fs::directory_iterator(GF_PLUGIN_FOLDER)) {
+        if (p.path().extension() == ".so") {
+          std::string path = p.path().string();
+          std::cout << "Loading " << path << "\n";
+          dloaders.emplace(path, std::make_unique<DLLoader>(path));
+          dloaders[path]->DLOpenLib();
+          node_registers.emplace( dloaders[path]->DLGetInstance() );
+        }
     }
 
+    // {   
+    //   json j;
+    //   std::ifstream i(config_path);
+    //   i >> j;
+    //   auto node_paths = j.at("node-libs").get<std::vector<std::string>>();
+
+    //   for (const auto& path : node_paths)  {
+    //     dloaders.emplace(path, std::make_unique<DLLoader>(path));
+    //     // auto lib = ;
+    //     std::cout << "Loading " << path << std::endl;
+    //     dloaders[path]->DLOpenLib();
+
+    //     node_registers.emplace( dloaders[path]->DLGetInstance() );
+    //   }
+    // }
     // load flowchart from file
     geoflow::NodeManager node_manager;
     // node_manager.load_json(flowchart_path, node_registers);

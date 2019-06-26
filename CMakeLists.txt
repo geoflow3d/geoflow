@@ -44,7 +44,6 @@ include_directories(
 
 add_definitions(
   -DGLFW_INCLUDE_NONE 
-  -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\"
   -DCMAKE_INSTALL_PREFIX=\"${CMAKE_INSTALL_PREFIX}\"
   -DIMGUI_IMPL_OPENGL_LOADER_GLAD
   -DGLM_FORCE_CTOR_INIT
@@ -126,24 +125,37 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/geoflow")
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins")
+if (WIN32)
+  set(GF_PLUGIN_FOLDER "$ENV{%USERPROFILE%}/.geoflow/plugins")
+endif()
+add_definitions(-DGF_PLUGIN_FOLDER="${GF_PLUGIN_FOLDER}")
+
 install(FILES 
-  src/geoflow/common.hpp
-  src/geoflow/parameters.hpp
-  src/geoflow/geoflow.hpp 
-  DESTINATION include/geoflow)
+src/geoflow/common.hpp
+src/geoflow/parameters.hpp
+src/geoflow/geoflow.hpp 
+DESTINATION include/geoflow)
 
 install(TARGETS geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
 if(${GF_BUILD_GUI})
   install(TARGETS geoflow-gui EXPORT geoflow-targets DESTINATION lib/geoflow)
   install(FILES 
-    src/viewer/shaders/crosshair.frag 
-    src/viewer/shaders/crosshair.vert 
-    src/viewer/shaders/basic.frag 
-    src/viewer/shaders/basic.vert 
-    DESTINATION share/geoflow)
+  src/viewer/shaders/crosshair.frag 
+  src/viewer/shaders/crosshair.vert 
+  src/viewer/shaders/basic.frag 
+  src/viewer/shaders/basic.vert 
+  DESTINATION share/geoflow)
 endif()
 install(EXPORT geoflow-targets DESTINATION lib/geoflow)
-install(FILES geoflow-config.cmake DESTINATION lib/geoflow)
+
+include ( CMakePackageConfigHelpers )
+configure_package_config_file(geoflow-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
+  INSTALL_DESTINATION lib/geoflow
+  PATH_VARS GF_PLUGIN_FOLDER)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/geoflow)
 
 add_subdirectory(apps)
 add_subdirectory(examples)
