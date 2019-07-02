@@ -18,6 +18,8 @@ namespace geoflow {
 				ImGui::SliderInt(name.c_str(), &valptr->get(), valptr->min(), valptr->max());
 			} else if( auto valptr = std::get_if<ParamPath>(&param) ) {
         ImGui::FilePicker(OSDIALOG_OPEN, valptr->get());
+				ImGui::SameLine();
+				ImGui::Text("%s",name.c_str());
 			} else if( auto valptr = std::get_if<ParamBool>(&param) ) {
 				ImGui::Checkbox(name.c_str(), &valptr->get());
 			} else {

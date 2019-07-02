@@ -29,6 +29,6 @@ namespace ImGui {
         picked_file = result.value();
     }
     ImGui::SameLine();
-    ImGui::Text("%s", picked_file.c_str());
+    ImGui::InputText("", &picked_file);
   }
 }
