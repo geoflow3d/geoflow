@@ -55,7 +55,7 @@ if(GF_BUILD_GUI)
   add_definitions(-DGF_BUILD_GUI)
 endif()
 
-add_library(geoflow-core STATIC
+add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
   thirdparty/imgui/imgui.cpp
   thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
@@ -102,7 +102,7 @@ if(${GF_BUILD_GUI})
       gtklib)
   endif()
 
-  add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
+  add_library(geoflow-gui SHARED ${GEOFLOW_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
   target_link_libraries(geoflow-gui PUBLIC ${GEOFLOW_GUI_LIBS} PRIVATE glfw)
   set_target_properties(
