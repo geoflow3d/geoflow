@@ -57,16 +57,12 @@ endif()
 
 add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
-  thirdparty/imgui/imgui.cpp
-  thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
-  thirdparty/imgui/imgui_draw.cpp
-  thirdparty/imgui/imgui_widgets.cpp
 )
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json)
 
-set_target_properties(
-  geoflow-core
-  PROPERTIES CXX_STANDARD 17
+set_target_properties(geoflow-core PROPERTIES 
+  CXX_STANDARD 17
+  WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
 
 if(${GF_BUILD_GUI})
@@ -75,6 +71,10 @@ if(${GF_BUILD_GUI})
     src/viewer/app_povi.cpp 
     thirdparty/glad/src/glad.c 
     src/viewer/gloo.cpp
+    thirdparty/imgui/imgui.cpp
+    thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
+    thirdparty/imgui/imgui_draw.cpp
+    thirdparty/imgui/imgui_widgets.cpp
     thirdparty/imgui/imgui_demo.cpp
     thirdparty/imgui/examples/imgui_impl_glfw.cpp
     thirdparty/imgui/examples/imgui_impl_opengl3.cpp
@@ -102,7 +102,7 @@ if(${GF_BUILD_GUI})
       gtklib)
   endif()
 
-  add_library(geoflow-gui SHARED ${GEOFLOW_GUI_SOURCES})
+  add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
   target_link_libraries(geoflow-gui PUBLIC ${GEOFLOW_GUI_LIBS} PRIVATE glfw)
   set_target_properties(
@@ -130,9 +130,10 @@ set(GF_PLUGIN_EXTENSION ".so")
 if (WIN32)
   set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
   string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
-  message(STATUS "Setting Geoflow plugin folder to ${GF_PLUGIN_FOLDER}")
   set(GF_PLUGIN_EXTENSION ".dll")
 endif()
+message(STATUS "Setting Geoflow plugin folder to ${GF_PLUGIN_FOLDER}")
+message(STATUS "Setting Geoflow plugin extension to ${GF_PLUGIN_EXTENSION}")
 add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
 add_definitions(-DGF_PLUGIN_EXTENSION=\"${GF_PLUGIN_EXTENSION}\")
 
@@ -144,7 +145,7 @@ DESTINATION include/geoflow)
 
 install(TARGETS geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
 if(${GF_BUILD_GUI})
-  install(TARGETS geoflow-gui EXPORT geoflow-targets DESTINATION lib/geoflow)
+  # install(TARGETS geoflow-gui EXPORT geoflow-targets DESTINATION lib/geoflow)
   install(FILES 
   src/viewer/shaders/crosshair.frag 
   src/viewer/shaders/crosshair.vert 
