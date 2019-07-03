@@ -20,8 +20,6 @@
 #include <vector>
 #include <array>
 #include <optional>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace geoflow {
 
@@ -123,7 +121,7 @@ class Box {
   bool isEmpty() const {
       return just_cleared;
   }
-  glm::vec3 center() const {
+  arr3f center() const {
       return {(pmax[0]+pmin[0])/2, (pmax[1]+pmin[1])/2, (pmax[2]+pmin[2])/2};
   }
 };

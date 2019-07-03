@@ -31,7 +31,7 @@ if(UNIX)
 endif(UNIX)
 
 # nlohmann's json
-find_package(nlohmann_json)
+find_package(nlohmann_json 3.2.0)
 
 include_directories(
   src
@@ -55,7 +55,7 @@ if(GF_BUILD_GUI)
   add_definitions(-DGF_BUILD_GUI)
 endif()
 
-add_library(geoflow-core SHARED
+add_library(geoflow-core STATIC
   src/geoflow/geoflow.cpp
   thirdparty/imgui/imgui.cpp
   thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
@@ -102,7 +102,7 @@ if(${GF_BUILD_GUI})
       gtklib)
   endif()
 
-  add_library(geoflow-gui SHARED ${GEOFLOW_GUI_SOURCES})
+  add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
   target_link_libraries(geoflow-gui PUBLIC ${GEOFLOW_GUI_LIBS} PRIVATE glfw)
   set_target_properties(
@@ -126,10 +126,15 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/geoflow")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins")
+set(GF_PLUGIN_EXTENSION ".so")
 if (WIN32)
-  set(GF_PLUGIN_FOLDER "$ENV{%USERPROFILE%}/.geoflow/plugins")
+  set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
+  string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
+  message(STATUS "Setting Geoflow plugin folder to ${GF_PLUGIN_FOLDER}")
+  set(GF_PLUGIN_EXTENSION ".dll")
 endif()
-add_definitions(-DGF_PLUGIN_FOLDER="${GF_PLUGIN_FOLDER}")
+add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
+add_definitions(-DGF_PLUGIN_EXTENSION=\"${GF_PLUGIN_EXTENSION}\")
 
 install(FILES 
 src/geoflow/common.hpp
@@ -150,6 +155,7 @@ endif()
 install(EXPORT geoflow-targets DESTINATION lib/geoflow)
 
 include ( CMakePackageConfigHelpers )
+set(Other)
 configure_package_config_file(geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
   INSTALL_DESTINATION lib/geoflow

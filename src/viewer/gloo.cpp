@@ -428,7 +428,7 @@ void Painter::gui() {
     short_gui();
     auto c = bbox.center();
     // ImGui::Text("Init: %d", is_initialised());
-    ImGui::Text("center: [%.2f, %.2f, %.2f]", c.x, c.y, c.z);
+    ImGui::Text("center: [%.2f, %.2f, %.2f]", c[0], c[1], c[2]);
     if(draw_mode==GL_TRIANGLES) {
         const char* items[] = { "GL_POINT", "GL_LINE", "GL_FILL" };
         const char* item_current;

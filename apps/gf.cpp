@@ -52,7 +52,7 @@ int main(int ac, const char * av[]) {
     #endif
     
     for(auto& p: fs::directory_iterator(GF_PLUGIN_FOLDER)) {
-        if (p.path().extension() == ".so") {
+        if (p.path().extension() == GF_PLUGIN_EXTENSION) {
           std::string path = p.path().string();
           std::cout << "Loading " << path << "\n";
           dloaders.emplace(path, std::make_unique<DLLoader>(path));
