@@ -42,9 +42,13 @@ include_directories(
   thirdparty/osdialog
 )
 
+set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/geoflow)
+if(WIN32)
+  set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/)
+endif()
 add_definitions(
-  -DGLFW_INCLUDE_NONE 
-  -DCMAKE_INSTALL_PREFIX=\"${CMAKE_INSTALL_PREFIX}\"
+  -DGLFW_INCLUDE_NONE
+  -DGF_SHADER_PATH=\"${GF_SHADER_PATH}\"
   -DIMGUI_IMPL_OPENGL_LOADER_GLAD
   -DGLM_FORCE_CTOR_INIT
 )
@@ -66,7 +70,12 @@ set_target_properties(geoflow-core PROPERTIES
 )
 
 if(${GF_BUILD_GUI})
-  SET(GEOFLOW_GUI_SOURCES
+  set(GF_SHADER_FILES 
+    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.frag 
+    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.vert 
+    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.frag 
+    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.vert)
+  SET(GF_GUI_SOURCES
     src/viewer/app.cpp 
     src/viewer/app_povi.cpp 
     thirdparty/glad/src/glad.c 
@@ -82,29 +91,29 @@ if(${GF_BUILD_GUI})
     src/geoflow/gui/imgui_color_gradient.cpp
     thirdparty/osdialog/osdialog.c
     src/geoflow/gui/osdialog.cpp)
-  SET(GEOFLOW_GUI_LIBS geoflow-core )
+  SET(GF_GUI_LIBS geoflow-core glfw)
   if(APPLE)
-    SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
+    SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_mac.m)
   elseif(MSVC)
-    SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
+    SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_win.c)
-    SET(GEOFLOW_GUI_LIBS ${GEOFLOW_GUI_LIBS}
+    SET(GF_GUI_LIBS ${GF_GUI_LIBS}
       comdlg32)
   else()
     execute_process (
       COMMAND "pkg-config --libs gtk+-2.0"
       OUTPUT_VARIABLE gtklib
     )
-    SET(GEOFLOW_GUI_SOURCES ${GEOFLOW_GUI_SOURCES}
+    SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_gtk2.c)
-    SET(GEOFLOW_GUI_LIBS ${GEOFLOW_GUI_LIBS}
+    SET(GF_GUI_LIBS ${GF_GUI_LIBS}
       gtklib)
   endif()
 
-  add_library(geoflow-gui STATIC ${GEOFLOW_GUI_SOURCES})
+  add_library(geoflow-gui STATIC ${GF_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
-  target_link_libraries(geoflow-gui PUBLIC ${GEOFLOW_GUI_LIBS} PRIVATE glfw)
+  target_link_libraries(geoflow-gui PRIVATE ${GF_GUI_LIBS})
   set_target_properties(
     geoflow-gui
     PROPERTIES CXX_STANDARD 17
@@ -137,32 +146,27 @@ message(STATUS "Setting Geoflow plugin extension to ${GF_PLUGIN_EXTENSION}")
 add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
 add_definitions(-DGF_PLUGIN_EXTENSION=\"${GF_PLUGIN_EXTENSION}\")
 
-install(FILES 
-src/geoflow/common.hpp
-src/geoflow/parameters.hpp
-src/geoflow/geoflow.hpp 
-DESTINATION include/geoflow)
+set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
+  src/geoflow/common.hpp
+  src/geoflow/parameters.hpp
+  src/geoflow/geoflow.hpp
+)
 
-install(TARGETS geoflow-core EXPORT geoflow-targets DESTINATION lib/geoflow)
-if(${GF_BUILD_GUI})
-  # install(TARGETS geoflow-gui EXPORT geoflow-targets DESTINATION lib/geoflow)
-  install(FILES 
-  src/viewer/shaders/crosshair.frag 
-  src/viewer/shaders/crosshair.vert 
-  src/viewer/shaders/basic.frag 
-  src/viewer/shaders/basic.vert 
-  DESTINATION share/geoflow)
-endif()
-install(EXPORT geoflow-targets DESTINATION lib/geoflow)
+install(TARGETS geoflow-core EXPORT geoflow-targets 
+  RUNTIME
+  ARCHIVE
+  LIBRARY
+  PUBLIC_HEADER DESTINATION include/geoflow)
+install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
 
 include ( CMakePackageConfigHelpers )
 set(Other)
 configure_package_config_file(geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
-  INSTALL_DESTINATION lib/geoflow
+  INSTALL_DESTINATION lib/cmake/geoflow
   PATH_VARS GF_PLUGIN_FOLDER)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/geoflow)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/cmake/geoflow)
 
 add_subdirectory(apps)
 add_subdirectory(examples)

@@ -7,15 +7,14 @@ endif()
 add_executable(gf gf.cpp)
 target_link_libraries(gf PRIVATE ${geoflowlib} nlohmann_json::nlohmann_json)
 
-# target_link_options(
-#   gf
-#   PUBLIC
-#   -Wl,-export_dynamic
-# )
 
 set_target_properties(
   gf
   PROPERTIES CXX_STANDARD 17
 )
 
-install(TARGETS gf DESTINATION bin)
+if(${GF_BUILD_GUI})
+  install(FILES ${GF_SHADER_FILES} DESTINATION ${GF_SHADER_PATH})
+endif()
+
+install(TARGETS gf RUNTIME)
