@@ -4,20 +4,19 @@ project (Geoflow VERSION 0.0.1)
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 
+# dependencies
+find_package(glfw3 3.3 REQUIRED)
+find_package(nlohmann_json)
+find_package(glm)
 
 if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
 execute_process(
-  COMMAND             git submodule update --init --recursive thirdparty/glm thirdparty/imgui
+  COMMAND             git submodule update --init thirdparty/imgui thirdparty/osdialog
   WORKING_DIRECTORY   ${PROJECT_SOURCE_DIR}
   OUTPUT_QUIET
   ERROR_QUIET
   )
-endif()
-  
-# configure GLFW
-find_package(glfw3 3.3 REQUIRED)
-# nlohmann's json
-find_package(nlohmann_json 3.2.0)
+endif()  
   
 # DLLoader
 if (WIN32)
@@ -55,14 +54,14 @@ include_directories(
   thirdparty/glad/include
   thirdparty/imgui
   thirdparty/imgui/examples
-  thirdparty/glm
+  # thirdparty/glm
   thirdparty/osdialog
 )
 
 add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
 )
-target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json glm)
 
 set_target_properties(geoflow-core PROPERTIES 
   CXX_STANDARD 17
@@ -113,7 +112,7 @@ if(${GF_BUILD_GUI})
 
   add_library(geoflow-gui STATIC ${GF_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
-  target_link_libraries(geoflow-gui PRIVATE geoflow-core glfw ${GF_FILEDIALOG_LIBS})
+  target_link_libraries(geoflow-gui PRIVATE geoflow-core glm glfw ${GF_FILEDIALOG_LIBS})
   set_target_properties(geoflow-gui PROPERTIES CXX_STANDARD 17)
 endif()
 
