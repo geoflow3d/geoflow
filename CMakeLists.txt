@@ -4,18 +4,21 @@ project (Geoflow VERSION 0.0.1)
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 
-# configure GLFW
-find_package(glfw3 3.3 REQUIRED)
 
 if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
-    execute_process(
-            COMMAND             git submodule update --init --recursive thirdparty/glm thirdparty/imgui
-            WORKING_DIRECTORY   ${PROJECT_SOURCE_DIR}
-            OUTPUT_QUIET
-            ERROR_QUIET
-    )
+execute_process(
+  COMMAND             git submodule update --init --recursive thirdparty/glm thirdparty/imgui
+  WORKING_DIRECTORY   ${PROJECT_SOURCE_DIR}
+  OUTPUT_QUIET
+  ERROR_QUIET
+  )
 endif()
-
+  
+# configure GLFW
+find_package(glfw3 3.3 REQUIRED)
+# nlohmann's json
+find_package(nlohmann_json 3.2.0)
+  
 # DLLoader
 if (WIN32)
 	include_directories(
@@ -29,18 +32,6 @@ if(UNIX)
 	)
     # set (CMAKE_CXX_FLAGS "-W -Wall -Wextra")
 endif(UNIX)
-
-# nlohmann's json
-find_package(nlohmann_json 3.2.0)
-
-include_directories(
-  src
-  thirdparty/glad/include
-  thirdparty/imgui
-  thirdparty/imgui/examples
-  thirdparty/glm
-  thirdparty/osdialog
-)
 
 set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/geoflow)
 if(WIN32)
@@ -58,6 +49,15 @@ endif()
 if(GF_BUILD_GUI)
   add_definitions(-DGF_BUILD_GUI)
 endif()
+
+include_directories(
+  src
+  thirdparty/glad/include
+  thirdparty/imgui
+  thirdparty/imgui/examples
+  thirdparty/glm
+  thirdparty/osdialog
+)
 
 add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
@@ -91,14 +91,14 @@ if(${GF_BUILD_GUI})
     src/geoflow/gui/imgui_color_gradient.cpp
     thirdparty/osdialog/osdialog.c
     src/geoflow/gui/osdialog.cpp)
-  SET(GF_GUI_LIBS geoflow-core glfw)
+  SET(GF_FILEDIALOG_LIBS "")
   if(APPLE)
     SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_mac.m)
   elseif(MSVC)
     SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_win.c)
-    SET(GF_GUI_LIBS ${GF_GUI_LIBS}
+    SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
       comdlg32)
   else()
     execute_process (
@@ -107,17 +107,14 @@ if(${GF_BUILD_GUI})
     )
     SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_gtk2.c)
-    SET(GF_GUI_LIBS ${GF_GUI_LIBS}
+    SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
       gtklib)
   endif()
 
   add_library(geoflow-gui STATIC ${GF_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
-  target_link_libraries(geoflow-gui PRIVATE ${GF_GUI_LIBS})
-  set_target_properties(
-    geoflow-gui
-    PROPERTIES CXX_STANDARD 17
-  )
+  target_link_libraries(geoflow-gui PRIVATE geoflow-core glfw ${GF_FILEDIALOG_LIBS})
+  set_target_properties(geoflow-gui PROPERTIES CXX_STANDARD 17)
 endif()
 
 # ensure rpath is set up properly (https://gitlab.kitware.com/cmake/community/wikis/doc/cmake/RPATH-handling)
@@ -160,7 +157,6 @@ install(TARGETS geoflow-core EXPORT geoflow-targets
 install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
 
 include ( CMakePackageConfigHelpers )
-set(Other)
 configure_package_config_file(geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
   INSTALL_DESTINATION lib/cmake/geoflow
@@ -169,4 +165,4 @@ configure_package_config_file(geoflow-config.cmake.in
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/cmake/geoflow)
 
 add_subdirectory(apps)
-add_subdirectory(examples)
+# add_subdirectory(examples)
