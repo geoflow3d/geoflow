@@ -32,6 +32,7 @@ if(UNIX)
     # set (CMAKE_CXX_FLAGS "-W -Wall -Wextra")
 endif(UNIX)
 
+# definitions
 set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/geoflow)
 if(WIN32)
   set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share)
@@ -49,20 +50,20 @@ if(GF_BUILD_GUI)
   add_definitions(-DGF_BUILD_GUI)
 endif()
 
+# includes
 include_directories(
   src
   thirdparty/glad/include
   thirdparty/imgui
   thirdparty/imgui/examples
-  # thirdparty/glm
   thirdparty/osdialog
 )
 
+# targets
 add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
 )
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json glm)
-
 set_target_properties(geoflow-core PROPERTIES 
   CXX_STANDARD 17
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
@@ -115,6 +116,8 @@ if(${GF_BUILD_GUI})
   target_link_libraries(geoflow-gui PRIVATE geoflow-core glm glfw ${GF_FILEDIALOG_LIBS})
   set_target_properties(geoflow-gui PROPERTIES CXX_STANDARD 17)
 endif()
+
+# installation
 
 # ensure rpath is set up properly (https://gitlab.kitware.com/cmake/community/wikis/doc/cmake/RPATH-handling)
 # use, i.e. don't skip the full RPATH for the build tree
