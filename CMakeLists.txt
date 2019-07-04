@@ -35,7 +35,7 @@ endif(UNIX)
 
 set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/geoflow)
 if(WIN32)
-  set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/)
+  set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share)
 endif()
 add_definitions(
   -DGLFW_INCLUDE_NONE
