@@ -18,7 +18,8 @@
 #include <fstream>
 #include <filesystem>
 
-#include "DLLoader.h"
+#include <DLLoader.h>
+#include "CLI11.hpp"
 
 #include <geoflow/geoflow.hpp>
 #include <nlohmann/json.hpp>
@@ -30,10 +31,21 @@ using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
-int main(int ac, const char * av[]) {
+int main(int argc, const char * argv[]) {
 
   const std::string config_path = "/Users/ravi/git/geoflow/apps/geoflow-config.json";
-  const std::string flowchart_path = "/Users/ravi/git/geoflow/apps/add.json";
+  std::string flowchart_path = "/Users/ravi/git/geoflow/apps/add.json";
+
+
+  CLI::App cli{"Geoflow"};
+
+  CLI::Option* opt_flowchart_path = cli.add_option("-f,--flowchart", flowchart_path, "Flowchart file");
+
+  try {
+    cli.parse(argc, argv);
+  } catch (const CLI::ParseError &e) {
+    return cli.exit(e);
+  }
 
   typedef dlloader::DLLoader<geoflow::NodeRegister> DLLoader;
   std::unordered_map<std::string, std::unique_ptr<DLLoader>> dloaders;
@@ -78,13 +90,14 @@ int main(int ac, const char * av[]) {
     // }
     // load flowchart from file
     geoflow::NodeManager node_manager;
-    // node_manager.load_json(flowchart_path, node_registers);
+    if(*opt_flowchart_path)
+      node_manager.load_json(flowchart_path, node_registers);
 
     // launch gui or just run the flowchart in cli mode
     #ifdef GF_BUILD_GUI
       geoflow::launch_flowchart(node_manager, node_registers);
     #else
-      //N.run(*las_loader);
+      //N.run();
     #endif
   }
 
@@ -93,4 +106,6 @@ int main(int ac, const char * av[]) {
     std::cout << "Unloading " << path << std::endl;
     loader->DLCloseLib();
   }
+
+  return 0;
 }

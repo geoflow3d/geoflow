@@ -19,37 +19,69 @@
 #include <string>
 #include <map>
 #include <variant>
+#include <vector>
 
 namespace geoflow {
   template <typename T> class ParameterBase {
+    protected:
     T& value;
+    std::string label;
+    bool is_visible;
     public:
-    ParameterBase(T& val) : value(val) {};
+    ParameterBase(T& val, std::string label, bool visible=true) : value(val), label(label), is_visible(visible) {};
+    std::string get_label() {
+      return label;
+    }
     T& get() {
       return value;
     }
     void set(T val) {
       value = val;
     }
+    bool visible() {
+      return is_visible;
+    }
+    void set_visible(bool vis) {
+      is_visible=vis;
+    }
   };
-  template<typename T> class ParameterRange : public ParameterBase<T> {
-    T& min_, max_;
+  template<typename T> class ParameterBounded : public ParameterBase<T> {
+    T min_, max_;
     public:
-    ParameterRange(T& val, T& min, T& max) : ParameterBase<T>(val), min_(min), max_(max) {};
-    T& min() { return min_;}
-    T& max() { return max_;}
+    ParameterBounded(T& val, T min, T max, std::string label, bool visible=true) : ParameterBase<T>(val, label, visible), min_(min), max_(max) {};
+    T min() { return min_;}
+    T max() { return max_;}
+    void set_bounds(T min, T max) {
+      min_ = min;
+      max_ = max;
+    }
   };
   class ParamPath : public ParameterBase<std::string> {
     using ParameterBase::ParameterBase;
   };
+  class ParamSelector : public ParameterBase<size_t> {
+    std::vector<std::string> options;
+
+    public:
+    ParamSelector(std::vector<std::string> options, size_t& index, std::string label, bool visible=true) : ParameterBase(index, label, visible) {};
+
+    std::vector<std::string> get_options() {
+      return options;
+    }
+    std::string get_selected_option() {
+      return options.at(value);
+    }
+  };
   typedef ParameterBase<float> ParamFloat;
-  typedef ParameterRange<float> ParamFloatRange;
+  typedef ParameterBase<std::pair<float,float>> ParamFloatRange;
+  typedef ParameterBase<std::pair<int,int>> ParamIntRange;
+  typedef ParameterBounded<float> ParamBoundedFloat;
   typedef ParameterBase<int> ParamInt;
-  typedef ParameterRange<int> ParamIntRange;
+  typedef ParameterBounded<int> ParamBoundedInt;
   typedef ParameterBase<bool> ParamBool;
   typedef ParameterBase<std::string> ParamString;
 
-  typedef std::variant<ParamBool, ParamInt, ParamFloat, ParamIntRange, ParamFloatRange, ParamPath> ParameterVariant;
+  typedef std::variant<ParamBool, ParamInt, ParamFloat, ParamBoundedInt, ParamBoundedFloat, ParamFloatRange, ParamIntRange, ParamPath, ParamSelector> ParameterVariant;
   typedef std::map<std::string, ParameterVariant> ParameterMap;
   // class ParameterSet : public ParameterMap {
 

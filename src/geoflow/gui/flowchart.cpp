@@ -1131,7 +1131,11 @@ namespace ImGui
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save to JSON", "Ctrl+S")) {
+					#ifndef __APPLE__
 					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
+					#else
+					std::optional<std::string> result = "flowchart.json";
+					#endif
 					if (result.has_value()) {
 						for (auto& node : nodes_) {
 							ImVec2 new_position = node->position_+node->size_/2;
@@ -1345,7 +1349,7 @@ namespace ImGui
 				if (node->get_register().get_name() == "Visualisation") {
 					node->gui();
 				} else { 
-					geoflow::draw_parameters(node->parameters);
+					geoflow::draw_parameters(node);
 					ImGui::Text("%s", node->info().c_str());
 				}
 				if (ImGui::MenuItem("Run")) {		

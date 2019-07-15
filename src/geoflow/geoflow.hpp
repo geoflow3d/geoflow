@@ -313,6 +313,8 @@ namespace geoflow {
     virtual void on_clear(InputTerminal& it){};
     virtual void on_connect_input(InputTerminal& ot){};
     virtual void on_connect_output(OutputTerminal& ot){};
+    virtual void on_change_parameter(std::string name, ParameterVariant& param){};
+    virtual void before_gui(){};
     virtual std::string info() {return std::string();};
 
     std::string debug_info();
