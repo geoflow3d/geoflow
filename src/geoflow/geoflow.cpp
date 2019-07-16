@@ -337,8 +337,18 @@ using namespace geoflow;
           n["parameters"][pname] = ptr->get();
         else if (auto ptr = std::get_if<ParamFloat>(&pvalue))
           n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamBoundedInt>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamBoundedFloat>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamIntRange>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamFloatRange>(&pvalue))
+          n["parameters"][pname] = ptr->get();
         else if (auto ptr = std::get_if<ParamPath>(&pvalue))
           n["parameters"][pname] = ptr->get();
+        else
+          std::cerr << "Parameter '" << pname << "' has an unknown type and is not serialised!\n";
       }
       for (const auto& [name, oTerm] : node_handle->outputTerminals) {
         std::vector<std::pair<std::string, std::string>> connection_vec;
@@ -376,12 +386,25 @@ using namespace geoflow;
         if (node_j.value().count("parameters")) {
           auto params_j = node_j.value().at("parameters");
           for (auto& pel : params_j.items()) {
+            if(!nhandle->parameters.count(pel.key())) {
+              std::cerr << "key not found in node parameters: " << pel.key() << "\n";
+              continue;
+            }
+
             if (auto param_ptr = std::get_if<ParamBool>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<bool>());
             else if (auto param_ptr = std::get_if<ParamInt>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<int>());
             else if (auto param_ptr = std::get_if<ParamFloat>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<float>());
+            else if (auto param_ptr = std::get_if<ParamBoundedInt>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<int>());
+            else if (auto param_ptr = std::get_if<ParamBoundedFloat>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<float>());
+            else if (auto param_ptr = std::get_if<ParamIntRange>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<std::pair<int,int>>());
+            else if (auto param_ptr = std::get_if<ParamFloatRange>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<std::pair<float,float>>());
             else if (auto param_ptr = std::get_if<ParamPath>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<std::string>());
           }
