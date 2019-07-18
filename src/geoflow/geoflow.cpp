@@ -337,6 +337,10 @@ using namespace geoflow;
           n["parameters"][pname] = ptr->get();
         else if (auto ptr = std::get_if<ParamFloat>(&pvalue))
           n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamDouble>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamBoundedDouble>(&pvalue))
+          n["parameters"][pname] = ptr->get();
         else if (auto ptr = std::get_if<ParamBoundedInt>(&pvalue))
           n["parameters"][pname] = ptr->get();
         else if (auto ptr = std::get_if<ParamBoundedFloat>(&pvalue))
@@ -397,10 +401,14 @@ using namespace geoflow;
               param_ptr->set(pel.value().get<int>());
             else if (auto param_ptr = std::get_if<ParamFloat>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<float>());
+            else if (auto param_ptr = std::get_if<ParamDouble>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<double>());
             else if (auto param_ptr = std::get_if<ParamBoundedInt>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<int>());
             else if (auto param_ptr = std::get_if<ParamBoundedFloat>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<float>());
+            else if (auto param_ptr = std::get_if<ParamBoundedDouble>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<double>());
             else if (auto param_ptr = std::get_if<ParamIntRange>(&nhandle->parameters.at(pel.key())))
               param_ptr->set(pel.value().get<std::pair<int,int>>());
             else if (auto param_ptr = std::get_if<ParamFloatRange>(&nhandle->parameters.at(pel.key())))

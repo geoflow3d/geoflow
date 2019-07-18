@@ -73,15 +73,31 @@ namespace geoflow {
     }
   };
   typedef ParameterBase<float> ParamFloat;
+  typedef ParameterBase<double> ParamDouble;
   typedef ParameterBase<std::pair<float,float>> ParamFloatRange;
   typedef ParameterBase<std::pair<int,int>> ParamIntRange;
+  typedef ParameterBase<std::pair<double,double>> ParamDoubleRange;
   typedef ParameterBounded<float> ParamBoundedFloat;
+  typedef ParameterBounded<double> ParamBoundedDouble;
   typedef ParameterBase<int> ParamInt;
   typedef ParameterBounded<int> ParamBoundedInt;
   typedef ParameterBase<bool> ParamBool;
   typedef ParameterBase<std::string> ParamString;
 
-  typedef std::variant<ParamBool, ParamInt, ParamFloat, ParamBoundedInt, ParamBoundedFloat, ParamFloatRange, ParamIntRange, ParamPath, ParamSelector> ParameterVariant;
+  typedef std::variant<
+    ParamBool,
+    ParamInt,
+    ParamFloat,
+    ParamDouble,
+    ParamBoundedInt,
+    ParamBoundedFloat,
+    ParamBoundedDouble,
+    ParamFloatRange,
+    // ParamDoubleRange,
+    ParamIntRange,
+    ParamPath,
+    ParamSelector
+    > ParameterVariant;
   typedef std::map<std::string, ParameterVariant> ParameterMap;
   // class ParameterSet : public ParameterMap {
 
