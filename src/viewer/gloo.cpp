@@ -360,6 +360,7 @@ void Painter::clear_attribute(const std::string name) {
     if(name == "position"){
         bbox.clear();
         subdata_pairs.clear();
+        attributes["position"]->set_data<GLfloat>(nullptr, 0, 0);
     }
     disable_attribute(name);
 }
