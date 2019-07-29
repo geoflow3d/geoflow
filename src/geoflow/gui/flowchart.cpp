@@ -26,6 +26,8 @@ namespace ImGui
 			R->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
 			R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
 			R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
+			R->register_node<geoflow::nodes::gui::CubeNode>("Cube");
+			R->register_node<geoflow::nodes::gui::TriangleNode>("Triangle");
 			registers.emplace(R);
 		}
 	}
