@@ -29,7 +29,6 @@
 #include <unordered_set>
 #include <set>
 #include <queue>
-#include <exception>
 #include <typeinfo>
 #include <typeindex>
 
@@ -41,20 +40,6 @@
 
 namespace geoflow {
 
-  class Exception: public std::exception
-  {
-  public:
-    explicit Exception(const std::string& message):
-      msg_(message)
-      {}
-    virtual const char* what() const throw (){
-      return msg_.c_str();
-    }
-
-  protected:
-      std::string msg_;
-  };
-
   class Node;
   class NodeManager;
   class NodeRegister;
@@ -65,151 +50,140 @@ namespace geoflow {
   class OutputGroup;
   // typedef std::weak_ptr<InputTerminal> InputHandle;
   // typedef std::weak_ptr<OutputTerminal> OutputHandle;
-
-  
   
   typedef std::shared_ptr<Node> NodeHandle;
   
-  class Terminal {
-    public:
-    Terminal(Node& parent_gnode, std::string name):parent(parent_gnode), name(name) {
-      // std::cout<< "Constructing geoflow::Terminal " << this << "\n";
-    };
-    ~Terminal() {
-      // std::cout<< "Destructing geoflow::Terminal " << this << "\n";
-    }
+  class gfOutputTerminal;
+  class gfSingleOutputTerminal;
 
-    Node& parent;
-    const std::string name;
-    std::any cdata;
+  enum gfIO {GF_IN, GF_OUT};
+  enum gfTerminalFamily {GF_SINGLE, GF_MULTI, GF_GROUP};
+  enum gfNodeStatus {GF_NODE_WAITING, GF_NODE_READY, GF_NODE_PROCESSING, GF_NODE_DONE};
 
-    virtual void push(std::any data) = 0;
-    virtual void clear() = 0;
-    
-    bool has_data() {
-      return cdata.has_value();
-    };
-    template<typename T> T get() { 
-      return std::any_cast<T>(cdata); 
-    };
-    template<typename T> void set(T data) { 
-      push(std::any(data)); 
-    };
-
-    const std::string get_name() { return name; };
-  };
-
-  class InputTerminal : public Terminal, public std::enable_shared_from_this<InputTerminal>{
-    public:
-    std::vector<std::type_index> types;
-    std::type_index connected_type = typeid(void);
-    InputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types): Terminal(parent_gnode, name), types(types) {};
-    InputTerminal(Node& parent_gnode, std::string name, std::type_index type): Terminal(parent_gnode, name), types({type}) {};
-    
-    std::weak_ptr<InputTerminal>  get_ptr(){
-      return weak_from_this();
-    }
-    std::vector<std::type_index> get_types() { return types; };
-    void push(std::any data);
-    void clear();
-  };
-  class OutputTerminal : public Terminal, public std::enable_shared_from_this<OutputTerminal>{
-    typedef std::set<std::weak_ptr<InputTerminal>, std::owner_less<std::weak_ptr<InputTerminal>>> connection_set;
-    public:
-    std::type_index type;
-    //use a set to make sure we don't get duplicate connection
-    connection_set connections;
-    
-    OutputTerminal(Node& parent_gnode, std::string name, std::type_index type): Terminal(parent_gnode, name), type(type){};
-    ~OutputTerminal();
-    
-    std::weak_ptr<OutputTerminal>  get_ptr(){
-      return weak_from_this();
-    }
-
-    void set_type(std::type_index t);
-    bool is_compatible(InputTerminal& in);
-    void connect(InputTerminal& in);
-    void disconnect(InputTerminal& in);
-    void propagate();
-    connection_set& get_connections();
-    
-    void push(std::any data);
-    void clear();
-  };
-
-  template <typename TerminalClass> class TerminalGroup {
+  class gfTerminal : public gfObject {
     protected:
-    std::string name;
-    public:
-    Node& parent;
-    std::unordered_set<std::type_index> types;
-    std::map<std::string,std::shared_ptr<TerminalClass> > terminals;
-    TerminalGroup(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types)
-    : parent(parent_gnode), name(name), types(types) {};
-    // ~TerminalGroup(){};
+    Node& parent_;
+    std::vector<std::type_index> types_;
 
-    TerminalClass& term(std::string term_name) {
-      return *terminals.at(term_name);
-    }
-    TerminalClass& add(std::string term_name, std::type_index type) {
-      // TODO: check if term_name is unique and if type is in types
-      terminals[term_name] = std::make_shared<TerminalClass>(parent, term_name, type);
-      return *terminals[term_name];
-    }
-    void clear(std::string term_name) {
-      terminals.erase(term_name);
-    }
-    void clear() {
-      terminals.clear();
-    }
+    public:
+    gfTerminal(Node& parent_node, std::initializer_list<std::type_index> types, std::string name)
+      : parent_(parent_node), types_(types), gfObject(name) {};
+
+    Node& get_parent() { return parent_; };
+
+    bool accepts_type(std::type_index type);
+    const std::vector<std::type_index>& get_types() { return types_; };
+    const virtual gfIO get_side() = 0;
+    virtual bool has_data() = 0;
+
     friend class Node;
   };
-  
-  class InputGroup : public TerminalGroup<InputTerminal>, public std::enable_shared_from_this<InputGroup> {
-  typedef std::set<std::weak_ptr<OutputGroup>, std::owner_less<std::weak_ptr<OutputGroup>>> connection_set;
-  public:
-    using TerminalGroup<InputTerminal>::TerminalGroup;
-    connection_set connections;
 
-    std::weak_ptr<InputGroup>  get_ptr(){
+  class gfInputTerminal : public gfTerminal, public std::enable_shared_from_this<gfInputTerminal> {
+    private:
+    bool is_optional_;
+
+    protected:
+    std::weak_ptr<gfOutputTerminal> connected_output_;
+    std::weak_ptr<gfInputTerminal>  get_ptr(){
       return weak_from_this();
     }
-    
-  };
-  
-  class OutputGroup : public TerminalGroup<OutputTerminal>, public std::enable_shared_from_this<OutputGroup> {
-  typedef std::set<std::weak_ptr<InputGroup>, std::owner_less<std::weak_ptr<InputGroup>>> connection_set;
-    connection_set connections;
-  public:
-    using TerminalGroup<OutputTerminal>::TerminalGroup;
-    
-    bool is_propagated=false;
-    void connect(InputGroup& ig);
-    void disconnect(InputGroup& ig);
-    void propagate();
+    void clear();
+    void update_on_receive(bool queue);
 
-    std::weak_ptr<OutputGroup>  get_ptr(){
+    public:
+    gfInputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types, bool is_optional=false)
+      : gfTerminal(parent_gnode, types, name), is_optional_(is_optional)
+      {};
+    gfInputTerminal(Node& parent_gnode, std::string name, std::type_index type, bool is_optional=false)
+      : gfInputTerminal(parent_gnode, name, {type}, is_optional)
+      {};
+    const gfIO get_side() { return GF_IN; };
+    const virtual gfTerminalFamily get_family() = 0;
+    bool is_optional() { return is_optional_; };
+    bool connected_type(std::type_index ttype);
+
+    friend class gfOutputTerminal;
+    friend class gfSingleOutputTerminal;
+    friend class Node;
+  };
+
+  class gfSingleInputTerminal : public gfInputTerminal {
+    private:
+    std::type_index connected_type_ = typeid(void);
+
+    public:
+    using gfInputTerminal::gfInputTerminal;
+    const gfTerminalFamily get_family() { return GF_SINGLE; };
+    std::type_index get_connected_type() { return connected_type_; };
+    template<typename T> T get();
+    bool has_data();
+  };
+
+  typedef std::set<std::weak_ptr<gfInputTerminal>, std::owner_less<std::weak_ptr<gfInputTerminal>>> InputConnectionSet;
+
+  class gfOutputTerminal : public gfTerminal, public std::enable_shared_from_this<gfOutputTerminal> {
+    protected:
+    std::weak_ptr<gfOutputTerminal>  get_ptr(){
       return weak_from_this();
     }
-    
+    InputConnectionSet connections_;
+
+    virtual void propagate();
+    virtual std::set<NodeHandle> get_child_nodes();
+    virtual void clear() = 0;
+
+    public:
+    gfOutputTerminal(Node& parent_gnode, std::string name, std::type_index type) 
+      : gfTerminal(parent_gnode, {type}, name)
+    {}
+    ~gfOutputTerminal();
+    virtual bool is_compatible(gfInputTerminal& input_terminal);
+    const InputConnectionSet& get_connections();
+    const std::type_index& get_type() { return types_[0]; };
+    const gfIO get_side() { return GF_OUT; };
+    const virtual gfTerminalFamily get_family() = 0;
+    void connect(gfInputTerminal& in);
+    void disconnect(gfInputTerminal& in);
+
+    friend class Node;
+    friend class gfInputTerminal;
   };
 
-  enum node_status {
-    WAITING,
-    READY,
-    PROCESSING,
-    DONE
+  class gfSingleOutputTerminal : public gfOutputTerminal {
+    private:
+    std::any data_;
+    protected:
+    void clear();
+    std::any& get_data() { return data_; };
+
+    public:
+    using gfOutputTerminal::gfOutputTerminal;
+    const gfTerminalFamily get_family() { return GF_SINGLE; };
+    void disconnect();
+    bool has_data();
+    template<typename T> void set(T data){
+      data_ = std::move(data);
+    };
+    template<typename T> T get() { return std::any_cast<T>(data_); };
+
+    friend class gfSingleInputTerminal;
+  };
+
+  template<typename T> T gfSingleInputTerminal::get() {
+    auto output_term = connected_output_.lock();
+    auto sot = (gfSingleOutputTerminal*)(output_term.get());
+    return std::any_cast<T>(sot->get_data()); 
   };
 
   class Node : public std::enable_shared_from_this<Node> {
     public:
 
-    std::map<std::string,std::shared_ptr<InputTerminal>> inputTerminals;
-    std::map<std::string,std::shared_ptr<OutputTerminal>> outputTerminals;
+    std::map<std::string,std::shared_ptr<gfInputTerminal>> input_terminals;
+    std::map<std::string,std::shared_ptr<gfOutputTerminal>> output_terminals;
 
-    std::map<std::string,std::shared_ptr<InputGroup>> inputGroups;
-    std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
+    // std::map<std::string,std::shared_ptr<InputGroup>> inputGroups;
+    // std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
 
     ParameterMap parameters;
     arr2f position;
@@ -219,65 +193,67 @@ namespace geoflow {
 
     void remove_from_manager();
 
-    InputTerminal& input(std::string term_name) {
-      if (inputTerminals.find(term_name) == inputTerminals.end()) {
-        throw Exception("No such input terminal - \""+term_name+"\" in " + get_name());
+    gfSingleInputTerminal& input(std::string term_name) {
+      if (input_terminals.find(term_name) == input_terminals.end()) {
+        throw gfException("No such input terminal - \""+term_name+"\" in " + get_name());
       }
-      return *inputTerminals[term_name];
+      auto input_term = (gfSingleInputTerminal*) (input_terminals[term_name].get());
+      return *input_term;
     }
-    OutputTerminal& output(std::string term_name) {
-      if (outputTerminals.find(term_name) == outputTerminals.end()) {
-        throw Exception("No such output terminal - \""+term_name+"\" in " + get_name());
+    gfSingleOutputTerminal& output(std::string term_name) {
+      if (output_terminals.find(term_name) == output_terminals.end()) {
+        throw gfException("No such output terminal - \""+term_name+"\" in " + get_name());
       }
-      return *outputTerminals[term_name];
+      auto output_term = (gfSingleOutputTerminal*) (output_terminals[term_name].get());
+      return *output_term;
     }
     // template<typename T> T& param(std::string name) {
     //   return std::get<T>(parameters.at(name));
     // }
-    InputGroup& input_group(std::string group_name){
-      return *inputGroups.at(group_name);
-    }
-    OutputGroup& output_group(std::string group_name){
-      return *outputGroups.at(group_name);
-    }
+    // InputGroup& input_group(std::string group_name){
+    //   return *inputGroups.at(group_name);
+    // }
+    // OutputGroup& output_group(std::string group_name){
+    //   return *outputGroups.at(group_name);
+    // }
 
-    void for_each_input(std::function<void(InputTerminal&)> f) {
-      for (auto& iT : inputTerminals) {
+    void for_each_input(std::function<void(gfInputTerminal&)> f) {
+      for (auto& iT : input_terminals) {
         f(*iT.second);
       }
-      for (auto& iG : inputGroups) {
-        for (auto& iT : iG.second->terminals) {
-          f(*iT.second);
-        }
-      }
+      // for (auto& iG : inputGroups) {
+      //   for (auto& iT : iG.second->terminals) {
+      //     f(*iT.second);
+      //   }
+      // }
     }
-    void for_each_output(std::function<void(OutputTerminal&)> f) {
-      for (auto& iT : outputTerminals) {
+    void for_each_output(std::function<void(gfOutputTerminal&)> f) {
+      for (auto& iT : output_terminals) {
         f(*iT.second);
       }
-      for (auto& iG : outputGroups) {
-        for (auto& iT : iG.second->terminals) {
-          f(*iT.second);
-        }
-      }
+      // for (auto& iG : outputGroups) {
+      //   for (auto& iT : iG.second->terminals) {
+      //     f(*iT.second);
+      //   }
+      // }
     }
 
-    node_status status=WAITING;
+    gfNodeStatus status_=GF_NODE_WAITING;
 
     void add_input(std::string name, std::type_index type);
     void add_input(std::string name, std::initializer_list<std::type_index> types);
     void add_output(std::string name, std::type_index type);
 
-    void add_input_group(std::string group_name, std::initializer_list<std::type_index> types) {
-      inputGroups.emplace(
-        std::make_pair(group_name, std::make_shared<InputGroup>(*this, group_name, types))
-      );
-    }
-    void add_output_group(std::string group_name, std::initializer_list<std::type_index> types) {
-      outputGroups.emplace(
-        std::make_pair(group_name, std::make_shared<OutputGroup>(*this, group_name, types))
-      );
-    }
+    // void add_input_group(std::string group_name, std::initializer_list<std::type_index> types) {
+    //   inputGroups.emplace(
+    //     std::make_pair(group_name, std::make_shared<InputGroup>(*this, group_name, types))
+    //   );
+    // }
+    // void add_output_group(std::string group_name, std::initializer_list<std::type_index> types) {
+    //   outputGroups.emplace(
+    //     std::make_pair(group_name, std::make_shared<OutputGroup>(*this, group_name, types))
+    //   );
+    // }
 
     template<typename T> void add_param(std::string name, T value) {
       parameters.emplace(name, value);
@@ -296,10 +272,11 @@ namespace geoflow {
 
     NodeHandle get_handle(){return shared_from_this();};
 
-    bool update();
+    bool queue();
+    bool update_status();
     void propagate_outputs();
     void notify_children();
-    void preprocess();
+    // void preprocess();
 
     // private:
 
@@ -309,10 +286,11 @@ namespace geoflow {
     // virtual ParameterMap init_parameters() {};
     virtual void process() = 0;
     virtual void gui() {};
-    virtual void on_push(InputTerminal& it){};
+    virtual void on_receive(gfInputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
+    virtual void on_waiting(gfInputTerminal& it){};
     virtual void on_connect_input(InputTerminal& ot){};
-    virtual void on_connect_output(OutputTerminal& ot){};
+    virtual void on_connect_output(gfOutputTerminal& ot){};
     virtual void on_change_parameter(std::string name, ParameterVariant& param){};
     virtual void before_gui(){};
     virtual std::string info() {return std::string();};
@@ -357,7 +335,7 @@ namespace geoflow {
     }
     NodeHandle create(std::string type_name, NodeManager& nm) {
       if (node_types.find(type_name) == node_types.end())
-        throw Exception("No such node type - \""+type_name+"\"");
+        throw gfException("No such node type - \""+type_name+"\"");
 
       auto f = node_types[type_name];
       auto n = f(shared_from_this(), nm, type_name);
@@ -424,13 +402,14 @@ namespace geoflow {
 
   typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> ConnectionList;
   ConnectionList dump_connections(std::vector<NodeHandle>);
-  bool connect(OutputTerminal& oT, InputTerminal& iT);
+  bool connect(gfOutputTerminal& oT, gfInputTerminal& iT);
   bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
   bool connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2);
-  bool connect(Terminal& t1, Terminal& t2);
+  bool connect(gfTerminal& t1, gfTerminal& t2);
   bool connect(OutputGroup& in, InputGroup& out);
-  bool is_compatible(Terminal& t1, Terminal& t2);
-  void disconnect(Terminal& t1, Terminal& t2);
-  bool detect_loop(Terminal& t1, Terminal& t2);
-  bool detect_loop(OutputTerminal& iT, InputTerminal& oT);
+  bool is_compatible(gfTerminal& t1, gfTerminal& t2);
+  void disconnect(gfTerminal& t1, gfTerminal& t2);
+  bool detect_loop(gfTerminal& t1, gfTerminal& t2);
+
+  bool detect_loop(gfOutputTerminal& iT, gfInputTerminal& oT);
 }

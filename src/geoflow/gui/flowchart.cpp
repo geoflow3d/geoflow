@@ -157,14 +157,14 @@ namespace ImGui
 		}
 
 		// std::cout << "reading inputs from " << type <<  "\n";
-		// std::cout << "\t has " << gf_node->inputTerminals.size() <<  " input terminals\n";
-		for (auto input : gf_node->inputTerminals){
+		// std::cout << "\t has " << gf_node->input_terminals.size() <<  " input terminals\n";
+		for (auto input : gf_node->input_terminals){
 			auto connection = std::make_unique<Connection>(input.second);
 			connection->name_ = input.first;
 
 			node->inputs_.push_back(std::move(connection));
 		}
-		for (auto& output : gf_node->outputTerminals){
+		for (auto& output : gf_node->output_terminals){
 			auto connection = std::make_unique<Connection>(output.second);
 			connection->name_ = output.first;
 
@@ -834,11 +834,11 @@ namespace ImGui
 			
 			// set border color based on status of node
 			auto bcol = ImColor(0.6, 0.6f, 0.6f, 0.8f);
-			if (node.gf_node->status==geoflow::DONE)
+			if (node.gf_node->status_==geoflow::GF_NODE_DONE)
 				bcol = ImColor(0.0f, 1.0f, 0.0f, 0.8f);
-			else if (node.gf_node->status==geoflow::WAITING)
+			else if (node.gf_node->status_==geoflow::GF_NODE_WAITING)
 				bcol = ImColor(1.0f, 1.0f, 0.0f, 0.8f);
-			else if (node.gf_node->status==geoflow::READY)
+			else if (node.gf_node->status_==geoflow::GF_NODE_READY)
 				bcol = ImColor(0.0f, 0.0f, 1.0f, 0.8f);
 
 			if (node.state_ > 0)
@@ -925,7 +925,9 @@ namespace ImGui
 
 				////////////////////////////////////////////////////////////////////////////////
 
-				ImColor color = ImColor(0.8f, 0.8f, 0.8f, 1.0f);
+				ImColor color(0.4f, 0.4f, 0.4f, 1.0f);
+				// if(connection->gf_terminal->has_data())
+				// 	color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
 				if (connection->connections_ > 0)
 				{
@@ -933,14 +935,16 @@ namespace ImGui
 				}
 
 				// currently we are dragin some output, check if there is a possibilty to connect here (this input)
+				bool is_connectable = false;
 				if (element_.state_ == NodesState_DragingOutput || element_.state_ == NodesState_DragingOutputValid)
 				{
 					// check is draging output are not from the same node
 					// check if this connection is legal (ie does not cause a loop in the graph)
+					is_connectable = geoflow::is_compatible(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get())
+						&& !geoflow::detect_loop(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get());
 					if (	
 						element_.node_ != node.Get() 
-						&& geoflow::is_compatible(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get()) //element_.connection_->type_ == connection->type_ 
-						&& !geoflow::detect_loop(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get())
+						&& is_connectable
 					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -962,7 +966,7 @@ namespace ImGui
 								element_.connection_->connections_++;
 
 								geoflow::connect(*element_.connection_->gf_terminal.get(), *connection->gf_terminal.get());
-								gf_manager.run(connection->gf_terminal->parent);
+								gf_manager.run(connection->gf_terminal->get_parent());
 								// std::cout << "connected " << element_.connection_->name_ << " to " <<connection->name_ <<"\n";
 
 								element_.Reset(NodesState_HoverIO);
@@ -989,7 +993,12 @@ namespace ImGui
 					}
 				}
 
-				drawList->AddCircle(connection_pos, (input_name_size.y / 3.0f), color, ((int)(6.0f * canvas_scale_) + 10), (1.5f * canvas_scale_));
+				if (connection->gf_terminal->has_data())
+					color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
+				else
+					color = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
+
+				drawList->AddCircle(connection_pos, (input_name_size.y / 3.0f), color, ((int)(6.0f * canvas_scale_) + 10), ((consider_io||is_connectable?2:1) * 1.5f * canvas_scale_));
 			}
 
 			////////////////////////////////////////////////////////////////////////////////
@@ -1044,22 +1053,24 @@ namespace ImGui
 
 				////////////////////////////////////////////////////////////////////////////////
 
-				ImColor color = ImColor(0.8f, 0.8f, 0.8f, 1.0f);
+				ImColor color(0.3f, 0.3f, 0.3f, 1.0f);
 
 				if (connection->connections_ > 0)
 				{
-					drawList->AddCircleFilled(connection_pos, (output_name_size.y / 2.5f), ImColor(0.8f, 0.8f, 0.8f, 1.0f));
+					drawList->AddCircleFilled(connection_pos, (output_name_size.y / 2.5f), color);
 				}
 
 				// currently we are dragin some input, check if there is a possibilty to connect here (this output)
+				bool is_connectable = false;
 				if (
 					element_.state_ == NodesState_DragingInput || element_.state_ == NodesState_DragingInputValid)
 				{
 					// check is draging input are not from the same node
+					is_connectable = geoflow::is_compatible(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get()) //element_.connection_->type_ == connection->type_
+						&& !geoflow::detect_loop(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get());
 					if (
 						element_.node_ != node.Get() 
-						&& geoflow::is_compatible(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get()) //element_.connection_->type_ == connection->type_
-						&& !geoflow::detect_loop(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get())
+						&& is_connectable
 					) {
 						color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -1076,7 +1087,7 @@ namespace ImGui
 								element_.connection_->connections_ = 1;
 								
 								geoflow::connect(*connection->gf_terminal.get(), *element_.connection_->gf_terminal.get());
-								gf_manager.run(element_.connection_->gf_terminal->parent);
+								gf_manager.run(element_.connection_->gf_terminal->get_parent());
 								// std::cout << "connected " << connection->name_ << " to " << element_.connection_->name_ << "\n";
 
 								connection->connections_++;
@@ -1105,7 +1116,12 @@ namespace ImGui
 					}
 				}
 
-				drawList->AddCircle(connection_pos, (output_name_size.y / 2.5f), color, ((int)(6.0f * canvas_scale_) + 10), (1.5f * canvas_scale_));
+				if(connection->gf_terminal->has_data())
+					color = ImColor(0.0f, 1.0f, 0.0f, 1.0f);
+				else
+					color = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
+
+				drawList->AddCircle(connection_pos, (output_name_size.y / 2.5f), color, ((int)(6.0f * canvas_scale_) + 10), ((consider_io||is_connectable?2:1) * 1.5f * canvas_scale_));
 			}
 			
 			////////////////////////////////////////////////////////////////////////////////		
@@ -1203,7 +1219,7 @@ namespace ImGui
 			conn_target->connections_++;
 
 			// geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
-			gf_manager.run(conn_target->gf_terminal->parent);
+			gf_manager.run(conn_target->gf_terminal->get_parent());
 		}
 	}
 
@@ -1412,12 +1428,12 @@ namespace ImGui
 			if (element_.node_){
 				// ImGui::Text("element_node: %s", element_.node_->name_.c_str());
 				// ImGui::Text("Inputerminals:");
-				// for (auto& iT : element_.node_->gf_node->inputTerminals) {
+				// for (auto& iT : element_.node_->gf_node->input_terminals) {
 				// 	ImGui::Text("\t%s, data: %i", iT.first.c_str(), iT.second->has_data());
 				// }
 				ImGui::Text("Outputerminals:");
-				for (auto& oT : element_.node_->gf_node->outputTerminals) {
-					ImGui::Text("[%i/%lu] %s", oT.second->has_data(), oT.second->connections.size(), oT.first.c_str());
+				for (auto& oT : element_.node_->gf_node->output_terminals) {
+					ImGui::Text("[%i/%lu] %s", oT.second->has_data(), oT.second->get_connections().size(), oT.first.c_str());
 				}
 			}
 			// if (element_.node_slot0_)

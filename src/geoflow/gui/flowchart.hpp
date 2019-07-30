@@ -154,9 +154,9 @@ namespace ImGui
 			Connection* input_;
 			uint32_t connections_;
 
-			std::shared_ptr<geoflow::Terminal> gf_terminal;
+			std::shared_ptr<geoflow::gfTerminal> gf_terminal;
 
-			Connection(std::shared_ptr<geoflow::Terminal> gf_term)
+			Connection(std::shared_ptr<geoflow::gfTerminal> gf_term)
 			{
 				position_ = ImVec2(0.0f, 0.0f);
 
