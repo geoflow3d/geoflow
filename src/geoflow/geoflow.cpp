@@ -55,8 +55,7 @@ void gfInputTerminal::update_on_receive(bool queue) {
     }
   }
 }
-
-bool gfSingleInputTerminal::has_data() {
+bool gfInputTerminal::has_data() {
   if (auto output_term = connected_output_.lock()) {
     return output_term->has_data();
   }
@@ -107,8 +106,9 @@ void gfOutputTerminal::connect(gfInputTerminal& in) {
     throw gfException("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Loop detected!");
   
   in.connected_output_ = shared_from_this();
-  parent_.on_connect_output(*this);
   connections_.insert(in.get_ptr());
+  parent_.on_connect_output(*this);
+  in.get_parent().on_connect_input(in);
   if (has_data()) {
     in.update_on_receive(false);
   }
@@ -128,6 +128,18 @@ bool gfSingleOutputTerminal::has_data() {
   return data_.has_value();
 }
 
+const std::vector<std::any>& gfMultiInputTerminal::get() {
+  auto output_term = connected_output_.lock();
+  auto sot = (gfMultiOutputTerminal*)(output_term.get());
+  return sot->get();
+}
+
+void gfMultiOutputTerminal::clear() {
+  data_.clear();
+}
+bool gfMultiOutputTerminal::has_data() {
+  return data_.size()!=0;
+}
 
 Node::~Node() {
 //    std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
@@ -181,7 +193,7 @@ bool Node::update_status() {
   auto status_before = status_;
   bool success = true;
   for (auto& [name,iT] : input_terminals) {
-    if (!iT->has_data())
+    if (!iT->has_data() && !iT->is_optional())
       success &= false;
   }
   if (success)

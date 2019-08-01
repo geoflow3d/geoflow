@@ -102,6 +102,7 @@ namespace geoflow {
     const virtual gfTerminalFamily get_family() = 0;
     bool is_optional() { return is_optional_; };
     bool connected_type(std::type_index ttype);
+    bool has_data();
 
     friend class gfOutputTerminal;
     friend class gfSingleOutputTerminal;
@@ -109,15 +110,10 @@ namespace geoflow {
   };
 
   class gfSingleInputTerminal : public gfInputTerminal {
-    private:
-    std::type_index connected_type_ = typeid(void);
-
     public:
     using gfInputTerminal::gfInputTerminal;
     const gfTerminalFamily get_family() { return GF_SINGLE; };
-    std::type_index get_connected_type() { return connected_type_; };
-    template<typename T> T get();
-    bool has_data();
+    template<typename T> const T get();
   };
 
   typedef std::set<std::weak_ptr<gfInputTerminal>, std::owner_less<std::weak_ptr<gfInputTerminal>>> InputConnectionSet;
@@ -153,6 +149,7 @@ namespace geoflow {
   class gfSingleOutputTerminal : public gfOutputTerminal {
     private:
     std::any data_;
+    
     protected:
     void clear();
     std::any& get_data() { return data_; };
@@ -160,21 +157,57 @@ namespace geoflow {
     public:
     using gfOutputTerminal::gfOutputTerminal;
     const gfTerminalFamily get_family() { return GF_SINGLE; };
-    void disconnect();
     bool has_data();
-    template<typename T> void set(T data){
+    template<typename T> T& set(T data){
+      if(!accepts_type(typeid(T)))
+        throw gfException("illegal type for gfSingleOutputTerminal");
       data_ = std::move(data);
+      return std::any_cast<T&>(data_);
     };
-    template<typename T> T get() { return std::any_cast<T>(data_); };
+    template<typename T> T get() { 
+      return std::any_cast<T>(data_); 
+    };
 
     friend class gfSingleInputTerminal;
   };
 
-  template<typename T> T gfSingleInputTerminal::get() {
+  template<typename T> const T gfSingleInputTerminal::get() {
     auto output_term = connected_output_.lock();
     auto sot = (gfSingleOutputTerminal*)(output_term.get());
     return std::any_cast<T>(sot->get_data()); 
   };
+
+  class gfMultiInputTerminal : public gfInputTerminal {    
+    public:
+    using gfInputTerminal::gfInputTerminal;
+    const gfTerminalFamily get_family() { return GF_MULTI; };
+    const std::vector<std::any>& get();
+  };
+
+  class gfMultiOutputTerminal : public gfOutputTerminal {
+    private:
+    std::vector<std::any> data_;
+
+    protected:
+    void clear();
+
+    public:
+    using gfOutputTerminal::gfOutputTerminal;
+    const gfTerminalFamily get_family() { return GF_MULTI; };
+    bool has_data();
+
+    template<typename T> void push_back(T data) {
+      if(!accepts_type(typeid(T)))
+        throw gfException("illegal type for gfMultiOutputTerminal");
+      data_.push_back(std::move(data));
+    };
+    size_t size() { return data_.size(); };
+    std::vector<std::any>& get() { return data_; };
+
+    friend class gfMultiInputTerminal;
+  };
+
+
 
   class Node : public std::enable_shared_from_this<Node> {
     public:
@@ -238,7 +271,7 @@ namespace geoflow {
       // }
     }
 
-    gfNodeStatus status_=GF_NODE_WAITING;
+    gfNodeStatus status_ = GF_NODE_WAITING;
 
     void add_input(std::string name, std::type_index type);
     void add_input(std::string name, std::initializer_list<std::type_index> types);
@@ -289,7 +322,7 @@ namespace geoflow {
     virtual void on_receive(gfInputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
     virtual void on_waiting(gfInputTerminal& it){};
-    virtual void on_connect_input(InputTerminal& ot){};
+    virtual void on_connect_input(gfInputTerminal& ot){};
     virtual void on_connect_output(gfOutputTerminal& ot){};
     virtual void on_change_parameter(std::string name, ParameterVariant& param){};
     virtual void before_gui(){};
