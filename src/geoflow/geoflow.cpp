@@ -34,33 +34,41 @@ bool gfTerminal::accepts_type(std::type_index ttype) {
   return false;
 }
 
-bool gfInputTerminal::connected_type(std::type_index ttype) {
+gfMonoInputTerminal::~gfMonoInputTerminal(){
+  if (auto connected_output = connected_output_.lock())
+    connected_output->connections_.erase(get_ptr());
+}
+bool gfMonoInputTerminal::connected_type(std::type_index ttype) {
   if(auto output_term = connected_output_.lock()) {
     return output_term->accepts_type(ttype);
   }
   return false;
 }
 
-
 void gfInputTerminal::clear() {
   parent_.update_status();
   parent_.on_waiting(*this);
 }
-void gfInputTerminal::update_on_receive(bool queue) {
-  if (auto output_term = connected_output_.lock()) {
-    if (output_term->has_data()) {
-      if (queue && parent_.update_status()) 
-        parent_.queue();
-      parent_.on_receive(*this);
-    }
+void gfMonoInputTerminal::update_on_receive(bool queue) {
+  if(has_data()) {
+    if (queue && parent_.update_status()) 
+      parent_.queue();
+    parent_.on_receive(*this);
   }
 }
-bool gfInputTerminal::has_data() {
+bool gfMonoInputTerminal::has_data() {
   if (auto output_term = connected_output_.lock()) {
     return output_term->has_data();
   }
   return false;
 }
+void gfMonoInputTerminal::connect_output(gfOutputTerminal& output_term) {
+  connected_output_ = output_term.get_ptr();
+}
+void gfMonoInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
+  connected_output_.reset();
+}
+
 
 gfOutputTerminal::~gfOutputTerminal() {
   for(auto& conn : connections_) {
@@ -70,14 +78,23 @@ gfOutputTerminal::~gfOutputTerminal() {
   }
 }
 bool gfOutputTerminal::is_compatible(gfInputTerminal& input_terminal) {
-  bool type_compatible = false;
-  for (auto& in_type : input_terminal.get_types()) {
-    if (get_type() == in_type) {
-      type_compatible = true;
-      break;
-    }
+  bool type_compatible = true;
+  // ensure that each output type of this terminal can be handles by the input_terminal
+  if (input_terminal.get_family() == GF_POLY) {
+    for (auto& out_type : get_types()) {
+      bool in_type_found = false;
+      for (auto& in_type : input_terminal.get_types()) {
+        if (in_type == out_type) {
+          bool in_type_found = true;
+          break;
+        }
+      }
+      type_compatible &= in_type_found;
+    }  
   }
-  return get_family()==input_terminal.get_family() && type_compatible;
+  // Everything can  be connected to a POLY input, otherwise the families need to be equal
+  bool family_compatible = (get_family()==input_terminal.get_family()) || (input_terminal.get_family() == GF_POLY);
+  return family_compatible && type_compatible;
 }
 const InputConnectionSet& gfOutputTerminal::get_connections(){
   return connections_;
@@ -102,10 +119,10 @@ void gfOutputTerminal::connect(gfInputTerminal& in) {
   if (!is_compatible(in))
     throw gfException("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Terminals have incompatible types!");
     
-  if (detect_loop(*this, *in.get_ptr().lock()))
+  if (detect_loop(*this, in))
     throw gfException("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Loop detected!");
-  
-  in.connected_output_ = shared_from_this();
+
+  in.connect_output(*this);
   connections_.insert(in.get_ptr());
   parent_.on_connect_output(*this);
   in.get_parent().on_connect_input(in);
@@ -115,31 +132,75 @@ void gfOutputTerminal::connect(gfInputTerminal& in) {
 };
 void gfOutputTerminal::disconnect(gfInputTerminal& in) {
   connections_.erase(in.get_ptr());
-  // clear data to enforce a new connection must be made to this input terminal before the parent_ node can use it
-  in.connected_output_.reset();
+  in.disconnect_output(*this);
   in.clear();
   in.parent_.notify_children();
 };
 
-void gfSingleOutputTerminal::clear() {
+void gfBasicMonoOutputTerminal::clear() {
   data_.reset();
 }
-bool gfSingleOutputTerminal::has_data() {
+bool gfBasicMonoOutputTerminal::has_data() {
   return data_.has_value();
 }
 
-const std::vector<std::any>& gfMultiInputTerminal::get() {
+const std::vector<std::any>& gfVectorMonoInputTerminal::get() {
   auto output_term = connected_output_.lock();
-  auto sot = (gfMultiOutputTerminal*)(output_term.get());
+  auto sot = (gfVectorMonoOutputTerminal*)(output_term.get());
   return sot->get();
 }
 
-void gfMultiOutputTerminal::clear() {
+void gfVectorMonoOutputTerminal::clear() {
   data_.clear();
 }
-bool gfMultiOutputTerminal::has_data() {
+bool gfVectorMonoOutputTerminal::has_data() {
   return data_.size()!=0;
 }
+
+gfPolyInputTerminal::~gfPolyInputTerminal(){
+  for (auto output_term_ : connected_outputs_) {
+    if(auto output_term = output_term_.lock())
+      output_term->connections_.erase(get_ptr());
+  }
+}
+void gfPolyInputTerminal::connect_output(gfOutputTerminal& output_term) {
+  connected_outputs_.insert(output_term.get_ptr());
+}
+void gfPolyInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
+  connected_outputs_.erase(output_term.get_ptr());
+}
+void gfPolyInputTerminal::update_on_receive(bool queue) {
+  if (!has_data())
+    return;
+  if (queue && parent_.update_status()) 
+    parent_.queue();
+  parent_.on_receive(*this);
+}
+bool gfPolyInputTerminal::has_data() {
+  for (auto output_term_ : connected_outputs_){
+    if (auto output_term = output_term_.lock()) {
+      if (!output_term->has_data()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void gfPolyOutputTerminal::clear() {
+  // for (auto& [name, t] : terminals_) {
+  //   t->clear();
+  // }
+  terminals_.clear();
+}
+bool gfPolyOutputTerminal::has_data() {
+  for (auto& [name, t] : terminals_) {
+    if(!t->has_data())
+      return false;
+  }
+  return true;
+}
+
 
 Node::~Node() {
 //    std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
@@ -172,7 +233,7 @@ const ParameterMap& Node::dump_params() {
 }
 void Node::add_input(std::string name, std::initializer_list<std::type_index> types) {
   // TODO: check if name is unique key in input_terminals map
-  input_terminals[name] = std::make_shared<gfSingleInputTerminal>(
+  input_terminals[name] = std::make_shared<gfBasicMonoInputTerminal>(
     *this, name, types
   );
 }
@@ -180,7 +241,7 @@ void Node::add_input(std::string name, std::type_index type) {
   add_input(name, {type});
 }
 void Node::add_output(std::string name, std::type_index type) {
-  output_terminals[name] = std::make_shared<gfSingleOutputTerminal>(
+  output_terminals[name] = std::make_shared<gfBasicMonoOutputTerminal>(
     *this, name, type
   );
 }

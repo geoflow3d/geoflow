@@ -250,7 +250,7 @@ namespace geoflow::nodes::gui {
       }
     }
 
-    void on_receive(gfInputTerminal& t) {
+    void on_receive(gfMonoInputTerminal& t) {
       // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
       if(t.has_data() && painter->is_initialised()) {
         if(input_terminals["geometries"].get() == &t) {

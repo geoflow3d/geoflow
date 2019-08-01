@@ -54,10 +54,10 @@ namespace geoflow {
   typedef std::shared_ptr<Node> NodeHandle;
   
   class gfOutputTerminal;
-  class gfSingleOutputTerminal;
+  class gfBasicMonoOutputTerminal;
 
   enum gfIO {GF_IN, GF_OUT};
-  enum gfTerminalFamily {GF_SINGLE, GF_MULTI, GF_GROUP};
+  enum gfTerminalFamily {GF_BASIC, GF_VECTOR, GF_POLY};
   enum gfNodeStatus {GF_NODE_WAITING, GF_NODE_READY, GF_NODE_PROCESSING, GF_NODE_DONE};
 
   class gfTerminal : public gfObject {
@@ -84,12 +84,13 @@ namespace geoflow {
     bool is_optional_;
 
     protected:
-    std::weak_ptr<gfOutputTerminal> connected_output_;
     std::weak_ptr<gfInputTerminal>  get_ptr(){
       return weak_from_this();
     }
     void clear();
-    void update_on_receive(bool queue);
+    virtual void update_on_receive(bool queue) = 0;
+    virtual void connect_output(gfOutputTerminal& output_term) = 0;
+    virtual void disconnect_output(gfOutputTerminal& output_term) = 0;
 
     public:
     gfInputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types, bool is_optional=false)
@@ -98,22 +99,32 @@ namespace geoflow {
     gfInputTerminal(Node& parent_gnode, std::string name, std::type_index type, bool is_optional=false)
       : gfInputTerminal(parent_gnode, name, {type}, is_optional)
       {};
+    virtual ~gfInputTerminal() {};
     const gfIO get_side() { return GF_IN; };
     const virtual gfTerminalFamily get_family() = 0;
     bool is_optional() { return is_optional_; };
-    bool connected_type(std::type_index ttype);
-    bool has_data();
+    virtual bool has_data() = 0;
 
     friend class gfOutputTerminal;
-    friend class gfSingleOutputTerminal;
+    friend class gfBasicMonoOutputTerminal;
+    friend class gfMonoOutputTerminal;
     friend class Node;
   };
 
-  class gfSingleInputTerminal : public gfInputTerminal {
+  class gfMonoInputTerminal : public gfInputTerminal {
+    protected:
+    std::weak_ptr<gfOutputTerminal> connected_output_;
+    void update_on_receive(bool queue);
+    void connect_output(gfOutputTerminal& output_term);
+    void disconnect_output(gfOutputTerminal& output_term);
+
     public:
     using gfInputTerminal::gfInputTerminal;
-    const gfTerminalFamily get_family() { return GF_SINGLE; };
-    template<typename T> const T get();
+    ~gfMonoInputTerminal();
+    bool connected_type(std::type_index ttype);
+    bool has_data();
+
+    friend class gfMonoOutputTerminal;
   };
 
   typedef std::set<std::weak_ptr<gfInputTerminal>, std::owner_less<std::weak_ptr<gfInputTerminal>>> InputConnectionSet;
@@ -125,8 +136,8 @@ namespace geoflow {
     }
     InputConnectionSet connections_;
 
+    std::set<NodeHandle> get_child_nodes();
     virtual void propagate();
-    virtual std::set<NodeHandle> get_child_nodes();
     virtual void clear() = 0;
 
     public:
@@ -134,19 +145,36 @@ namespace geoflow {
       : gfTerminal(parent_gnode, {type}, name)
     {}
     ~gfOutputTerminal();
-    virtual bool is_compatible(gfInputTerminal& input_terminal);
     const InputConnectionSet& get_connections();
-    const std::type_index& get_type() { return types_[0]; };
     const gfIO get_side() { return GF_OUT; };
     const virtual gfTerminalFamily get_family() = 0;
+    
+    bool is_compatible(gfInputTerminal& input_terminal);
     void connect(gfInputTerminal& in);
     void disconnect(gfInputTerminal& in);
 
     friend class Node;
     friend class gfInputTerminal;
+    friend class gfGroupOutputTerminal;
+    friend class gfMonoInputTerminal;
+    friend class gfPolyInputTerminal;
   };
 
-  class gfSingleOutputTerminal : public gfOutputTerminal {
+  class gfMonoOutputTerminal : public gfOutputTerminal {
+    public:
+    using gfOutputTerminal::gfOutputTerminal;
+    const std::type_index& get_type() { return types_[0]; };
+  };
+
+
+  class gfBasicMonoInputTerminal : public gfMonoInputTerminal {
+    public:
+    using gfMonoInputTerminal::gfMonoInputTerminal;
+    const gfTerminalFamily get_family() { return GF_BASIC; };
+    template<typename T> const T get();
+  };
+
+  class gfBasicMonoOutputTerminal : public gfMonoOutputTerminal {
     private:
     std::any data_;
     
@@ -155,12 +183,12 @@ namespace geoflow {
     std::any& get_data() { return data_; };
 
     public:
-    using gfOutputTerminal::gfOutputTerminal;
-    const gfTerminalFamily get_family() { return GF_SINGLE; };
+    using gfMonoOutputTerminal::gfMonoOutputTerminal;
+    const gfTerminalFamily get_family() { return GF_BASIC; };
     bool has_data();
     template<typename T> T& set(T data){
       if(!accepts_type(typeid(T)))
-        throw gfException("illegal type for gfSingleOutputTerminal");
+        throw gfException("illegal type for gfBasicMonoOutputTerminal");
       data_ = std::move(data);
       return std::any_cast<T&>(data_);
     };
@@ -168,23 +196,25 @@ namespace geoflow {
       return std::any_cast<T>(data_); 
     };
 
-    friend class gfSingleInputTerminal;
+    friend class gfBasicMonoInputTerminal;
+    friend class gfPolyOutputTerminal;
   };
 
-  template<typename T> const T gfSingleInputTerminal::get() {
+  template<typename T> const T gfBasicMonoInputTerminal::get() {
     auto output_term = connected_output_.lock();
-    auto sot = (gfSingleOutputTerminal*)(output_term.get());
+    auto sot = (gfBasicMonoOutputTerminal*)(output_term.get());
     return std::any_cast<T>(sot->get_data()); 
   };
 
-  class gfMultiInputTerminal : public gfInputTerminal {    
+
+  class gfVectorMonoInputTerminal : public gfMonoInputTerminal {    
     public:
-    using gfInputTerminal::gfInputTerminal;
-    const gfTerminalFamily get_family() { return GF_MULTI; };
+    using gfMonoInputTerminal::gfMonoInputTerminal;
+    const gfTerminalFamily get_family() { return GF_VECTOR; };
     const std::vector<std::any>& get();
   };
 
-  class gfMultiOutputTerminal : public gfOutputTerminal {
+  class gfVectorMonoOutputTerminal : public gfMonoOutputTerminal {
     private:
     std::vector<std::any> data_;
 
@@ -192,22 +222,61 @@ namespace geoflow {
     void clear();
 
     public:
-    using gfOutputTerminal::gfOutputTerminal;
-    const gfTerminalFamily get_family() { return GF_MULTI; };
+    using gfMonoOutputTerminal::gfMonoOutputTerminal;
+    const gfTerminalFamily get_family() { return GF_VECTOR; };
     bool has_data();
 
     template<typename T> void push_back(T data) {
       if(!accepts_type(typeid(T)))
-        throw gfException("illegal type for gfMultiOutputTerminal");
+        throw gfException("illegal type for gfVectorMonoOutputTerminal");
       data_.push_back(std::move(data));
     };
     size_t size() { return data_.size(); };
     std::vector<std::any>& get() { return data_; };
 
-    friend class gfMultiInputTerminal;
+    friend class gfVectorMonoInputTerminal;
   };
 
+  typedef std::set<std::weak_ptr<gfOutputTerminal>, std::owner_less<std::weak_ptr<gfOutputTerminal>>> OutputConnectionSet;
+  class gfPolyInputTerminal : public gfInputTerminal {
+    protected:
+    // void clear();
+    OutputConnectionSet connected_outputs_;
+    
+    void update_on_receive(bool queue);
+    void connect_output(gfOutputTerminal& output_term);
+    void disconnect_output(gfOutputTerminal& output_term);
+    
+    public:
+    using gfInputTerminal::gfInputTerminal;
+    ~gfPolyInputTerminal();
+    const gfTerminalFamily get_family() { return GF_POLY; };
+    bool has_data();
+  };
 
+  class gfPolyOutputTerminal : public gfOutputTerminal {
+    protected:
+    std::map<std::string,std::shared_ptr<gfMonoOutputTerminal>> terminals_;
+    // bool is_propagated_=false;
+    // void propagate(); ?
+    void clear();
+
+    public:
+    using gfOutputTerminal::gfOutputTerminal;
+    const gfTerminalFamily get_family() { return GF_POLY; };
+    bool has_data();
+
+    void connect(gfInputTerminal& in);
+    void disconnect(gfInputTerminal& in);
+
+    // gfBasicMonoOutputTerminal& add(std::string term_name, std::type_index type) {
+    //   // TODO: check if term_name is unique and if type is in types
+    //   terminals_[term_name] = std::make_shared<gfBasicMonoOutputTerminal>(parent_, term_name, type);
+    //   return *terminals_[term_name];
+    // }
+
+    friend class gfPolyInputTerminal;
+  };
 
   class Node : public std::enable_shared_from_this<Node> {
     public:
@@ -226,18 +295,18 @@ namespace geoflow {
 
     void remove_from_manager();
 
-    gfSingleInputTerminal& input(std::string term_name) {
+    gfBasicMonoInputTerminal& input(std::string term_name) {
       if (input_terminals.find(term_name) == input_terminals.end()) {
         throw gfException("No such input terminal - \""+term_name+"\" in " + get_name());
       }
-      auto input_term = (gfSingleInputTerminal*) (input_terminals[term_name].get());
+      auto input_term = (gfBasicMonoInputTerminal*) (input_terminals[term_name].get());
       return *input_term;
     }
-    gfSingleOutputTerminal& output(std::string term_name) {
+    gfBasicMonoOutputTerminal& output(std::string term_name) {
       if (output_terminals.find(term_name) == output_terminals.end()) {
         throw gfException("No such output terminal - \""+term_name+"\" in " + get_name());
       }
-      auto output_term = (gfSingleOutputTerminal*) (output_terminals[term_name].get());
+      auto output_term = (gfBasicMonoOutputTerminal*) (output_terminals[term_name].get());
       return *output_term;
     }
     // template<typename T> T& param(std::string name) {
@@ -319,7 +388,8 @@ namespace geoflow {
     // virtual ParameterMap init_parameters() {};
     virtual void process() = 0;
     virtual void gui() {};
-    virtual void on_receive(gfInputTerminal& it){};
+    virtual void on_receive(gfMonoInputTerminal& it){};
+    virtual void on_receive(gfPolyInputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
     virtual void on_waiting(gfInputTerminal& it){};
     virtual void on_connect_input(gfInputTerminal& ot){};
@@ -439,7 +509,7 @@ namespace geoflow {
   bool connect(Node& n1, Node& n2, std::string s1, std::string s2);
   bool connect(NodeHandle n1, NodeHandle n2, std::string s1, std::string s2);
   bool connect(gfTerminal& t1, gfTerminal& t2);
-  bool connect(OutputGroup& in, InputGroup& out);
+  // bool connect(OutputGroup& in, InputGroup& out);
   bool is_compatible(gfTerminal& t1, gfTerminal& t2);
   void disconnect(gfTerminal& t1, gfTerminal& t2);
   bool detect_loop(gfTerminal& t1, gfTerminal& t2);
