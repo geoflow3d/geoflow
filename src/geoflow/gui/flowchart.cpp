@@ -8,6 +8,7 @@
 
 #include "flowchart.hpp"
 #include "osdialog.hpp"
+#include "parameter_widgets.hpp"
 #include <tuple>
 
 namespace ImGui
@@ -18,11 +19,17 @@ namespace ImGui
 		id_ = 0;
 		element_.Reset();
 		canvas_scale_ = 1.0f;
-		auto R = geoflow::NodeRegister::create("Visualisation");
-		R->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
-    R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
-    R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
-		registers.emplace(R);
+
+		// ensure visualisation nodes are available
+		if(registers.find("Visualisation")==registers.end()) {
+			auto R = geoflow::NodeRegister::create("Visualisation");
+			R->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
+			R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
+			R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
+			R->register_node<geoflow::nodes::gui::CubeNode>("Cube");
+			R->register_node<geoflow::nodes::gui::TriangleNode>("Triangle");
+			registers.emplace(R);
+		}
 	}
 
 	Nodes::~Nodes()
@@ -145,7 +152,7 @@ namespace ImGui
 		node->position_ = pos;
 
 		if (gf_node->get_type_name()=="Painter") {
-			auto& painter_node = dynamic_cast<geoflow::nodes::gui::PainterNode&>(*gf_node);
+			auto& painter_node = static_cast<geoflow::nodes::gui::PainterNode&>(*gf_node);
 			painter_node.add_to(pv_app, gf_node->get_name());
 		}
 
@@ -1126,10 +1133,15 @@ namespace ImGui
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save to JSON", "Ctrl+S")) {
+					#ifndef __APPLE__
 					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
+					#else
+					std::optional<std::string> result = "flowchart.json";
+					#endif
 					if (result.has_value()) {
 						for (auto& node : nodes_) {
-							node->gf_node->position = node->position_+node->size_/2;
+							ImVec2 new_position = node->position_+node->size_/2;
+							node->gf_node->set_position(new_position.x, new_position.y);
 						}
 						gf_manager.dump_json(result.value());
 					}
@@ -1162,7 +1174,8 @@ namespace ImGui
 
 	void Nodes::CreateNodesFromHandles(std::vector<geoflow::NodeHandle> node_vec) {
 		for(auto& gf_node : node_vec){
-			CreateNodeFromHandle(gf_node->position, gf_node);
+			 auto pos = gf_node->get_position();
+			CreateNodeFromHandle(ImVec2(pos.first, pos.second), gf_node);
 		}
 	
 		// map all nodes and input/output ports
@@ -1189,7 +1202,7 @@ namespace ImGui
 			conn_source->connections_++;
 			conn_target->connections_++;
 
-			geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
+			// geoflow::connect(*conn_source->gf_terminal.get(), *conn_target->gf_terminal.get());
 			gf_manager.run(conn_target->gf_terminal->parent);
 		}
 	}
@@ -1332,9 +1345,15 @@ namespace ImGui
 			{
 				auto node = element_.node_slot0_->gf_node;
 				element_.Reset(NodesState_Block);
-				ImGui::Text("%s", node->get_info().c_str());
-				ImGui::Text("position: %.2f, %.2f", element_.node_slot0_->position_.x, element_.node_slot0_->position_.y);
-				node->gui();
+				ImGui::Text("%s", node->debug_info().c_str());
+				// ImGui::Text("position: %.2f, %.2f", element_.node_slot0_->position_.x, element_.node_slot0_->position_.y);
+				// node->gui();
+				if (node->get_register().get_name() == "Visualisation") {
+					node->gui();
+				} else { 
+					geoflow::draw_parameters(node);
+					ImGui::Text("%s", node->info().c_str());
+				}
 				if (ImGui::MenuItem("Run")) {		
 					gf_manager.run(*node);
 				}

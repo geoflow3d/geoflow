@@ -36,25 +36,20 @@
 #include <iostream>
 #include <sstream>
 
-#include "../common.hpp"
-#include "imgui.h"
-#include "misc/cpp/imgui_stdlib.h"
-
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
+#include "common.hpp"
+#include "parameters.hpp"
 
 namespace geoflow {
 
   class Exception: public std::exception
   {
   public:
-      explicit Exception(const std::string& message):
-        msg_(message)
-        {}
-      virtual const char* what() const throw (){
-        return msg_.c_str();
-      }
+    explicit Exception(const std::string& message):
+      msg_(message)
+      {}
+    virtual const char* what() const throw (){
+      return msg_.c_str();
+    }
 
   protected:
       std::string msg_;
@@ -71,8 +66,8 @@ namespace geoflow {
   // typedef std::weak_ptr<InputTerminal> InputHandle;
   // typedef std::weak_ptr<OutputTerminal> OutputHandle;
 
-  typedef std::variant<bool,int,float,std::string> Parameter;
-  typedef std::unordered_map<std::string, Parameter> ParameterMap;
+  
+  
   typedef std::shared_ptr<Node> NodeHandle;
   
   class Terminal {
@@ -132,6 +127,7 @@ namespace geoflow {
       return weak_from_this();
     }
 
+    void set_type(std::type_index t);
     bool is_compatible(InputTerminal& in);
     void connect(InputTerminal& in);
     void disconnect(InputTerminal& in);
@@ -216,7 +212,7 @@ namespace geoflow {
     std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
 
     ParameterMap parameters;
-    ImVec2 position;
+    arr2f position;
 
     Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
     ~Node();
@@ -235,9 +231,9 @@ namespace geoflow {
       }
       return *outputTerminals[term_name];
     }
-    template<typename T> T& param(std::string name) {
-      return std::get<T>(parameters.at(name));
-    }
+    // template<typename T> T& param(std::string name) {
+    //   return std::get<T>(parameters.at(name));
+    // }
     InputGroup& input_group(std::string group_name){
       return *inputGroups.at(group_name);
     }
@@ -284,18 +280,18 @@ namespace geoflow {
     }
 
     template<typename T> void add_param(std::string name, T value) {
-      parameters[name] = value;
+      parameters.emplace(name, value);
     }
-    void set_param(std::string name, Parameter param, bool quiet=false);
+    void set_param(std::string name, ParameterVariant param, bool quiet=false);
     void set_params(ParameterMap param_map, bool quiet=false);
     const ParameterMap&  dump_params();
 
     void set_position(float x, float y) {
-      position.x=x;
-      position.y=y;
+      position[0]=x;
+      position[1]=y;
     }
     std::pair<float,float> get_position() {
-      return std::make_pair(position.x, position.y);
+      return std::make_pair(position[0], position[1]);
     }
 
     NodeHandle get_handle(){return shared_from_this();};
@@ -308,18 +304,24 @@ namespace geoflow {
     // private:
 
     virtual void init() = 0;
+    // virtual std::map<std::string,std::shared_ptr<InputTerminal>> init_inputs() {};
+    // virtual std::map<std::string,std::shared_ptr<OutputTerminal>> init_outputs() {};
+    // virtual ParameterMap init_parameters() {};
     virtual void process() = 0;
-    virtual void gui(){};
+    virtual void gui() {};
     virtual void on_push(InputTerminal& it){};
     virtual void on_clear(InputTerminal& it){};
-    virtual void on_connect(OutputTerminal& ot){};
+    virtual void on_connect_input(InputTerminal& ot){};
+    virtual void on_connect_output(OutputTerminal& ot){};
+    virtual void on_change_parameter(std::string name, ParameterVariant& param){};
+    virtual void before_gui(){};
+    virtual std::string info() {return std::string();};
 
-    std::string get_info();
+    std::string debug_info();
     const std::string get_name() { return name; };
     const std::string get_type_name() { return type_name; };
     const NodeRegister& get_register() { return *node_register; };
     bool set_name(std::string new_name);
-    json dump_json();
 
     protected:
     std::string name;
@@ -332,10 +334,10 @@ namespace geoflow {
 
   class NodeRegister : public std::enable_shared_from_this<NodeRegister> {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
-    private:
-    NodeRegister(const std::string& name):name(name) {};
-    NodeRegister();
+    // private:
     public:
+    NodeRegister(const std::string& name) : name(name) {};
+    NodeRegister();
 
     template<typename ... T> static NodeRegisterHandle create(T&& ... t) {
       return std::shared_ptr<NodeRegister>(new NodeRegister(std::forward<T>(t)...));

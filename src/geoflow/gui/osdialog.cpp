@@ -22,13 +22,17 @@ std::optional<std::string> osdialog_file(osdialog_file_action action, const char
 
 namespace ImGui {
 
-  void FilePicker(osdialog_file_action action, std::string& picked_file, const char* filters) {
+  bool FilePicker(osdialog_file_action action, std::string& picked_file, const char* filters) {
+    bool changed = false;
     if (ImGui::Button("Open")) {
       auto result = osdialog_file(action, nullptr, filters);
-      if (result.has_value())
+      if (result.has_value()) {
         picked_file = result.value();
+        changed = true;
+      }
     }
     ImGui::SameLine();
-    ImGui::Text("%s", picked_file.c_str());
+    ImGui::InputText("", &picked_file);
+    return changed;
   }
 }

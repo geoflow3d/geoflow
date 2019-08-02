@@ -20,7 +20,7 @@
 #include <geoflow/gui/flowchart.hpp>
 #include <geoflow/gui/osdialog.hpp>
 
-#include "basic_nodes.hpp"
+#include "Arithmetic/nodes.hpp"
 
 // #include <nlohmann/json.hpp>
 

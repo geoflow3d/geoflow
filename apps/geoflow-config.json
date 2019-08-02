@@ -1,0 +1,6 @@
+{
+  "node-libs": [
+    "/Users/ravi/git/geoflow-plugin-template/build/libgf_plugin_example.dylib",
+    "/Users/ravi/git/geoflow-nodes/build/modules/gdal/libgdal_plugin.dylib"
+  ]
+}

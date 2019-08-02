@@ -20,6 +20,9 @@
 
 #include "geoflow.hpp"
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 using namespace geoflow;
   // TODO: what happens if connect several output terminals to 1 input terminal? -> should clear other connections to same input terminal
   void InputTerminal::push(std::any data) {
@@ -77,7 +80,7 @@ using namespace geoflow;
       throw Exception("Failed to connect ouput " +get_name()+ " from "+parent.get_name()+" to input " + in.get_name() + " from " +in.parent.get_name()+ ". Loop detected!");
     
     in.connected_type = type;
-    parent.on_connect(*this);
+    parent.on_connect_output(*this);
     connections.insert(in.get_ptr());
     if (has_data()) {
       in.push(cdata);
@@ -89,6 +92,11 @@ using namespace geoflow;
     in.clear();
     in.parent.notify_children();
   }
+  void OutputTerminal::set_type(std::type_index t) {
+    // TODO: disconnect incompatible connections, also in gui
+    type=t;
+  };
+
 
   void OutputGroup::connect(InputGroup& ig) {
       connections.insert(ig.get_ptr());
@@ -134,11 +142,11 @@ using namespace geoflow;
   bool Node::set_name(std::string new_name) { 
     return manager.name_node(get_handle(), new_name); 
   };
-  void Node::set_param(std::string name, Parameter param, bool quiet) {
+  void Node::set_param(std::string name, ParameterVariant param, bool quiet) {
     if (parameters.find(name) != parameters.end()) {
-      if(parameters[name].index() == param.index())
-        parameters[name] = param;
-      else {
+      if(parameters.at(name).index() == param.index()) {
+        parameters.emplace(name, param);
+      } else {
         std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
       }
     } else if(!quiet) {
@@ -226,7 +234,7 @@ using namespace geoflow;
 
     }
   }
-  std::string Node::get_info() {
+  std::string Node::debug_info() {
     std::stringstream s;
     s << "status: ";
     switch (status) {
@@ -238,33 +246,6 @@ using namespace geoflow;
     }
     s << "\n";
     return s.str();
-  }
-  json Node::dump_json() {
-    json n;
-    n["type"] = {node_register->get_name(), get_type_name()};
-    n["position"] = {position.x, position.y};
-    for ( const auto& [pname, pvalue] : parameters ) {
-      if (std::holds_alternative<bool>(pvalue))
-        n["parameters"][pname] = param<bool>(pname);
-      else if (std::holds_alternative<int>(pvalue))
-        n["parameters"][pname] = param<int>(pname);
-      else if (std::holds_alternative<float>(pvalue))
-        n["parameters"][pname] = param<float>(pname);
-      else if (std::holds_alternative<std::string>(pvalue))
-        n["parameters"][pname] = param<std::string>(pname);
-    }
-
-    for (const auto& [name, oTerm] : outputTerminals) {
-      std::vector<std::pair<std::string, std::string>> connection_vec;
-      if(oTerm->connections.size() > 0) {
-        for (auto& conn : oTerm->connections) {
-          if (auto iTerm = conn.lock())
-            connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
-        }
-        n["connections"][name] = connection_vec;
-      }
-    }
-    return n;
   }
 
   void NodeManager::queue(std::shared_ptr<Node> n) {
@@ -345,18 +326,59 @@ using namespace geoflow;
   void NodeManager::dump_json(std::string filepath) {
     json j;
     j["nodes"] = json::object();
-    for (auto& [name, handle] : nodes) {
-      j["nodes"][name] = handle->dump_json();
+    for (auto& [name, node_handle] : nodes) {
+      json n;
+      n["type"] = {node_handle->node_register->get_name(), node_handle->get_type_name()};
+      n["position"] = {node_handle->position[0], node_handle->position[1]};
+      for ( auto& [pname, pvalue] : node_handle->parameters ) {
+        if (auto ptr = std::get_if<ParamBool>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamInt>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamFloat>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamDouble>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamBoundedDouble>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamBoundedInt>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamBoundedFloat>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamIntRange>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamFloatRange>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else if (auto ptr = std::get_if<ParamPath>(&pvalue))
+          n["parameters"][pname] = ptr->get();
+        else
+          std::cerr << "Parameter '" << pname << "' has an unknown type and is not serialised!\n";
+      }
+      for (const auto& [name, oTerm] : node_handle->outputTerminals) {
+        std::vector<std::pair<std::string, std::string>> connection_vec;
+        if(oTerm->connections.size() > 0) {
+          for (auto& conn : oTerm->connections) {
+            if (auto iTerm = conn.lock())
+              connection_vec.push_back(std::make_pair(iTerm->parent.get_name(), iTerm->get_name()));
+          }
+          n["connections"][name] = connection_vec;
+        }
+      }
+      j["nodes"][name] = n;
     }
     std::ofstream o(filepath);
     o << std::setw(2) << j << std::endl;
   }
   std::vector<NodeHandle> NodeManager::load_json(std::string filepath, NodeRegisterMap& registers) {
     json j;
+    std::vector<NodeHandle> new_nodes;
     std::ifstream i(filepath);
+    if (i.peek() == std::ifstream::traits_type::eof()) {
+      std::cout << "bad json file\n";
+      return new_nodes;
+    }
     i >> j;
     json nodes_j = j["nodes"];
-    std::vector<NodeHandle> new_nodes;
     for (auto node_j : nodes_j.items()) {
       auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
       if (registers.count(tt[0])) {
@@ -368,14 +390,31 @@ using namespace geoflow;
         if (node_j.value().count("parameters")) {
           auto params_j = node_j.value().at("parameters");
           for (auto& pel : params_j.items()) {
-            if (std::holds_alternative<bool>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<bool>());
-            else if (std::holds_alternative<int>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<int>());
-            else if (std::holds_alternative<float>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<float>());
-            else if (std::holds_alternative<std::string>(nhandle->parameters[pel.key()]))
-              nhandle->set_param(pel.key(), pel.value().get<std::string>());
+            if(!nhandle->parameters.count(pel.key())) {
+              std::cerr << "key not found in node parameters: " << pel.key() << "\n";
+              continue;
+            }
+
+            if (auto param_ptr = std::get_if<ParamBool>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<bool>());
+            else if (auto param_ptr = std::get_if<ParamInt>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<int>());
+            else if (auto param_ptr = std::get_if<ParamFloat>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<float>());
+            else if (auto param_ptr = std::get_if<ParamDouble>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<double>());
+            else if (auto param_ptr = std::get_if<ParamBoundedInt>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<int>());
+            else if (auto param_ptr = std::get_if<ParamBoundedFloat>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<float>());
+            else if (auto param_ptr = std::get_if<ParamBoundedDouble>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<double>());
+            else if (auto param_ptr = std::get_if<ParamIntRange>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<std::pair<int,int>>());
+            else if (auto param_ptr = std::get_if<ParamFloatRange>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<std::pair<float,float>>());
+            else if (auto param_ptr = std::get_if<ParamPath>(&nhandle->parameters.at(pel.key())))
+              param_ptr->set(pel.value().get<std::string>());
           }
         }
       } else {
@@ -418,8 +457,8 @@ using namespace geoflow;
     return geoflow::connect(n1->output(s1), n2->input(s2));
   }
   bool geoflow::connect(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     return geoflow::connect(oT, iT);
   }
 //  bool geoflow::connect(TerminalGroup<OutputTerminal> input_group, TerminalGroup<InputTerminal> output_group) {
@@ -432,18 +471,18 @@ using namespace geoflow;
 //    return true;
 //  }
   bool geoflow::is_compatible(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     return oT.is_compatible(iT);
   }
   void geoflow::disconnect(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     oT.disconnect(iT);
   }
   bool geoflow::detect_loop(Terminal& t1, Terminal& t2) {
-    auto& oT = dynamic_cast<OutputTerminal&>(t1);
-    auto& iT = dynamic_cast<InputTerminal&>(t2);
+    auto& oT = static_cast<OutputTerminal&>(t1);
+    auto& iT = static_cast<InputTerminal&>(t2);
     return detect_loop(oT, iT);
   }
   bool geoflow::detect_loop(OutputTerminal& outputT, InputTerminal& inputT) {

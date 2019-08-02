@@ -20,8 +20,6 @@
 #include <vector>
 #include <array>
 #include <optional>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace geoflow {
 
@@ -51,6 +49,7 @@ namespace geoflow {
   //   TT_attribute_map_f
   // };
 
+typedef std::array<float,2> arr2f;
 typedef std::array<float,3> arr3f;
 typedef std::vector<arr3f> vec3f;
 typedef std::vector<std::array<float,2>> vec2f;
@@ -122,7 +121,7 @@ class Box {
   bool isEmpty() const {
       return just_cleared;
   }
-  glm::vec3 center() const {
+  arr3f center() const {
       return {(pmax[0]+pmin[0])/2, (pmax[1]+pmin[1])/2, (pmax[2]+pmin[2])/2};
   }
 };

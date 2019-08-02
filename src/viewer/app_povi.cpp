@@ -225,7 +225,7 @@ void poviApp::on_draw(){
         
         ImGui::SameLine();
         if (ImGui::Button("Center"))
-            translation = -p->get_bbox().center();
+            translation = -glm::make_vec3(p->get_bbox().center().data());
         ImGui::SameLine();
         // if (ImGui::Button("...")) 
         //     ImGui::OpenPopup("config");
@@ -250,7 +250,7 @@ void poviApp::center() {
         if (!p_bbox.isEmpty())
             bbox.add(p_bbox);
     }
-    translation = -bbox.center();
+    translation = -glm::make_vec3(bbox.center().data());
 }
 
 void poviApp::on_key_press(int key, int action, int mods) {

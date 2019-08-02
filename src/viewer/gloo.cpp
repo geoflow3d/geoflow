@@ -41,8 +41,9 @@ Shader & Shader::activate()
 Shader & Shader::attach(std::string const & filename)
 {
     // Load GLSL Shader Source from File
-    std::string path = PROJECT_SOURCE_DIR "/src/viewer/shaders/";
+    std::string path = GF_SHADER_PATH "/";
     path += filename;
+    std::cout << path << "\n";
     sources.push_back(path);
     return *this;
 }
@@ -359,6 +360,7 @@ void Painter::clear_attribute(const std::string name) {
     if(name == "position"){
         bbox.clear();
         subdata_pairs.clear();
+        attributes["position"]->set_data<GLfloat>(nullptr, 0, 0);
     }
     disable_attribute(name);
 }
@@ -427,7 +429,7 @@ void Painter::gui() {
     short_gui();
     auto c = bbox.center();
     // ImGui::Text("Init: %d", is_initialised());
-    ImGui::Text("center: [%.2f, %.2f, %.2f]", c.x, c.y, c.z);
+    ImGui::Text("center: [%.2f, %.2f, %.2f]", c[0], c[1], c[2]);
     if(draw_mode==GL_TRIANGLES) {
         const char* items[] = { "GL_POINT", "GL_LINE", "GL_FILL" };
         const char* item_current;
