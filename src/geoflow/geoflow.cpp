@@ -231,20 +231,6 @@ void Node::set_params(ParameterMap new_map, bool quiet) {
 const ParameterMap& Node::dump_params() {
   return parameters;
 }
-void Node::add_input(std::string name, std::initializer_list<std::type_index> types) {
-  // TODO: check if name is unique key in input_terminals map
-  input_terminals[name] = std::make_shared<gfBasicMonoInputTerminal>(
-    *this, name, types
-  );
-}
-void Node::add_input(std::string name, std::type_index type) {
-  add_input(name, {type});
-}
-void Node::add_output(std::string name, std::type_index type) {
-  output_terminals[name] = std::make_shared<gfBasicMonoOutputTerminal>(
-    *this, name, type
-  );
-}
 // void Node::preprocess() {
 //   for (auto& [name, oG] : outputGroups) {
 //     oG->is_propagated = false;

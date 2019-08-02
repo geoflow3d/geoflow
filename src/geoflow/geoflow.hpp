@@ -57,7 +57,7 @@ namespace geoflow {
   class gfBasicMonoOutputTerminal;
 
   enum gfIO {GF_IN, GF_OUT};
-  enum gfTerminalFamily {GF_BASIC, GF_VECTOR, GF_POLY};
+  enum gfTerminalFamily {GF_UNKNOWN, GF_BASIC, GF_VECTOR, GF_POLY};
   enum gfNodeStatus {GF_NODE_WAITING, GF_NODE_READY, GF_NODE_PROCESSING, GF_NODE_DONE};
 
   class gfTerminal : public gfObject {
@@ -141,8 +141,8 @@ namespace geoflow {
     virtual void clear() = 0;
 
     public:
-    gfOutputTerminal(Node& parent_gnode, std::string name, std::type_index type) 
-      : gfTerminal(parent_gnode, {type}, name)
+    gfOutputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types) 
+      : gfTerminal(parent_gnode, types, name)
     {}
     ~gfOutputTerminal();
     const InputConnectionSet& get_connections();
@@ -278,7 +278,66 @@ namespace geoflow {
     friend class gfPolyInputTerminal;
   };
 
+  template <typename T> struct get_family {
+    static const gfTerminalFamily value = GF_UNKNOWN;
+  };
+  template<> struct get_family<gfBasicMonoInputTerminal> {
+    static const gfTerminalFamily value = GF_BASIC;
+  };
+  template<> struct get_family<gfVectorMonoInputTerminal> {
+    static const gfTerminalFamily value = GF_VECTOR;
+  };
+  template<> struct get_family<gfPolyInputTerminal> {
+    static const gfTerminalFamily value = GF_POLY;
+  };
+  template<> struct get_family<gfBasicMonoOutputTerminal> {
+    static const gfTerminalFamily value = GF_BASIC;
+  };
+  template<> struct get_family<gfVectorMonoOutputTerminal> {
+    static const gfTerminalFamily value = GF_VECTOR;
+  };
+  template<> struct get_family<gfPolyOutputTerminal> {
+    static const gfTerminalFamily value = GF_POLY;
+  };
+
   class Node : public std::enable_shared_from_this<Node> {
+    private:
+    template<typename T> void add_input(std::string name, std::initializer_list<std::type_index> types) {
+      // TODO: check if name is unique key in input_terminals map
+      input_terminals[name] = std::make_shared<T>(
+        *this, name, types
+      );
+    }
+    template<typename T> void add_output(std::string name, std::initializer_list<std::type_index> types) {
+      // TODO: check if name is unique key in output_terminals map
+      output_terminals[name] = std::make_shared<T>(
+        *this, name, types
+      );
+    }
+
+    template<typename T> T& input(std::string term_name) {
+      if (input_terminals.find(term_name) == input_terminals.end()) {
+        throw gfException("No such input terminal - \""+term_name+"\" in " + get_name());
+      }
+      if (input_terminals[term_name]->get_family() != get_family<T>::value) {
+        throw gfException("Illegal terminal down cast - \""+term_name+"\" in " + get_name());
+      }
+        
+      auto input_term = (T*) (input_terminals[term_name].get());
+      return *input_term;
+    }
+    template<typename T> T& output(std::string term_name) {
+      if (output_terminals.find(term_name) == output_terminals.end()) {
+        throw gfException("No such output terminal - \""+term_name+"\" in " + get_name());
+      }
+      if (output_terminals[term_name]->get_family() != get_family<T>::value) {
+        throw gfException("Illegal terminal down cast - \""+term_name+"\" in " + get_name());
+      }
+
+      auto output_term = (T*) (output_terminals[term_name].get());
+      return *output_term;
+    }
+
     public:
 
     std::map<std::string,std::shared_ptr<gfInputTerminal>> input_terminals;
@@ -296,66 +355,62 @@ namespace geoflow {
     void remove_from_manager();
 
     gfBasicMonoInputTerminal& input(std::string term_name) {
-      if (input_terminals.find(term_name) == input_terminals.end()) {
-        throw gfException("No such input terminal - \""+term_name+"\" in " + get_name());
-      }
-      auto input_term = (gfBasicMonoInputTerminal*) (input_terminals[term_name].get());
-      return *input_term;
+      return input<gfBasicMonoInputTerminal>(term_name);
+    }
+    gfVectorMonoInputTerminal& vector_input(std::string term_name) {
+      return input<gfVectorMonoInputTerminal>(term_name);
+    }
+    gfPolyInputTerminal& poly_input(std::string term_name) {
+      return input<gfPolyInputTerminal>(term_name);
     }
     gfBasicMonoOutputTerminal& output(std::string term_name) {
-      if (output_terminals.find(term_name) == output_terminals.end()) {
-        throw gfException("No such output terminal - \""+term_name+"\" in " + get_name());
-      }
-      auto output_term = (gfBasicMonoOutputTerminal*) (output_terminals[term_name].get());
-      return *output_term;
+      return output<gfBasicMonoOutputTerminal>(term_name);
     }
-    // template<typename T> T& param(std::string name) {
-    //   return std::get<T>(parameters.at(name));
-    // }
-    // InputGroup& input_group(std::string group_name){
-    //   return *inputGroups.at(group_name);
-    // }
-    // OutputGroup& output_group(std::string group_name){
-    //   return *outputGroups.at(group_name);
-    // }
+    gfVectorMonoOutputTerminal& vector_output(std::string term_name) {
+      return output<gfVectorMonoOutputTerminal>(term_name);
+    }
+    gfPolyOutputTerminal& poly_output(std::string term_name) {
+      return output<gfPolyOutputTerminal>(term_name);
+    }
 
     void for_each_input(std::function<void(gfInputTerminal&)> f) {
       for (auto& iT : input_terminals) {
         f(*iT.second);
       }
-      // for (auto& iG : inputGroups) {
-      //   for (auto& iT : iG.second->terminals) {
-      //     f(*iT.second);
-      //   }
-      // }
     }
     void for_each_output(std::function<void(gfOutputTerminal&)> f) {
       for (auto& iT : output_terminals) {
         f(*iT.second);
       }
-      // for (auto& iG : outputGroups) {
-      //   for (auto& iT : iG.second->terminals) {
-      //     f(*iT.second);
-      //   }
-      // }
     }
 
     gfNodeStatus status_ = GF_NODE_WAITING;
 
-    void add_input(std::string name, std::type_index type);
-    void add_input(std::string name, std::initializer_list<std::type_index> types);
-    void add_output(std::string name, std::type_index type);
+    void add_input(std::string name, std::type_index type) {
+      add_input<gfBasicMonoInputTerminal>(name, {type});
+    };
+    void add_input(std::string name, std::initializer_list<std::type_index> types) {
+      add_input<gfBasicMonoInputTerminal>(name, types);
+    };
+    void add_vector_input(std::string name, std::type_index type){
+      add_input<gfVectorMonoInputTerminal>(name, {type});
+    };
+    void add_vector_input(std::string name, std::initializer_list<std::type_index> types) {
+      add_input<gfVectorMonoInputTerminal>(name, types);
+    };
+    void add_poly_input(std::string name, std::initializer_list<std::type_index> types) {
+      add_input<gfPolyInputTerminal>(name, types);
+    };
 
-    // void add_input_group(std::string group_name, std::initializer_list<std::type_index> types) {
-    //   inputGroups.emplace(
-    //     std::make_pair(group_name, std::make_shared<InputGroup>(*this, group_name, types))
-    //   );
-    // }
-    // void add_output_group(std::string group_name, std::initializer_list<std::type_index> types) {
-    //   outputGroups.emplace(
-    //     std::make_pair(group_name, std::make_shared<OutputGroup>(*this, group_name, types))
-    //   );
-    // }
+    void add_output(std::string name, std::type_index type) {
+      add_output<gfBasicMonoOutputTerminal>(name, {type});
+    };
+    void add_vector_output(std::string name, std::type_index type) {
+      add_output<gfVectorMonoOutputTerminal>(name, {type});
+    };
+    void add_poly_output(std::string name, std::initializer_list<std::type_index> types) {
+      add_output<gfPolyOutputTerminal>(name, types);
+    };
 
     template<typename T> void add_param(std::string name, T value) {
       parameters.emplace(name, value);
