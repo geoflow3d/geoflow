@@ -87,7 +87,7 @@ namespace geoflow {
     std::weak_ptr<gfInputTerminal>  get_ptr(){
       return weak_from_this();
     }
-    void clear();
+    virtual void clear();
     virtual void update_on_receive(bool queue) = 0;
     virtual void connect_output(gfOutputTerminal& output_term) = 0;
     virtual void disconnect_output(gfOutputTerminal& output_term) = 0;
@@ -245,11 +245,13 @@ namespace geoflow {
     BasicRefs basic_terminals_;
     VectorRefs vector_terminals_;
     void push_term_ref(gfOutputTerminal* term_ptr);
+    void rebuild_terminal_refs();
 
     protected:
     // void clear();
     OutputConnectionSet connected_outputs_;
     
+    void clear();
     void update_on_receive(bool queue);
     void connect_output(gfOutputTerminal& output_term);
     void disconnect_output(gfOutputTerminal& output_term);
@@ -324,10 +326,10 @@ namespace geoflow {
 
   class Node : public std::enable_shared_from_this<Node> {
     private:
-    template<typename T> void add_input(std::string name, std::initializer_list<std::type_index> types) {
+    template<typename T> void add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional) {
       // TODO: check if name is unique key in input_terminals map
       input_terminals[name] = std::make_shared<T>(
-        *this, name, types
+        *this, name, types, is_optional
       );
     }
     template<typename T> void add_output(std::string name, std::initializer_list<std::type_index> types) {
@@ -408,20 +410,20 @@ namespace geoflow {
 
     gfNodeStatus status_ = GF_NODE_WAITING;
 
-    void add_input(std::string name, std::type_index type) {
-      add_input<gfBasicMonoInputTerminal>(name, {type});
+    void add_input(std::string name, std::type_index type, bool is_optional=false) {
+      add_input<gfBasicMonoInputTerminal>(name, {type}, is_optional);
     };
-    void add_input(std::string name, std::initializer_list<std::type_index> types) {
-      add_input<gfBasicMonoInputTerminal>(name, types);
+    void add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
+      add_input<gfBasicMonoInputTerminal>(name, types, is_optional);
     };
-    void add_vector_input(std::string name, std::type_index type){
-      add_input<gfVectorMonoInputTerminal>(name, {type});
+    void add_vector_input(std::string name, std::type_index type, bool is_optional=false){
+      add_input<gfVectorMonoInputTerminal>(name, {type}, is_optional);
     };
-    void add_vector_input(std::string name, std::initializer_list<std::type_index> types) {
-      add_input<gfVectorMonoInputTerminal>(name, types);
+    void add_vector_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
+      add_input<gfVectorMonoInputTerminal>(name, types, is_optional);
     };
-    void add_poly_input(std::string name, std::initializer_list<std::type_index> types) {
-      add_input<gfPolyInputTerminal>(name, types);
+    void add_poly_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
+      add_input<gfPolyInputTerminal>(name, types, is_optional);
     };
 
     void add_output(std::string name, std::type_index type) {

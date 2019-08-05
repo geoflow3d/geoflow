@@ -154,6 +154,10 @@ gfPolyInputTerminal::~gfPolyInputTerminal(){
       output_term->connections_.erase(get_ptr());
   }
 }
+void gfPolyInputTerminal::clear() {
+  rebuild_terminal_refs();
+  gfInputTerminal::clear();
+}
 void gfPolyInputTerminal::connect_output(gfOutputTerminal& output_term) {
   connected_outputs_.insert(output_term.get_ptr());
 }
@@ -167,24 +171,26 @@ void gfPolyInputTerminal::push_term_ref(gfOutputTerminal* term_ptr) {
     vector_terminals_.push_back(vector_term_ptr);
   }
 }
-void gfPolyInputTerminal::update_on_receive(bool queue) {
-  if (parent_.update_status()) {
-    basic_terminals_.clear();
-    vector_terminals_.clear();
-    for (auto& wptr : connected_outputs_) {
-      if (auto term = wptr.lock()) {
-        auto term_ptr = term.get();
-        if (auto poly_term_ptr = dynamic_cast<gfPolyOutputTerminal*>(term_ptr)) {
-          for (auto& [name, sub_term] : poly_term_ptr->get_terminals()) {
-            push_term_ref(sub_term.get());
-          }
-        } else {
-          push_term_ref(term_ptr);
+void gfPolyInputTerminal::rebuild_terminal_refs() {
+  basic_terminals_.clear();
+  vector_terminals_.clear();
+  for (auto& wptr : connected_outputs_) {
+    if (auto term = wptr.lock()) {
+      auto term_ptr = term.get();
+      if (auto poly_term_ptr = dynamic_cast<gfPolyOutputTerminal*>(term_ptr)) {
+        for (auto& [name, sub_term] : poly_term_ptr->get_terminals()) {
+          push_term_ref(sub_term.get());
         }
+      } else {
+        push_term_ref(term_ptr);
       }
     }
+  }
+}
+void gfPolyInputTerminal::update_on_receive(bool queue) {
+  rebuild_terminal_refs();
+  if (parent_.update_status()) {
     parent_.on_receive(*this);
-
     if (queue)
       parent_.queue();
   }
