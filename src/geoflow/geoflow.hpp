@@ -71,8 +71,8 @@ namespace geoflow {
 
     Node& get_parent() { return parent_; };
 
-    bool accepts_type(std::type_index type);
-    const std::vector<std::type_index>& get_types() { return types_; };
+    bool accepts_type(std::type_index type) const;
+    const std::vector<std::type_index>& get_types() const { return types_; };
     const virtual gfIO get_side() = 0;
     virtual bool has_data() = 0;
 
@@ -121,7 +121,7 @@ namespace geoflow {
     public:
     using gfInputTerminal::gfInputTerminal;
     ~gfMonoInputTerminal();
-    bool connected_type(std::type_index ttype);
+    bool connected_type(std::type_index ttype) const;
     bool has_data();
 
     friend class gfMonoOutputTerminal;
@@ -192,7 +192,7 @@ namespace geoflow {
       data_ = std::move(data);
       return std::any_cast<T&>(data_);
     };
-    template<typename T> T get() { 
+    template<typename T> const T get() const { 
       return std::any_cast<T>(data_); 
     };
 
@@ -232,13 +232,20 @@ namespace geoflow {
       data_.push_back(std::move(data));
     };
     size_t size() { return data_.size(); };
-    std::vector<std::any>& get() { return data_; };
+    const std::vector<std::any>& get() const { return data_; };
 
     friend class gfVectorMonoInputTerminal;
   };
 
   typedef std::set<std::weak_ptr<gfOutputTerminal>, std::owner_less<std::weak_ptr<gfOutputTerminal>>> OutputConnectionSet;
   class gfPolyInputTerminal : public gfInputTerminal {
+    typedef std::vector<const gfBasicMonoOutputTerminal*> BasicRefs;
+    typedef std::vector<const gfVectorMonoOutputTerminal*> VectorRefs;
+    private:
+    BasicRefs basic_terminals_;
+    VectorRefs vector_terminals_;
+    void push_term_ref(gfOutputTerminal* term_ptr);
+
     protected:
     // void clear();
     OutputConnectionSet connected_outputs_;
@@ -252,11 +259,24 @@ namespace geoflow {
     ~gfPolyInputTerminal();
     const gfTerminalFamily get_family() { return GF_POLY; };
     bool has_data();
+
+    const BasicRefs& basic_terminals() { return basic_terminals_; };
+    const VectorRefs& vector_terminals() { return vector_terminals_; };
   };
 
   class gfPolyOutputTerminal : public gfOutputTerminal {
+    private:
+    template<typename T> T& add(std::string term_name, std::initializer_list<std::type_index> ttype) {
+      // TODO: check if term_name is unique and if type is in types
+      auto t = std::make_shared<T>(get_parent(), term_name, ttype);
+      terminals_[term_name] = t;
+      auto term = (T*)(terminals_.at(term_name).get());
+      return (*term);
+    };
+
     protected:
-    std::map<std::string,std::shared_ptr<gfMonoOutputTerminal>> terminals_;
+    typedef std::map<std::string,std::shared_ptr<gfMonoOutputTerminal>> MonoTerminalMap;
+    MonoTerminalMap terminals_;
     // bool is_propagated_=false;
     // void propagate(); ?
     void clear();
@@ -265,15 +285,17 @@ namespace geoflow {
     using gfOutputTerminal::gfOutputTerminal;
     const gfTerminalFamily get_family() { return GF_POLY; };
     bool has_data();
+    gfBasicMonoOutputTerminal& add(std::string term_name, std::type_index ttype ) ;
+    gfVectorMonoOutputTerminal& add_vector(std::string term_name, std::type_index ttype );
+    const MonoTerminalMap& get_terminals() { return terminals_; };
+    template<typename T> T get_basic(std::string term_name) {
+      auto tptr = (gfBasicMonoOutputTerminal*)(terminals_.at(term_name).get()); 
+      return std::any_cast<T>(tptr->get_data());
+    };
 
     void connect(gfInputTerminal& in);
     void disconnect(gfInputTerminal& in);
 
-    // gfBasicMonoOutputTerminal& add(std::string term_name, std::type_index type) {
-    //   // TODO: check if term_name is unique and if type is in types
-    //   terminals_[term_name] = std::make_shared<gfBasicMonoOutputTerminal>(parent_, term_name, type);
-    //   return *terminals_[term_name];
-    // }
 
     friend class gfPolyInputTerminal;
   };

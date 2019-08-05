@@ -26,7 +26,7 @@ using json = nlohmann::json;
 using namespace geoflow;
 
 
-bool gfTerminal::accepts_type(std::type_index ttype) {
+bool gfTerminal::accepts_type(std::type_index ttype) const {
   for (auto& t : types_) {
     if (t==ttype) 
       return true;
@@ -38,7 +38,7 @@ gfMonoInputTerminal::~gfMonoInputTerminal(){
   if (auto connected_output = connected_output_.lock())
     connected_output->connections_.erase(get_ptr());
 }
-bool gfMonoInputTerminal::connected_type(std::type_index ttype) {
+bool gfMonoInputTerminal::connected_type(std::type_index ttype) const {
   if(auto output_term = connected_output_.lock()) {
     return output_term->accepts_type(ttype);
   }
@@ -80,17 +80,8 @@ gfOutputTerminal::~gfOutputTerminal() {
 bool gfOutputTerminal::is_compatible(gfInputTerminal& input_terminal) {
   bool type_compatible = true;
   // ensure that each output type of this terminal can be handles by the input_terminal
-  if (input_terminal.get_family() == GF_POLY) {
-    for (auto& out_type : get_types()) {
-      bool in_type_found = false;
-      for (auto& in_type : input_terminal.get_types()) {
-        if (in_type == out_type) {
-          bool in_type_found = true;
-          break;
-        }
-      }
-      type_compatible &= in_type_found;
-    }  
+  for (auto& out_type : get_types()) {
+    type_compatible &= input_terminal.accepts_type(out_type);
   }
   // Everything can  be connected to a POLY input, otherwise the families need to be equal
   bool family_compatible = (get_family()==input_terminal.get_family()) || (input_terminal.get_family() == GF_POLY);
@@ -169,14 +160,38 @@ void gfPolyInputTerminal::connect_output(gfOutputTerminal& output_term) {
 void gfPolyInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
   connected_outputs_.erase(output_term.get_ptr());
 }
+void gfPolyInputTerminal::push_term_ref(gfOutputTerminal* term_ptr) {
+  if (auto basic_term_ptr = dynamic_cast<gfBasicMonoOutputTerminal*>(term_ptr)) {
+    basic_terminals_.push_back(basic_term_ptr);
+  } else if (auto vector_term_ptr = dynamic_cast<gfVectorMonoOutputTerminal*>(term_ptr)) {
+    vector_terminals_.push_back(vector_term_ptr);
+  }
+}
 void gfPolyInputTerminal::update_on_receive(bool queue) {
-  if (!has_data())
-    return;
-  if (queue && parent_.update_status()) 
-    parent_.queue();
-  parent_.on_receive(*this);
+  if (parent_.update_status()) {
+    basic_terminals_.clear();
+    vector_terminals_.clear();
+    for (auto& wptr : connected_outputs_) {
+      if (auto term = wptr.lock()) {
+        auto term_ptr = term.get();
+        if (auto poly_term_ptr = dynamic_cast<gfPolyOutputTerminal*>(term_ptr)) {
+          for (auto& [name, sub_term] : poly_term_ptr->get_terminals()) {
+            push_term_ref(sub_term.get());
+          }
+        } else {
+          push_term_ref(term_ptr);
+        }
+      }
+    }
+    parent_.on_receive(*this);
+
+    if (queue)
+      parent_.queue();
+  }
 }
 bool gfPolyInputTerminal::has_data() {
+  if (connected_outputs_.size()==0)
+    return false;
   for (auto output_term_ : connected_outputs_){
     if (auto output_term = output_term_.lock()) {
       if (!output_term->has_data()) {
@@ -200,7 +215,12 @@ bool gfPolyOutputTerminal::has_data() {
   }
   return true;
 }
-
+gfBasicMonoOutputTerminal& gfPolyOutputTerminal::add(std::string term_name, std::type_index ttype ) {
+      return add<gfBasicMonoOutputTerminal>(term_name, {ttype});
+    };
+gfVectorMonoOutputTerminal& gfPolyOutputTerminal::add_vector(std::string term_name, std::type_index ttype ) {
+  return add<gfVectorMonoOutputTerminal>(term_name, {ttype});
+};
 
 Node::~Node() {
 //    std::cout<< "Destructing geoflow::Node " << type_name << " " << name << "\n";
