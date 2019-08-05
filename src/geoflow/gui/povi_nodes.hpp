@@ -19,7 +19,7 @@
 #include <chrono>
 #include <algorithm>
 #include <random>
-#include <geoflow/geoflow.hpp>
+#include "../geoflow.hpp"
 #include "../../viewer/gloo.h"
 #include "../../viewer/app_povi.h"
 #include "imgui_color_gradient.h"
@@ -70,13 +70,13 @@ namespace geoflow::nodes::gui {
       }
     }
 
-    void on_push(InputTerminal& t) {
+    void on_receive(gfInputTerminal& t) {
       if(&input("values") == &t) {
         count_values();
       }
     }
 
-    void on_connect_output(OutputTerminal& t) {
+    void on_connect_output(gfOutputTerminal& t) {
       if(&output("colormap") == &t) {
         update_texture();
       }
@@ -166,9 +166,9 @@ namespace geoflow::nodes::gui {
       max_bin_count = *std::max_element(histogram.begin(), histogram.end());
     }
 
-    void on_push(InputTerminal& t) {
+    void on_receive(gfInputTerminal& t) {
       if(&input("values") == &t) {
-        auto& d = t.get<vec1f&>();
+        auto& d = input("values").get<vec1f&>();
         minval = *std::min_element(d.begin(), d.end());
         maxval = *std::max_element(d.begin(), d.end());
         compute_histogram(minval, maxval);
@@ -250,47 +250,47 @@ namespace geoflow::nodes::gui {
       }
     }
 
-    void on_push(InputTerminal& t) {
+    void on_receive(gfMonoInputTerminal& t) {
       // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
       if(t.has_data() && painter->is_initialised()) {
-        if(inputTerminals["geometries"].get() == &t) {
-          if (t.connected_type == typeid(PointCollection)) {
-            auto& gc = t.get<PointCollection&>();
+        if(input_terminals["geometries"].get() == &t) {
+          if (t.connected_type(typeid(PointCollection))) {
+            auto& gc = input("geometries").get<PointCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_POINTS);
-          } else if (t.connected_type == typeid(TriangleCollection)) {
-            auto& gc = t.get<TriangleCollection&>();
+          } else if (t.connected_type(typeid(TriangleCollection))) {
+            auto& gc = input("geometries").get<TriangleCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_TRIANGLES);
-          } else if(t.connected_type == typeid(LineStringCollection)) {
-            auto& gc = t.get<LineStringCollection&>();
+          } else if(t.connected_type(typeid(LineStringCollection))) {
+            auto& gc = input("geometries").get<LineStringCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINE_STRIP);
-          } else if(t.connected_type == typeid(SegmentCollection)) {
-            auto& gc = t.get<SegmentCollection&>();
+          } else if(t.connected_type(typeid(SegmentCollection))) {
+            auto& gc = input("geometries").get<SegmentCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINES);
-          } else if (t.connected_type == typeid(LinearRingCollection)) {
-            auto& gc = t.get<LinearRingCollection&>();
+          } else if (t.connected_type(typeid(LinearRingCollection))) {
+            auto& gc = input("geometries").get<LinearRingCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINE_LOOP);
-          } else if (t.connected_type == typeid(LinearRing)) {
-            auto& gc = t.get<LinearRing&>();
+          } else if (t.connected_type(typeid(LinearRing))) {
+            auto& gc = input("geometries").get<LinearRing&>();
             LinearRingCollection lrc;
             lrc.push_back(gc);
             painter->set_geometry(lrc);
             painter->set_drawmode(GL_LINE_LOOP);
           }
         } else if(&input("normals") == &t) {
-          auto& d = t.get<vec3f&>();
+          auto& d = input("normals").get<vec3f&>();
           painter->set_attribute("normal", d[0].data(), d.size(), 3);
         } else if(&input("values") == &t) {
-          auto d = t.get<vec1f>();
+          auto d = input("values").get<vec1f>();
           painter->set_attribute("value", d.data(), d.size(), 1);
         } else if(&input("identifiers") == &t) {
           map_identifiers();
         } else if(&input("colormap") == &t) {
-          auto& cmap = t.get<ColorMap&>();
+          auto& cmap = input("colormap").get<ColorMap&>();
           if(cmap.is_gradient) {
             painter->register_uniform(cmap.u_valmax);
             painter->register_uniform(cmap.u_valmin);
@@ -301,7 +301,7 @@ namespace geoflow::nodes::gui {
         }
       }
     }
-    void on_clear(InputTerminal& t) {
+    void on_clear(gfInputTerminal& t) {
       // clear attributes...
       // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
       if(&input("geometries") == &t) {
@@ -309,111 +309,12 @@ namespace geoflow::nodes::gui {
         } else if(&input("values") == &t) {
           painter->clear_attribute("value");
         } else if(&input("colormap") == &t) {
-          if(t.cdata.has_value()) {
-            auto& cmap = t.get<ColorMap&>();
+          if(t.has_data()) {
+            auto& cmap = input("colormap").get<ColorMap&>();
             if (cmap.is_gradient) {
               painter->unregister_uniform(cmap.u_valmax);
               painter->unregister_uniform(cmap.u_valmin);
             }
-          }
-          painter->remove_texture();
-        }
-    }
-
-    void gui() {
-      painter->gui();
-      // type: points, lines, triangles
-      // fp_painter->attach_shader("basic.vert");
-      // fp_painter->attach_shader("basic.frag");
-      // fp_painter->set_drawmode(GL_LINE_STRIP);
-    }
-    void process() {};
-  };
-
-  class PoviPainterNode:public Node {
-    std::shared_ptr<Painter> painter;
-    std::weak_ptr<poviApp> pv_app;
-    
-    public:
-    using Node::Node;
-    void init() {
-      painter = std::make_shared<Painter>();
-      // painter->set_attribute("position", nullptr, 0, {3});
-      // painter->set_attribute("value", nullptr, 0, {1});
-      painter->attach_shader("basic.vert");
-      painter->attach_shader("basic.frag");
-      painter->set_drawmode(GL_TRIANGLES);
-      // a.add_painter(painter, "mypainter");
-      add_input("vertices", typeid(vec3f));
-      add_input("normals", typeid(vec3f));
-      add_input("colormap", typeid(ColorMap));
-      add_input("values", typeid(vec1f));
-      add_input("identifiers", typeid(vec1i));
-    }
-    ~PoviPainterNode() {
-      // note: this assumes we have only attached this painter to one poviapp
-      if (auto a = pv_app.lock()) {
-        std::cout << "remove painter\n";
-        a->remove_painter(painter);
-      } else std::cout << "remove painter failed\n";
-    }
-
-    void add_to(poviApp& a, std::string name) {
-      a.add_painter(painter, name);
-      pv_app = a.get_ptr();
-    }
-
-    void map_identifiers() {
-      if (input("identifiers").has_data() && input("colormap").has_data()) {
-        auto cmap = input("colormap").get<ColorMap>();
-        if (cmap.is_gradient) return;
-        auto values = input("identifiers").get<vec1i>();
-        vec1f mapped;
-        for(auto& v : values) {
-          mapped.push_back(float(cmap.mapping[v])/256);
-        }
-        painter->set_attribute("identifier", mapped.data(), mapped.size(), 1);
-      }
-    }
-
-    void on_push(InputTerminal& t) {
-      // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
-      if(t.has_data() && painter->is_initialised()) {
-        if(&input("vertices") == &t) {
-          auto& d = t.get<vec3f&>();
-          painter->set_attribute("position", d[0].data(), d.size(), 3);
-        } else if(&input("normals") == &t) {
-          auto& d = t.get<vec3f&>();
-          painter->set_attribute("normal", d[0].data(), d.size(), 3);
-        } else if(&input("values") == &t) {
-          auto& d = t.get<vec1f&>();
-          painter->set_attribute("value", d.data(), d.size(), 1);
-        } else if(&input("identifiers") == &t) {
-          map_identifiers();
-        } else if(&input("colormap") == &t) {
-          auto& cmap = t.get<ColorMap&>();
-          if(cmap.is_gradient) {
-            painter->register_uniform(cmap.u_valmax);
-            painter->register_uniform(cmap.u_valmin);
-          } else {
-            map_identifiers();
-          }
-          painter->set_texture(cmap.tex);
-        }
-      }
-    }
-    void on_clear(InputTerminal& t) {
-      // clear attributes...
-      // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
-      if(&input("vertices") == &t) {
-          painter->clear_attribute("position");
-        } else if(&input("values") == &t) {
-          painter->clear_attribute("value");
-        } else if(&input("colormap") == &t) {
-          if(t.cdata.has_value()) {
-            auto& cmap = t.get<ColorMap&>();
-            painter->unregister_uniform(cmap.u_valmax);
-            painter->unregister_uniform(cmap.u_valmin);
           }
           painter->remove_texture();
         }

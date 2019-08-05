@@ -16,38 +16,38 @@
 
 #pragma once
 
-#include <algorithm>
-#include <vector>
+#include <string>
 #include <array>
+#include <vector>
 #include <optional>
+
+#include <exception>
+#include <algorithm>
 
 namespace geoflow {
 
-  // enum TerminalType : uint32_t{
-  //   TT_any = 0,
-  //   TT_float,
-  //   TT_int,
-  //   TT_vec1ui,
-  //   TT_vec1i,
-  //   TT_vec1f,
-  //   TT_vec1b,
-  //   TT_vec2f,
-  //   TT_vec3f,
-  //   TT_vec6f,
-  //   TT_vec_float,
-  //   TT_colmap,
-  //   TT_geometry,
-  //   TT_feature,
-  //   TT_point_collection, 
-  //   TT_point_collection_list, 
-  //   TT_triangle_collection,
-  //   TT_segment_collection,
-  //   TT_segment_collection_list,
-  //   TT_line_string_collection,
-  //   TT_linear_ring,
-  //   TT_linear_ring_collection,
-  //   TT_attribute_map_f
-  // };
+class gfException: public std::exception
+{
+public:
+  explicit gfException(const std::string& message):
+    msg_(message)
+    {}
+  virtual const char* what() const throw (){
+    return msg_.c_str();
+  }
+
+protected:
+    std::string msg_;
+};
+
+class gfObject {
+  private:
+  const std::string name_;
+
+  public:
+  gfObject(std::string name) : name_(name) {};
+  const std::string get_name() const { return name_; };
+};
 
 typedef std::array<float,2> arr2f;
 typedef std::array<float,3> arr3f;
