@@ -70,7 +70,7 @@ namespace geoflow::nodes::gui {
       }
     }
 
-    void on_receive(gfInputTerminal& t) {
+    void on_receive(gfMonoInputTerminal& t) {
       if(&input("values") == &t) {
         count_values();
       }
@@ -166,7 +166,7 @@ namespace geoflow::nodes::gui {
       max_bin_count = *std::max_element(histogram.begin(), histogram.end());
     }
 
-    void on_receive(gfInputTerminal& t) {
+    void on_receive(gfMonoInputTerminal& t) {
       if(&input("values") == &t) {
         auto& d = input("values").get<vec1f&>();
         minval = *std::min_element(d.begin(), d.end());
