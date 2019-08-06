@@ -75,6 +75,7 @@ namespace geoflow {
     const std::vector<std::type_index>& get_types() const { return types_; };
     const virtual gfIO get_side() = 0;
     virtual bool has_data() = 0;
+    virtual bool has_connection() = 0;
 
     friend class Node;
   };
@@ -103,7 +104,6 @@ namespace geoflow {
     const gfIO get_side() { return GF_IN; };
     const virtual gfTerminalFamily get_family() = 0;
     bool is_optional() { return is_optional_; };
-    virtual bool has_data() = 0;
 
     friend class gfOutputTerminal;
     friend class gfBasicMonoOutputTerminal;
@@ -122,6 +122,7 @@ namespace geoflow {
     using gfInputTerminal::gfInputTerminal;
     ~gfMonoInputTerminal();
     bool connected_type(std::type_index ttype) const;
+    bool has_connection();
     bool has_data();
 
     friend class gfMonoOutputTerminal;
@@ -130,6 +131,8 @@ namespace geoflow {
   typedef std::set<std::weak_ptr<gfInputTerminal>, std::owner_less<std::weak_ptr<gfInputTerminal>>> InputConnectionSet;
 
   class gfOutputTerminal : public gfTerminal, public std::enable_shared_from_this<gfOutputTerminal> {
+    private:
+    bool is_marked_;
     protected:
     std::weak_ptr<gfOutputTerminal>  get_ptr(){
       return weak_from_this();
@@ -141,17 +144,19 @@ namespace geoflow {
     virtual void clear() = 0;
 
     public:
-    gfOutputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types) 
-      : gfTerminal(parent_gnode, types, name)
+    gfOutputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types, bool is_marked=false) 
+      : gfTerminal(parent_gnode, types, name), is_marked_(is_marked)
     {}
     ~gfOutputTerminal();
     const InputConnectionSet& get_connections();
     const gfIO get_side() { return GF_OUT; };
     const virtual gfTerminalFamily get_family() = 0;
     
+    bool has_connection() { return connections_.size()>0; };
     bool is_compatible(gfInputTerminal& input_terminal);
     void connect(gfInputTerminal& in);
     void disconnect(gfInputTerminal& in);
+    bool is_marked() { return is_marked_; }; 
 
     friend class Node;
     friend class gfInputTerminal;
@@ -180,7 +185,6 @@ namespace geoflow {
     
     protected:
     void clear();
-    std::any& get_data() { return data_; };
 
     public:
     using gfMonoOutputTerminal::gfMonoOutputTerminal;
@@ -192,6 +196,7 @@ namespace geoflow {
       data_ = std::move(data);
       return std::any_cast<T&>(data_);
     };
+    std::any& get_data() { return data_; };
     template<typename T> const T get() const { 
       return std::any_cast<T>(data_); 
     };
@@ -261,6 +266,7 @@ namespace geoflow {
     ~gfPolyInputTerminal();
     const gfTerminalFamily get_family() { return GF_POLY; };
     bool has_data();
+    bool has_connection() {return connected_outputs_.size() > 0; };
 
     const BasicRefs& basic_terminals() { return basic_terminals_; };
     const VectorRefs& vector_terminals() { return vector_terminals_; };
@@ -481,6 +487,7 @@ namespace geoflow {
     const std::string get_name() { return name; };
     const std::string get_type_name() { return type_name; };
     const NodeRegister& get_register() { return *node_register; };
+    const NodeManager& get_manager() { return manager; };
     bool set_name(std::string new_name);
 
     protected:
@@ -544,12 +551,21 @@ namespace geoflow {
 
   class NodeManager {
     // manages a set of nodes that form one flowchart. Every node must linked to a NodeManager.
+    private:
+    NodeRegisterMap& registers_;
+    std::unordered_map<std::string, NodeHandle> nodes;
+
     public:
     size_t ID=0;
 
     std::optional<std::array<double,3>> data_offset;
-    NodeManager(){};
-    std::unordered_map<std::string, NodeHandle> nodes;
+    NodeManager(NodeRegisterMap&  node_registers)
+      : registers_(node_registers) {};
+    
+    NodeRegisterMap& get_node_registers() const { return registers_; };
+    void operator= (const NodeManager& other_manager) {
+      registers_ = other_manager.get_node_registers();
+    };
 
     NodeHandle create_node(NodeRegister& node_register, std::string type_name);
     NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name);
@@ -562,8 +578,7 @@ namespace geoflow {
 
     std::vector<NodeHandle> dump_nodes();
 
-
-    std::vector<NodeHandle> load_json(std::string filepath, NodeRegisterMap& registers);
+    std::vector<NodeHandle> load_json(std::string filepath);
     void dump_json(std::string filepath);
 
     // load_json() {

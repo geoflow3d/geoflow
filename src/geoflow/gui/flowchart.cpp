@@ -1169,7 +1169,7 @@ namespace ImGui
 						element_.Reset();
 						gf_manager.clear();
 
-						auto new_nodes = gf_manager.load_json(result.value(), registers);
+						auto new_nodes = gf_manager.load_json(result.value());
 						CreateNodesFromHandles(new_nodes);
 						CenterScroll();
 					}
@@ -1450,9 +1450,9 @@ namespace ImGui
 }
 
 namespace geoflow {
-	void launch_flowchart(NodeManager& manager, NodeRegisterMap nrm) {
+	void launch_flowchart(NodeManager& manager) {
 		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
-		ImGui::Nodes nodes(manager, *a, nrm);
+		ImGui::Nodes nodes(manager, *a, manager.get_node_registers());
 		a->draw_that(&nodes);
 		a->run();
 	}

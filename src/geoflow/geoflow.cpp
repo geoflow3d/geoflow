@@ -56,6 +56,9 @@ void gfMonoInputTerminal::update_on_receive(bool queue) {
     parent_.on_receive(*this);
   }
 }
+bool gfMonoInputTerminal::has_connection() {
+  return !connected_output_.expired();
+}
 bool gfMonoInputTerminal::has_data() {
   if (auto output_term = connected_output_.lock()) {
     return output_term->has_data();
@@ -451,7 +454,7 @@ void NodeManager::dump_json(std::string filepath) {
   std::ofstream o(filepath);
   o << std::setw(2) << j << std::endl;
 }
-std::vector<NodeHandle> NodeManager::load_json(std::string filepath, NodeRegisterMap& registers) {
+std::vector<NodeHandle> NodeManager::load_json(std::string filepath) {
   json j;
   std::vector<NodeHandle> new_nodes;
   std::ifstream i(filepath);
@@ -463,9 +466,9 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, NodeRegiste
   json nodes_j = j["nodes"];
   for (auto node_j : nodes_j.items()) {
     auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
-    if (registers.count(tt[0])) {
+    if (registers_.count(tt[0])) {
       std::array<float,2> pos = node_j.value().at("position");
-      auto nhandle = create_node(registers.at(tt[0]), tt[1], {pos[0], pos[1]});
+      auto nhandle = create_node(registers_.at(tt[0]), tt[1], {pos[0], pos[1]});
       new_nodes.push_back(nhandle);
       std::string node_name = node_j.key();
       name_node(nhandle, node_name);
@@ -505,7 +508,7 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, NodeRegiste
   }
   for (auto node_j : nodes_j.items()) {
     auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
-    if (registers.count(tt[0])) {
+    if (registers_.count(tt[0])) {
       auto nhandle = nodes[node_j.key()];
       if (node_j.value().count("connections")) {
         auto conns_j = node_j.value().at("connections");

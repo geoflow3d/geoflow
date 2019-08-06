@@ -386,5 +386,5 @@ namespace ImGui
 
 }
 namespace geoflow {
-	void launch_flowchart(NodeManager& manager, NodeRegisterMap nrm);
+	void launch_flowchart(NodeManager& manager);
 }

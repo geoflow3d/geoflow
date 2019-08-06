@@ -59,7 +59,6 @@ int main(int argc, const char * argv[]) {
       R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
       R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
       R->register_node<geoflow::nodes::gui::CubeNode>("Cube");
-      R->register_node<geoflow::nodes::gui::CubeNode>("Cube");
       R->register_node<geoflow::nodes::gui::TriangleNode>("Triangle");
       node_registers.emplace(R);
       
@@ -92,13 +91,13 @@ int main(int argc, const char * argv[]) {
     //   }
     // }
     // load flowchart from file
-    geoflow::NodeManager node_manager;
+    geoflow::NodeManager node_manager(node_registers);
     if(*opt_flowchart_path)
-      node_manager.load_json(flowchart_path, node_registers);
+      node_manager.load_json(flowchart_path);
 
     // launch gui or just run the flowchart in cli mode
     #ifdef GF_BUILD_GUI
-      geoflow::launch_flowchart(node_manager, node_registers);
+      geoflow::launch_flowchart(node_manager);
     #else
       //N.run();
     #endif
