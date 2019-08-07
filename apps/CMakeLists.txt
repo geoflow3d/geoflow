@@ -6,6 +6,7 @@ endif()
 
 add_executable(geof geof.cpp)
 target_link_libraries(geof PRIVATE ${geoflowlib} nlohmann_json::nlohmann_json)
+target_link_directories(geof PRIVATE ${CMAKE_SOURCE_DIR}/src)
 set_target_properties( geof PROPERTIES CXX_STANDARD 17 )
 
 if(${GF_BUILD_GUI})

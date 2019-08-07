@@ -38,11 +38,17 @@ gfMonoInputTerminal::~gfMonoInputTerminal(){
   if (auto connected_output = connected_output_.lock())
     connected_output->connections_.erase(get_ptr());
 }
-bool gfMonoInputTerminal::connected_type(std::type_index ttype) const {
+bool gfMonoInputTerminal::is_connected_type(std::type_index ttype) const {
   if(auto output_term = connected_output_.lock()) {
     return output_term->accepts_type(ttype);
   }
   return false;
+}
+std::type_index gfMonoInputTerminal::get_connected_type() const {
+  if(auto output_term = connected_output_.lock()) {
+    return output_term->types_[0];
+  }
+  return typeid(void);
 }
 
 void gfInputTerminal::clear() {

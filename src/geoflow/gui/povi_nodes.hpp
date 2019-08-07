@@ -254,27 +254,27 @@ namespace geoflow::nodes::gui {
       // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
       if(t.has_data() && painter->is_initialised()) {
         if(input_terminals["geometries"].get() == &t) {
-          if (t.connected_type(typeid(PointCollection))) {
+          if (t.is_connected_type(typeid(PointCollection))) {
             auto& gc = input("geometries").get<PointCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_POINTS);
-          } else if (t.connected_type(typeid(TriangleCollection))) {
+          } else if (t.is_connected_type(typeid(TriangleCollection))) {
             auto& gc = input("geometries").get<TriangleCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_TRIANGLES);
-          } else if(t.connected_type(typeid(LineStringCollection))) {
+          } else if(t.is_connected_type(typeid(LineStringCollection))) {
             auto& gc = input("geometries").get<LineStringCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINE_STRIP);
-          } else if(t.connected_type(typeid(SegmentCollection))) {
+          } else if(t.is_connected_type(typeid(SegmentCollection))) {
             auto& gc = input("geometries").get<SegmentCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINES);
-          } else if (t.connected_type(typeid(LinearRingCollection))) {
+          } else if (t.is_connected_type(typeid(LinearRingCollection))) {
             auto& gc = input("geometries").get<LinearRingCollection&>();
             painter->set_geometry(gc);
             painter->set_drawmode(GL_LINE_LOOP);
-          } else if (t.connected_type(typeid(LinearRing))) {
+          } else if (t.is_connected_type(typeid(LinearRing))) {
             auto& gc = input("geometries").get<LinearRing&>();
             LinearRingCollection lrc;
             lrc.push_back(gc);

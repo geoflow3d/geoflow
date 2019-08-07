@@ -22,6 +22,7 @@
 #include "CLI11.hpp"
 
 #include <geoflow/geoflow.hpp>
+#include <geoflow/core_nodes.hpp>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -53,14 +54,17 @@ int main(int argc, const char * argv[]) {
   // load node registers from libraries
   {
     geoflow::NodeRegisterMap node_registers;
+    auto R_core = geoflow::NodeRegister::create("Core");
+    R_core->register_node<geoflow::nodes::core::NestNode>("NestedFlowchart");
+    node_registers.emplace(R_core);
     #ifdef GF_BUILD_GUI
-      auto R = geoflow::NodeRegister::create("Visualisation");
-      R->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
-      R->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
-      R->register_node<geoflow::nodes::gui::PainterNode>("Painter");
-      R->register_node<geoflow::nodes::gui::CubeNode>("Cube");
-      R->register_node<geoflow::nodes::gui::TriangleNode>("Triangle");
-      node_registers.emplace(R);
+      auto R_gui = geoflow::NodeRegister::create("Visualisation");
+      R_gui->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
+      R_gui->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
+      R_gui->register_node<geoflow::nodes::gui::PainterNode>("Painter");
+      R_gui->register_node<geoflow::nodes::gui::CubeNode>("Cube");
+      R_gui->register_node<geoflow::nodes::gui::TriangleNode>("Triangle");
+      node_registers.emplace(R_gui);
       
       ImGui::CreateContext();
     #endif
