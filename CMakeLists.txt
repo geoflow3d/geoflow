@@ -87,7 +87,9 @@ if(${GF_BUILD_GUI})
     thirdparty/imgui/imgui_demo.cpp
     thirdparty/imgui/examples/imgui_impl_glfw.cpp
     thirdparty/imgui/examples/imgui_impl_opengl3.cpp
-    src/geoflow/gui/flowchart.cpp 
+    # src/geoflow/gui/flowchart.cpp 
+    src/geoflow/gui/ImNodes.cpp 
+    src/geoflow/gui/ImNodesEz.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
     thirdparty/osdialog/osdialog.c
     src/geoflow/gui/osdialog.cpp)

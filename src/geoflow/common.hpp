@@ -46,7 +46,7 @@ class gfObject {
 
   public:
   gfObject(std::string name) : name_(name) {};
-  const std::string get_name() const { return name_; };
+  const std::string& get_name() const { return name_; };
 };
 
 typedef std::array<float,2> arr2f;

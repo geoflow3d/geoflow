@@ -272,7 +272,7 @@ void App::cursor_pos_callback(
 void App::mouse_button_callback(
     GLFWwindow* window, int button, int action, int mods
     ){
-    redraw_counter=2;
+    redraw_counter=4;
     ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
     if (ImGui::GetIO().WantCaptureMouse) {
         return;

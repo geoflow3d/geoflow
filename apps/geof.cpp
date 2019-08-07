@@ -27,7 +27,8 @@
 using json = nlohmann::json;
 
 #ifdef GF_BUILD_GUI
-    #include <geoflow/gui/flowchart.hpp>
+    // #include <geoflow/gui/flowchart.hpp>
+    #include <geoflow/gui/gfImNodes.hpp>
 #endif
 
 namespace fs = std::filesystem;

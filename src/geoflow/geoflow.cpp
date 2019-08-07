@@ -72,6 +72,10 @@ bool gfMonoInputTerminal::has_data() {
   return false;
 }
 void gfMonoInputTerminal::connect_output(gfOutputTerminal& output_term) {
+  //check if we are already connected and if so disconnect from that output term first 
+  if(auto output = connected_output_.lock()) {
+    output->disconnect(*this);
+  }
   connected_output_ = output_term.get_ptr();
 }
 void gfMonoInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
@@ -326,6 +330,7 @@ void Node::notify_children() {
 }
 std::string Node::debug_info() {
   std::stringstream s;
+  s << "addr: " << this << "\n";
   s << "status: ";
   switch (status_) {
     case GF_NODE_WAITING: s << "WAITING"; break;
@@ -335,6 +340,10 @@ std::string Node::debug_info() {
     default: s << "UNKNOWN"; break;
   }
   s << "\n";
+  s << "Outputerminals:\n";
+  for (auto& [name, oT] : output_terminals) {
+    s << "- [" << oT->has_data() <<"/"<< oT->get_connections().size() << "] " << name << ", " << &(*oT) << "\n";
+  }
   return s.str();
 }
 
@@ -571,12 +580,16 @@ void geoflow::disconnect(gfTerminal& t1, gfTerminal& t2) {
   auto& iT = static_cast<gfInputTerminal&>(t2);
   oT.disconnect(iT);
 }
-bool geoflow::detect_loop(gfTerminal& t1, gfTerminal& t2) {
-  auto& oT = static_cast<gfOutputTerminal&>(t1);
-  auto& iT = static_cast<gfInputTerminal&>(t2);
-  return detect_loop(oT, iT);
-}
-bool geoflow::detect_loop(gfOutputTerminal& outputT, gfInputTerminal& inputT) {
+// bool geoflow::detect_loop(gfTerminal& t1, gfTerminal& t2) {
+//   gfOutputTerminal& oT;
+//   gfInputTerminal& iT;
+//   if (t1.get_side()==GF_IN && ) {
+//     auto& oT = static_cast<gfOutputTerminal&>(t1);
+//     auto& iT = static_cast<gfInputTerminal&>(t2);
+//   } else
+//   return detect_loop(oT, iT);
+// }
+bool geoflow::detect_loop(gfTerminal& outputT, gfTerminal& inputT) {
   auto node = inputT.get_parent().get_handle();
   std::queue<std::shared_ptr<Node>> nodes_to_check;
   std::set<std::shared_ptr<Node>> visited;

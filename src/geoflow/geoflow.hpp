@@ -52,6 +52,7 @@ namespace geoflow {
   // typedef std::weak_ptr<OutputTerminal> OutputHandle;
   
   typedef std::shared_ptr<Node> NodeHandle;
+  typedef std::weak_ptr<Node> WeakNodeHandle;
   
   class gfOutputTerminal;
   class gfBasicMonoOutputTerminal;
@@ -71,7 +72,7 @@ namespace geoflow {
     gfTerminal(Node& parent_node, std::vector<std::type_index> types, std::string name)
       : parent_(parent_node), types_(types), gfObject(name) {};
 
-    Node& get_parent() { return parent_; };
+    Node& get_parent() const { return parent_; };
 
     bool accepts_type(std::type_index type) const;
     const std::vector<std::type_index>& get_types() const { return types_; };
@@ -386,9 +387,11 @@ namespace geoflow {
     }
 
     public:
+    typedef std::map<std::string,std::shared_ptr<gfInputTerminal>> InputTerminalMap;
+    typedef std::map<std::string,std::shared_ptr<gfOutputTerminal>> OutputTerminalMap;
 
-    std::map<std::string,std::shared_ptr<gfInputTerminal>> input_terminals;
-    std::map<std::string,std::shared_ptr<gfOutputTerminal>> output_terminals;
+    InputTerminalMap input_terminals;
+    OutputTerminalMap output_terminals;
 
     // std::map<std::string,std::shared_ptr<InputGroup>> inputGroups;
     // std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
@@ -486,7 +489,8 @@ namespace geoflow {
       return std::make_pair(position[0], position[1]);
     }
 
-    NodeHandle get_handle(){return shared_from_this();};
+    NodeHandle get_handle(){ return shared_from_this(); };
+    WeakNodeHandle get_weak_handle(){ return shared_from_this(); };
 
     bool queue();
     bool update_status();
@@ -605,6 +609,7 @@ namespace geoflow {
 
     bool name_node(NodeHandle node, std::string new_name);
 
+    std::unordered_map<std::string, NodeHandle>& get_nodes() { return nodes; };
     std::vector<NodeHandle> dump_nodes();
 
     std::vector<NodeHandle> load_json(std::string filepath);
@@ -637,5 +642,5 @@ namespace geoflow {
   void disconnect(gfTerminal& t1, gfTerminal& t2);
   bool detect_loop(gfTerminal& t1, gfTerminal& t2);
 
-  bool detect_loop(gfOutputTerminal& iT, gfInputTerminal& oT);
+  // bool detect_loop(gfOutputTerminal& iT, gfInputTerminal& oT);
 }

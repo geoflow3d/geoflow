@@ -232,8 +232,8 @@ namespace geoflow::nodes::gui {
     }
     void init() {}
 
-    void add_to(poviApp& a, std::string name) {
-      a.add_painter(painter, name);
+    void add_to(poviApp& a) {
+      a.add_painter(painter, get_name());
       pv_app = a.get_ptr();
     }
 
