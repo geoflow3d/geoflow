@@ -25,6 +25,10 @@ class gfImNodes : public RenderObject {
         ImVec2(node->position[0], node->position[1]),
         false
       ));
+      if(node->get_type_name() == "Painter") {
+        auto* painter_node = (geoflow::nodes::gui::PainterNode*)(node.get());
+        painter_node->add_to(app_);
+      }
     }
   }
 
@@ -65,9 +69,9 @@ class gfImNodes : public RenderObject {
 					node_draw_list_.clear();
 					node_manager_.clear();
 				}
-				if (ImGui::MenuItem("Center flowchart")) {
-					// CenterScroll();
-				}
+				// if (ImGui::MenuItem("Center flowchart")) {
+				// 	// CenterScroll();
+				// }
 				ImGui::EndMenu();
 			}
 		}
@@ -224,9 +228,9 @@ class gfImNodes : public RenderObject {
               ImGui::EndMenu();
             }
           }
-          ImGui::Separator();
-          if (ImGui::MenuItem("Reset Zoom"))
-              canvas.zoom = 1;
+          // ImGui::Separator();
+          // if (ImGui::MenuItem("Reset Zoom"))
+          //     canvas.zoom = 1;
 
           // if (ImGui::IsAnyMouseDown() && !ImGui::IsWindowHovered())
           //     ImGui::CloseCurrentPopup();
