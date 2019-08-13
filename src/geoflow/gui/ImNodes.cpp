@@ -191,6 +191,7 @@ float GetDistanceToLineSquared(const ImVec2& point, const ImVec2& a, const ImVec
 bool RenderConnection(const ImVec2& input_pos, const ImVec2& output_pos, float thickness)
 {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->ChannelsSetCurrent(0);
     CanvasState* canvas = gCanvas;
     const ImGuiStyle& style = ImGui::GetStyle();
 
@@ -267,6 +268,11 @@ void BeginCanvas(CanvasState* canvas)
     }
 
     ImGui::SetWindowFontScale(canvas->zoom);
+
+    // 0 - curves
+    // 1 - node rect
+    // 2 - node content
+    draw_list->ChannelsSplit(3);
 }
 
 void EndCanvas()
@@ -274,6 +280,8 @@ void EndCanvas()
     assert(gCanvas != nullptr);     // Did you forget calling BeginCanvas()?
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->ChannelsMerge();
+
     auto* canvas = gCanvas;
     auto* impl = canvas->_impl;
     const ImGuiStyle& style = ImGui::GetStyle();
@@ -394,10 +402,6 @@ bool BeginNode(void* node_id, ImVec2* pos, bool* selected)
     impl->node.pos = pos;
     impl->node.selected = selected;
 
-    // 0 - node rect, curves
-    // 1 - node content
-    draw_list->ChannelsSplit(2);
-
     if (node_id == impl->auto_position_node_id)
     {
         // Somewhere out of view so that we dont see node flicker when it will be repositioned
@@ -412,7 +416,7 @@ bool BeginNode(void* node_id, ImVec2* pos, bool* selected)
     ImGui::PushID(node_id);
 
     ImGui::BeginGroup();    // Slots and content group
-    draw_list->ChannelsSetCurrent(1);
+    draw_list->ChannelsSetCurrent(2);
 
     return true;
 }
@@ -437,7 +441,7 @@ void EndNode()
     };
 
     // Render frame
-    draw_list->ChannelsSetCurrent(0);
+    draw_list->ChannelsSetCurrent(1);
 
     ImColor node_color = canvas->colors[node_selected ? ColNodeActiveBg : ColNodeBg];
     ImColor node_border_color(1.0f,1.0f,1.0f,1.0f);
@@ -557,8 +561,6 @@ void EndNode()
         break;
     }
     }
-
-    draw_list->ChannelsMerge();
 
     ImGui::PopID();     // id
 }
