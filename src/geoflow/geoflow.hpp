@@ -202,6 +202,9 @@ namespace geoflow {
       data_ = std::move(data);
       return std::any_cast<T&>(data_);
     };
+    void operator=(const std::any& data) {
+      data_ = data;
+    }
     std::any& get_data() { return data_; };
     template<typename T> const T get() const { 
       return std::any_cast<T>(data_); 
@@ -222,7 +225,9 @@ namespace geoflow {
     public:
     using gfMonoInputTerminal::gfMonoInputTerminal;
     const gfTerminalFamily get_family() { return GF_VECTOR; };
+    template<typename T> const T get(size_t i);
     const std::vector<std::any>& get();
+    size_t size();
   };
 
   class gfVectorMonoOutputTerminal : public gfMonoOutputTerminal {
@@ -242,11 +247,24 @@ namespace geoflow {
         throw gfException("illegal type for gfVectorMonoOutputTerminal");
       data_.push_back(std::move(data));
     };
+    void push_back_any(std::any& data) {
+      data_.push_back(std::move(data));
+    }
     size_t size() { return data_.size(); };
-    const std::vector<std::any>& get() const { return data_; };
+    template<typename T>void resize(size_t n) {
+      return data_.resize(n, T());
+    };
+    std::vector<std::any>& get() { return data_; };
+    template<typename T> T get(size_t i) { return std::any_cast<T>(data_[i]); };
 
     friend class gfVectorMonoInputTerminal;
   };
+
+  template<typename T>const T gfVectorMonoInputTerminal::get(size_t i) {
+    auto output_term = connected_output_.lock();
+    auto sot = (gfVectorMonoOutputTerminal*)(output_term.get());
+    return sot->get<T>(i);
+  }
 
   typedef std::set<std::weak_ptr<gfOutputTerminal>, std::owner_less<std::weak_ptr<gfOutputTerminal>>> OutputConnectionSet;
   class gfPolyInputTerminal : public gfInputTerminal {
@@ -344,10 +362,10 @@ namespace geoflow {
         *this, name, types, is_optional
       );
     }
-    template<typename T> void add_output(std::string name, std::initializer_list<std::type_index> types) {
+    template<typename T> void add_output(std::string name, std::initializer_list<std::type_index> types, bool is_marked=false) {
       // TODO: check if name is unique key in output_terminals map
       output_terminals[name] = std::make_shared<T>(
-        *this, name, types
+        *this, name, types, is_marked
       );
     }
     template<typename T> void add_input(std::string name, std::vector<std::type_index> types, bool is_optional) {
@@ -356,10 +374,10 @@ namespace geoflow {
         *this, name, types, is_optional
       );
     }
-    template<typename T> void add_output(std::string name, std::vector<std::type_index> types) {
+    template<typename T> void add_output(std::string name, std::vector<std::type_index> types, bool is_marked=false) {
       // TODO: check if name is unique key in output_terminals map
       output_terminals[name] = std::make_shared<T>(
-        *this, name, types
+        *this, name, types, is_marked
       );
     }
 
@@ -461,17 +479,17 @@ namespace geoflow {
       add_input<gfPolyInputTerminal>(name, types, is_optional);
     };
 
-    void add_output(std::string name, std::type_index type) {
-      add_output<gfBasicMonoOutputTerminal>(name, {type});
+    void add_output(std::string name, std::type_index type, bool is_marked=false) {
+      add_output<gfBasicMonoOutputTerminal>(name, {type}, is_marked);
     };
-    void add_vector_output(std::string name, std::type_index type) {
+    void add_vector_output(std::string name, std::type_index type, bool is_marked=false) {
       add_output<gfVectorMonoOutputTerminal>(name, {type});
     };
-    void add_poly_output(std::string name, std::initializer_list<std::type_index> types) {
-      add_output<gfPolyOutputTerminal>(name, types);
+    void add_poly_output(std::string name, std::initializer_list<std::type_index> types, bool is_marked=false) {
+      add_output<gfPolyOutputTerminal>(name, types, is_marked);
     };
-    void add_poly_output(std::string name, std::vector<std::type_index> types) {
-      add_output<gfPolyOutputTerminal>(name, types);
+    void add_poly_output(std::string name, std::vector<std::type_index> types, bool is_marked=false) {
+      add_output<gfPolyOutputTerminal>(name, types, is_marked);
     };
 
     template<typename T> void add_param(std::string name, T value) {
@@ -495,7 +513,7 @@ namespace geoflow {
     bool queue();
     bool update_status();
     void propagate_outputs();
-    void notify_children();
+    void notify_children(bool skip_root=false);
     // void preprocess();
 
     // private:
@@ -619,9 +637,9 @@ namespace geoflow {
 
     // }
     
-    bool run(Node &node);
-    bool run(NodeHandle node) {
-      return run(*node);
+    bool run(Node &node, bool skip_root=false);
+    bool run(NodeHandle node, bool skip_root=false) {
+      return run(*node, skip_root);
     };
     
     protected:

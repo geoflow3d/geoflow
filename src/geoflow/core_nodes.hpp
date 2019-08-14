@@ -1,5 +1,8 @@
-#include "geoflow.hpp"
 #include <filesystem>
+#include "geoflow.hpp"
+#ifdef GF_BUILD_GUI
+  #include "imgui.h"
+#endif
 
 namespace fs = std::filesystem;
 
@@ -14,6 +17,7 @@ namespace geoflow::nodes::core {
 
   class NestNode : public Node {
     private:
+    bool flowchart_loaded=false;
     std::string filepath_;
     std::unique_ptr<NodeManager> nested_node_manager_;
     std::vector<std::weak_ptr<gfInputTerminal>> nested_inputs_;
@@ -59,40 +63,43 @@ namespace geoflow::nodes::core {
       // load_nodes();
     };
 
+    #ifdef GF_BUILD_GUI
+      void gui() {
+        if(ImGui::Button("Load Nodes"))
+          flowchart_loaded = load_nodes();
+      };
+    #endif
+
     void process() {
-      if(load_nodes()) {
+      if(flowchart_loaded) {
         // set up proxy node
-        NodeRegister R("ProxyRegister");
-        R.register_node<ProxyNode>("Proxy");
+        auto R = std::make_shared<NodeRegister>("ProxyRegister");
+        R->register_node<ProxyNode>("Proxy");
         auto proxy_node = nested_node_manager_->create_node(R, "Proxy");
         for(auto nested_input : nested_inputs_) {
           auto input_term = (gfBasicMonoInputTerminal*)(nested_input.lock().get());
-          proxy_node->add_output(input_term->get_name(), vector_input(input_term->get_name()).get_connected_type());
-          proxy_node->output(input_term->get_name()).connect(*input_term);
+          auto& input_name = input_term->get_name();
+          proxy_node->add_output(input_name, vector_input(input_name).get_connected_type());
+          proxy_node->output(input_name).connect(*input_term);
         }
         // repack input data
         // assume all vector inputs have the same size
-        std::map<std::string, std::vector<std::any>> output_vecs;
+        // std::map<std::string, std::vector<std::any>> output_vecs;
         size_t n = vector_input(nested_inputs_[0].lock()->get_name()).get().size();
         for(size_t i=0; i<n; ++i) {
           // prep inputs
           for(auto nested_input_ : nested_inputs_) {
             auto& name = nested_input_.lock()->get_name();
-            auto data_vec = vector_input(name).get();
-            proxy_node->output(name).set(data_vec[i]);
+            auto& data_vec = vector_input(name).get();
+            proxy_node->output(name) = data_vec[i];
           }
           // run
-          nested_node_manager_->run(proxy_node);
-          // collect outputs
+          nested_node_manager_->run(proxy_node, true);
+          // collect outputs and push directly to vector outputs
           for(auto nested_output : nested_outputs_) {
             auto output_term = (gfBasicMonoOutputTerminal*)(nested_output.lock().get());
-            output_vecs[output_term->get_name()].push_back( output_term->get_data() );
+            vector_output(output_term->get_name()).push_back_any( output_term->get_data());
           }
-        }
-        // push final output vecs
-        for(auto nested_output_ : nested_outputs_) {
-          auto& name = nested_output_.lock()->get_name();
-          output(name).set(output_vecs[name]);
         }
       }
     };

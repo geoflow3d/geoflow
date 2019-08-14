@@ -153,6 +153,11 @@ const std::vector<std::any>& gfVectorMonoInputTerminal::get() {
   auto sot = (gfVectorMonoOutputTerminal*)(output_term.get());
   return sot->get();
 }
+size_t gfVectorMonoInputTerminal::size() {
+  auto output_term = connected_output_.lock();
+  auto sot = (gfVectorMonoOutputTerminal*)(output_term.get());
+  return sot->size(); 
+}
 
 void gfVectorMonoOutputTerminal::clear() {
   data_.clear();
@@ -303,7 +308,7 @@ void Node::propagate_outputs() {
   //   group->propagate();
   // }
 }
-void Node::notify_children() {
+void Node::notify_children(bool skip_root) {
   std::queue<Node*> nodes_to_check;
   std::set<Node*> visited;
   nodes_to_check.push(this);
@@ -312,8 +317,9 @@ void Node::notify_children() {
     auto n = nodes_to_check.front();
     nodes_to_check.pop();
     
-    n->for_each_output([&nodes_to_check, &visited](gfOutputTerminal& oT) {
-      oT.clear(); // clear output terminal
+    n->for_each_output([&nodes_to_check, &visited, &skip_root](gfOutputTerminal& oT) {
+      if (!skip_root)
+        oT.clear(); // clear output terminal
       for (auto& conn : oT.get_connections()) {
         if (auto iT = conn.lock()) {
           iT->clear();
@@ -350,11 +356,11 @@ std::string Node::debug_info() {
 void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
 }
-bool NodeManager::run(Node &node) {
+bool NodeManager::run(Node &node, bool skip_root) {
   std::queue<std::shared_ptr<Node>>().swap(node_queue); // clear to prevent double processing of nodes ()
   node.update_status();
   if (node.queue()) {
-    node.notify_children();
+    node.notify_children(skip_root);
     while (!node_queue.empty()) {
       auto n = node_queue.front();
       node_queue.pop();
@@ -531,7 +537,7 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath) {
           for (json::const_iterator c=conn_j->begin(); c!=conn_j->end(); ++c) {
             auto cval = c.value().get<std::array<std::string,2>>();
             if (nodes.count(cval[0]))
-              nhandle->output(conn_j.key()).connect(nodes[cval[0]]->input(cval[1]));
+              nhandle->output_terminals[conn_j.key()]->connect(*nodes[cval[0]]->input_terminals[cval[1]]);
             else 
               std::cout << "Could not connect output " << conn_j.key() << "\n";
           }

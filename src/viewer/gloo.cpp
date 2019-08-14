@@ -514,8 +514,8 @@ void Painter::render(glm::mat4 & model, glm::mat4 & view, glm::mat4 & projection
     glBindVertexArray(mVertexArray);
     if (attributes["position"]->get_length()>0) {
         if(has_subdata()){
-            for (auto& offset_len : subdata_pairs) {
-                glDrawArrays(draw_mode, offset_len.first, offset_len.second);
+            for (auto& [offset, len] : subdata_pairs) {
+                glDrawArrays(draw_mode, offset, len);
             }
         } else {
             auto n = attributes["position"]->get_length();

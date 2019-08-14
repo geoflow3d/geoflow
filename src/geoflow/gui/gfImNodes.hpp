@@ -117,10 +117,10 @@ class gfImNodes : public RenderObject {
                 {
                     auto source_node = (geoflow::Node*)(source_node_);
                     auto target_node = (geoflow::Node*)(target_node_);
-                    auto& source_term = source_node->output(std::string(source_term_title));
-                    auto& target_term = target_node->input(std::string(target_term_title));
+                    auto& source_term = source_node->output_terminals[std::string(source_term_title)];
+                    auto& target_term = target_node->input_terminals[std::string(target_term_title)];
                     // std::cerr << "connect " << source_node->get_name() << " [" << source_term_title << ", " << &source_term << "] to " << target_node->get_name() << " [" << target_term_title << ", " << &target_term << "]\n";
-                    source_term.connect(target_term);
+                    source_term->connect(*target_term);
                     node_manager_.run(*target_node);
                 }
 
@@ -170,6 +170,7 @@ class gfImNodes : public RenderObject {
               if (node->get_register().get_name() == "Visualisation") {
                 node->gui();
               } else { 
+                node->gui();
                 geoflow::draw_parameters(node);
                 ImGui::Text("%s", node->info().c_str());
               }
