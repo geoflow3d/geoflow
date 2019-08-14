@@ -519,6 +519,7 @@ namespace geoflow {
     // private:
 
     virtual void init() = 0;
+    virtual void post_parameter_load() {};
     // virtual std::map<std::string,std::shared_ptr<InputTerminal>> init_inputs() {};
     // virtual std::map<std::string,std::shared_ptr<OutputTerminal>> init_outputs() {};
     // virtual ParameterMap init_parameters() {};

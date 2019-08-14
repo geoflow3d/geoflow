@@ -25,6 +25,11 @@ namespace geoflow::nodes::core {
 
     bool load_nodes() {
       if (fs::exists(filepath_)) {
+        input_terminals.clear();
+        output_terminals.clear();
+        nested_node_manager_->clear();
+        nested_outputs_.clear();
+        nested_inputs_.clear();
         // load nodes from json file
         auto nodes = nested_node_manager_->load_json(filepath_);
         // find inputs and outputs to connect to this node's terminals...
@@ -60,8 +65,10 @@ namespace geoflow::nodes::core {
       nested_node_manager_ = std::make_unique<NodeManager>(manager); // this will only transfer the node registers
       add_param("filepath", ParamPath(filepath_, "Flowchart file"));
 
-      // load_nodes();
     };
+    void post_parameter_load() {
+      load_nodes();
+    }
 
     #ifdef GF_BUILD_GUI
       void gui() {

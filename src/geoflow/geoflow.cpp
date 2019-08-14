@@ -522,6 +522,7 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath) {
           else if (auto param_ptr = std::get_if<ParamPath>(&nhandle->parameters.at(pel.key())))
             param_ptr->set(pel.value().get<std::string>());
         }
+        nhandle->post_parameter_load();
       }
     } else {
       std::cout << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
