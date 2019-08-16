@@ -306,6 +306,17 @@ void Painter::set_attribute(std::string name, GLfloat* data, size_t n, size_t st
     attributes[name]->set_data(data, n, stride);
     enable_attribute(name);
 }
+void Painter::begin_sub_attributes(std::string& name, size_t element_count, size_t stride) {
+    attributes[name]->reserve_data<GLfloat>(element_count, stride);
+}
+void Painter::set_sub_attributes(std::string& name, GLfloat* data, size_t count, size_t& offset) {
+    attributes[name]->set_subdata(data, offset, count);
+    offset += count;
+}
+void Painter::end_sub_attributes(std::string& name) {
+    enable_attribute(name);
+}
+
 bool Painter::has_subdata() {
     return subdata_pairs.size()>0;
 }
@@ -353,6 +364,21 @@ void Painter::set_geometry(GeometryCollection< std::array<arr3f,2> >& geoms) {
     
     attributes["position"]->set_data(geoms[0][0].data(), geoms.vertex_count(), geoms.dimension());
   
+    enable_attribute("position");
+}
+void Painter::begin_sub_geometries(size_t vertex_count, size_t dim) {
+    subdata_pairs.clear();
+    bbox.clear();
+    attributes["position"]->reserve_data<GLfloat>(vertex_count, dim);
+}
+void Painter::set_sub_geometry(GeometryCollection< std::array<arr3f,3> >& geom, size_t& offset) {
+    size_t n = geom.vertex_count();
+    attributes["position"]->set_subdata(geom[0][0].data(), offset, n);
+    subdata_pairs.push_back(std::make_pair(offset, n));
+    offset += n;
+    bbox.add(geom.box());
+}
+void Painter::end_sub_geometries() {
     enable_attribute("position");
 }
 

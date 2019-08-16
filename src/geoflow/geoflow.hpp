@@ -77,6 +77,7 @@ namespace geoflow {
     bool accepts_type(std::type_index type) const;
     const std::vector<std::type_index>& get_types() const { return types_; };
     const virtual gfIO get_side() = 0;
+    const virtual gfTerminalFamily get_family() = 0;
     virtual bool has_data() = 0;
     virtual bool has_connection() = 0;
 
@@ -108,7 +109,6 @@ namespace geoflow {
       return weak_from_this();
     }
     const gfIO get_side() { return GF_IN; };
-    const virtual gfTerminalFamily get_family() = 0;
     bool is_optional() { return is_optional_; };
 
     friend class gfOutputTerminal;
@@ -156,7 +156,6 @@ namespace geoflow {
     std::weak_ptr<gfOutputTerminal>  get_ptr(){ return weak_from_this(); }
     const InputConnectionSet& get_connections();
     const gfIO get_side() { return GF_OUT; };
-    const virtual gfTerminalFamily get_family() = 0;
     
     bool has_connection() { return connections_.size()>0; };
     bool is_compatible(gfInputTerminal& input_terminal);
@@ -492,6 +491,8 @@ namespace geoflow {
       add_output<gfPolyOutputTerminal>(name, types, is_marked);
     };
 
+    std::set<NodeHandle> get_child_nodes();
+
     template<typename T> void add_param(std::string name, T value) {
       parameters.emplace(name, value);
     }
@@ -513,7 +514,7 @@ namespace geoflow {
     bool queue();
     bool update_status();
     void propagate_outputs();
-    void notify_children(bool skip_root=false);
+    void notify_children();
     // void preprocess();
 
     // private:
@@ -638,9 +639,9 @@ namespace geoflow {
 
     // }
     
-    bool run(Node &node, bool skip_root=false);
-    bool run(NodeHandle node, bool skip_root=false) {
-      return run(*node, skip_root);
+    bool run(Node &node);
+    bool run(NodeHandle node) {
+      return run(*node);
     };
     
     protected:

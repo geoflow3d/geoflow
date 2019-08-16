@@ -118,6 +118,42 @@ bool Slot(geoflow::gfTerminal* term, int kind)
         ImGui::ItemSize(circle_rect.GetSize());
         ImGui::ItemAdd(circle_rect, ImGui::GetID(title));
 
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            // ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            if (term->get_side()==geoflow::GF_IN) {
+                auto* it = (geoflow::gfInputTerminal*) term;
+                ImGui::Text("Input %s", it->is_optional() ? "(optional)" : "");
+            } else {
+                auto* ot = (geoflow::gfOutputTerminal*) term;
+                ImGui::Text("Output (%lu connections)", ot->get_connections().size());
+            }
+            ImGui::Text("Has data: %s", term->has_data() ? "yes" : "no");
+            if (term->get_family()==geoflow::GF_VECTOR ) {
+                ImGui::TextUnformatted("Family: Vector");
+                if(term->has_data()) {
+                    if (term->get_side()==geoflow::GF_IN) {
+                        auto* it = (geoflow::gfVectorMonoInputTerminal*) term;
+                        ImGui::SameLine(); ImGui::Text("(size: %lu)", it->size());
+                    } else{
+                        auto* ot = (geoflow::gfVectorMonoOutputTerminal*) term;
+                        ImGui::SameLine(); ImGui::Text("(size: %lu)", ot->size());
+                    }
+                }
+            } else if (term->get_family()==geoflow::GF_BASIC )
+                ImGui::TextUnformatted("Family: Basic");
+            else if (term->get_family()==geoflow::GF_POLY )
+                ImGui::TextUnformatted("Family: Poly");
+            else
+                ImGui::TextUnformatted("Family: Unknown");
+            
+            ImGui::Text("Accepted types:");
+            for (auto& ti : term->get_types())
+                ImGui::Text("\t%s", ti.name());
+            // ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+
         if (ImNodes::IsInputSlotKind(kind))
         {
             ImGui::SameLine();

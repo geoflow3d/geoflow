@@ -196,13 +196,13 @@ namespace geoflow::nodes::gui {
     }
   };
 
-  class PainterNode:public Node {
+  class BasePainterNode:public Node {
+    protected:
     std::shared_ptr<Painter> painter;
     std::weak_ptr<poviApp> pv_app;
-    
-    public:
-    // using Node::Node;
-     PainterNode (NodeRegisterHandle nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name) {
+
+    public:    
+    BasePainterNode (NodeRegisterHandle nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name) {
       painter = std::make_shared<Painter>();
       // painter->set_attribute("position", nullptr, 0, {3});
       // painter->set_attribute("value", nullptr, 0, {1});
@@ -210,6 +210,25 @@ namespace geoflow::nodes::gui {
       painter->attach_shader("basic.frag");
       painter->set_drawmode(GL_TRIANGLES);
       // a.add_painter(painter, "mypainter");
+    }
+    ~BasePainterNode() {
+      // note: this assumes we have only attached this painter to one poviapp
+      if (auto a = pv_app.lock()) {
+        std::cout << "remove painter\n";
+        a->remove_painter(painter);
+      } else std::cout << "remove painter failed\n";
+    }
+    void add_to(poviApp& a) {
+      a.add_painter(painter, get_name());
+      pv_app = a.get_ptr();
+    }
+  };
+
+  class PainterNode:public BasePainterNode {
+    
+    public:
+    using BasePainterNode::BasePainterNode;
+    void init() {
       add_input("geometries", {
         typeid(PointCollection), 
         typeid(TriangleCollection),
@@ -222,19 +241,6 @@ namespace geoflow::nodes::gui {
       add_input("colormap", typeid(ColorMap));
       add_input("values", typeid(vec1f));
       add_input("identifiers", typeid(vec1i));
-    }
-    ~PainterNode() {
-      // note: this assumes we have only attached this painter to one poviapp
-      if (auto a = pv_app.lock()) {
-        std::cout << "remove painter\n";
-        a->remove_painter(painter);
-      } else std::cout << "remove painter failed\n";
-    }
-    void init() {}
-
-    void add_to(poviApp& a) {
-      a.add_painter(painter, get_name());
-      pv_app = a.get_ptr();
     }
 
     void map_identifiers() {
@@ -318,6 +324,125 @@ namespace geoflow::nodes::gui {
           }
           painter->remove_texture();
         }
+    }
+
+    void gui() {
+      painter->gui();
+      // type: points, lines, triangles
+      // fp_painter->attach_shader("basic.vert");
+      // fp_painter->attach_shader("basic.frag");
+      // fp_painter->set_drawmode(GL_LINE_STRIP);
+    }
+    void process() {};
+  };
+
+  class VectorPainterNode:public BasePainterNode {
+    public:
+    using BasePainterNode::BasePainterNode;
+    void init() {
+      add_vector_input("geometries", {
+        // typeid(PointCollection), 
+        typeid(TriangleCollection),
+        // typeid(SegmentCollection),
+        // typeid(LineStringCollection),
+        // typeid(LinearRingCollection),
+        // typeid(LinearRing)
+      });
+      add_vector_input("normals", typeid(vec3f));
+      // add_input("colormap", typeid(ColorMap));
+      // add_vector_input("attributes", {typeid(vec1f),typeid(vec1i)});
+    }
+
+    void add_to(poviApp& a) {
+      a.add_painter(painter, get_name());
+      pv_app = a.get_ptr();
+    }
+
+    // void map_identifiers() {
+    //   if (input("identifiers").has_data() && input("colormap").has_data()) {
+    //     auto cmap = input("colormap").get<ColorMap>();
+    //     if (cmap.is_gradient) return;
+    //     auto values = input("identifiers").get<vec1i>();
+    //     vec1f mapped;
+    //     for(auto& v : values) {
+    //       mapped.push_back(float(cmap.mapping[v])/256);
+    //     }
+    //     painter->set_attribute("identifier", mapped.data(), mapped.size(), 1);
+    //   }
+    // }
+
+    template <typename T> void set_attribute(std::string name,  gfVectorMonoInputTerminal& aterm, size_t stride) {
+      size_t ecount{}, offset{};
+      for(size_t i=0; i< aterm.size(); ++i) {
+        auto& attr = aterm.get<T&>(i);
+        ecount += attr.size();
+      }
+      painter->begin_sub_attributes(name, ecount, stride);
+      for(size_t i=0; i< aterm.size(); ++i) {
+        auto& data = aterm.get<T&>(i);
+        painter->set_sub_attributes(name, data[0].data(), data.size(), offset);
+      }
+      painter->end_sub_attributes(name);
+    }
+
+    void on_receive(gfMonoInputTerminal& t) {
+      // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
+      if(t.has_data() && painter->is_initialised()) {
+        if(input_terminals["geometries"].get() == &t) {
+          if (t.is_connected_type(typeid(TriangleCollection))) {
+
+            auto& gterm = vector_input("geometries");
+            size_t vcount{}, offset{};
+            for(size_t i=0; i< gterm.size(); ++i) {
+              auto& geom = gterm.get<TriangleCollection&>(i);
+              vcount += geom.vertex_count();
+            }
+            painter->begin_sub_geometries(vcount, 3);
+            for(size_t i=0; i<gterm.size(); ++i) {
+              painter->set_sub_geometry(gterm.get<TriangleCollection&>(i), offset);
+            }
+            painter->end_sub_geometries();
+            painter->set_drawmode(GL_TRIANGLES);
+          }
+        } else if(input_terminals["normals"].get() == &t) {
+          auto& aterm = vector_input("normals");
+          set_attribute<vec3f>("normal", aterm, 3);
+        }
+        // } else if(input_terminals["attributes"].get() == &t) {
+        //   auto aterm = input("attributes");
+        //   set_attribute<vec3f>("attr", 1);
+        // } else if(&input("identifiers") == &t) {
+        //   map_identifiers();
+        // } else if(&input("colormap") == &t) {
+        //   auto& cmap = input("colormap").get<ColorMap&>();
+        //   if(cmap.is_gradient) {
+        //     painter->register_uniform(cmap.u_valmax);
+        //     painter->register_uniform(cmap.u_valmin);
+        //   } else {
+        //     map_identifiers();
+        //   }
+        //   painter->set_texture(cmap.tex);
+        // }
+      }
+    }
+    void on_clear(gfInputTerminal& t) {
+      // clear attributes...
+      // painter->set_attribute("position", nullptr, 0, {3}); // put empty array
+      if(input_terminals["geometries"].get() == &t) {
+          painter->clear_attribute("position");
+        } else if(input_terminals["normals"].get() == &t) {
+          painter->clear_attribute("normal");
+        }
+        // } else if(&input("colormap") == &t) {
+        //   if(t.has_data()) {
+        //     auto& cmap = input("colormap").get<ColorMap&>();
+        //     if (cmap.is_gradient) {
+        //       painter->unregister_uniform(cmap.u_valmax);
+        //       painter->unregister_uniform(cmap.u_valmin);
+        //     }
+        //   }
+        //   painter->remove_texture();
+        // }
     }
 
     void gui() {

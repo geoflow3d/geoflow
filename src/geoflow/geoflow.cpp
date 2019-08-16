@@ -272,6 +272,17 @@ void Node::set_params(ParameterMap new_map, bool quiet) {
     set_param(kv.first, kv.second, quiet);
   }
 }
+std::set<NodeHandle> Node::get_child_nodes() {
+  std::set<NodeHandle> child_nodes;
+  for (auto& [name, oT] : output_terminals) {
+    for (auto& conn : oT->get_connections()) {
+      if (auto input_term = conn.lock()) {
+        child_nodes.insert(input_term->get_parent().get_handle());
+      }
+    }
+  }
+  return child_nodes;
+}
 const ParameterMap& Node::dump_params() {
   return parameters;
 }
@@ -308,7 +319,7 @@ void Node::propagate_outputs() {
   //   group->propagate();
   // }
 }
-void Node::notify_children(bool skip_root) {
+void Node::notify_children() {
   std::queue<Node*> nodes_to_check;
   std::set<Node*> visited;
   nodes_to_check.push(this);
@@ -317,9 +328,8 @@ void Node::notify_children(bool skip_root) {
     auto n = nodes_to_check.front();
     nodes_to_check.pop();
     
-    n->for_each_output([&nodes_to_check, &visited, &skip_root](gfOutputTerminal& oT) {
-      if (!skip_root)
-        oT.clear(); // clear output terminal
+    n->for_each_output([&nodes_to_check, &visited](gfOutputTerminal& oT) {
+      oT.clear();
       for (auto& conn : oT.get_connections()) {
         if (auto iT = conn.lock()) {
           iT->clear();
@@ -356,11 +366,11 @@ std::string Node::debug_info() {
 void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
 }
-bool NodeManager::run(Node &node, bool skip_root) {
+bool NodeManager::run(Node &node) {
   std::queue<std::shared_ptr<Node>>().swap(node_queue); // clear to prevent double processing of nodes ()
   node.update_status();
   if (node.queue()) {
-    node.notify_children(skip_root);
+    node.notify_children();
     while (!node_queue.empty()) {
       auto n = node_queue.front();
       node_queue.pop();

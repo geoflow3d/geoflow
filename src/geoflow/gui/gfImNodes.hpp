@@ -25,7 +25,7 @@ class gfImNodes : public RenderObject {
         ImVec2(node->position[0], node->position[1]),
         false
       ));
-      if(node->get_type_name() == "Painter") {
+      if(node->get_type_name() == "Painter" || node->get_type_name() == "VectorPainter") {
         auto* painter_node = (geoflow::nodes::gui::PainterNode*)(node.get());
         painter_node->add_to(app_);
       }
@@ -213,7 +213,7 @@ class gfImNodes : public RenderObject {
                 auto type_name = kv.first;
                 if (ImGui::MenuItem(type_name.c_str())) {
                   auto handle = node_manager_.create_node(node_register, type_name);
-                  if (handle->get_type_name()=="Painter") {
+                  if (handle->get_type_name()=="Painter" || handle->get_type_name()=="VectorPainter") {
                     auto* painter_node = (geoflow::nodes::gui::PainterNode*)(handle.get());
                     painter_node->add_to(app_);
                   }

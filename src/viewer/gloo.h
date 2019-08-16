@@ -263,11 +263,29 @@ class Uniform3f:public Uniform
 
 class BasePainter
 {
-public:
+    protected:
+    BasePainter(BasePainter const &) = delete;
+    BasePainter & operator=(BasePainter const &) = delete;
+    // void set_buffer(std::unique_ptr<Buffer> b);
+    // void set_program(std::unique_ptr<Shader> s);
+    void setup_VertexArray();
+    GLuint mVertexArray=0;
+    int draw_mode;
+    int polygon_mode = GL_FILL;
+    // std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
+    std::unique_ptr<Shader> shader = std::make_unique<Shader>();
+    // std::unordered_<std::string,float> uniforms;
+    std::vector<std::unique_ptr<Uniform>> uniforms;
+    std::unordered_map<std::string, std::unique_ptr<Buffer>> attributes;
+    
+    bool initialised=false;
+    
+    public:
+
     BasePainter(){};
     ~BasePainter() { glDeleteVertexArrays(1, &mVertexArray); }
 
-    bool is_initialised(){ return initialised;};
+    bool is_initialised() { return initialised; };
     // GLuint get() { return mVertexArray; }
 
     void attach_shader(std::string const & filename);
@@ -287,23 +305,7 @@ public:
     
     // how to deal with uniforms?
     // float pointsize=1;
-protected:
-    BasePainter(BasePainter const &) = delete;
-    BasePainter & operator=(BasePainter const &) = delete;
-    // void set_buffer(std::unique_ptr<Buffer> b);
-    // void set_program(std::unique_ptr<Shader> s);
-    void setup_VertexArray();
-    GLuint mVertexArray=0;
-    int draw_mode;
-    int polygon_mode = GL_FILL;
-    // std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
-    std::unique_ptr<Shader> shader = std::make_unique<Shader>();
-    // std::unordered_<std::string,float> uniforms;
-    std::vector<std::unique_ptr<Uniform>> uniforms;
-    std::unordered_map<std::string, std::unique_ptr<Buffer>> attributes;
-    
 
-    bool initialised=false;
 };
 
 class hudPainter : public BasePainter {
@@ -325,6 +327,14 @@ class Painter : public BasePainter {
     void set_geometry(GeometryCollection<arr3f>& geoms);
     void set_geometry(GeometryCollection< std::array<arr3f,3> >& geoms);
     void set_geometry(GeometryCollection< std::array<arr3f,2> >& geoms);
+    
+    void begin_sub_attributes(std::string& name, size_t element_count, size_t stride);
+    void set_sub_attributes(std::string& name, GLfloat* data, size_t count, size_t& offset);
+    void end_sub_attributes(std::string& name);
+    void begin_sub_geometries(size_t vertex_count, size_t dim);
+    void set_sub_geometry(GeometryCollection< std::array<arr3f,3> >& geom, size_t& offset);
+    void end_sub_geometries();
+    
     void clear_attribute(const std::string name);
 
     void set_texture(std::weak_ptr<Texture1D> tex);

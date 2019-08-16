@@ -67,7 +67,7 @@ namespace geoflow::nodes::core {
 
     };
     void post_parameter_load() {
-      load_nodes();
+      flowchart_loaded = load_nodes();
     }
 
     #ifdef GF_BUILD_GUI
@@ -101,11 +101,17 @@ namespace geoflow::nodes::core {
             proxy_node->output(name) = data_vec[i];
           }
           // run
-          nested_node_manager_->run(proxy_node, true);
+          for (auto& child : proxy_node->get_child_nodes()) {
+            nested_node_manager_->run(child);
+          }
           // collect outputs and push directly to vector outputs
           for(auto nested_output : nested_outputs_) {
             auto output_term = (gfBasicMonoOutputTerminal*)(nested_output.lock().get());
-            vector_output(output_term->get_name()).push_back_any( output_term->get_data());
+            if (output_term->has_data()) {
+              auto& data = output_term->get_data();
+              std::cerr << data.type().name() << "\n";
+              vector_output(output_term->get_name()).push_back_any(data);
+            }
           }
         }
       }

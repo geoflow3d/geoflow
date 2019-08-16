@@ -62,6 +62,7 @@ int main(int argc, const char * argv[]) {
       R_gui->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
       R_gui->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
       R_gui->register_node<geoflow::nodes::gui::PainterNode>("Painter");
+      R_gui->register_node<geoflow::nodes::gui::VectorPainterNode>("VectorPainter");
       R_gui->register_node<geoflow::nodes::gui::CubeNode>("Cube");
       R_gui->register_node<geoflow::nodes::gui::TriangleNode>("Triangle");
       node_registers.emplace(R_gui);
