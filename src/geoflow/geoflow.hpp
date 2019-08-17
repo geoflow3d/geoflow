@@ -44,10 +44,6 @@ namespace geoflow {
   class NodeManager;
   class NodeRegister;
   typedef std::shared_ptr<NodeRegister> NodeRegisterHandle;
-  class InputTerminal;
-  class OutputTerminal;
-  class InputGroup;
-  class OutputGroup;
   // typedef std::weak_ptr<InputTerminal> InputHandle;
   // typedef std::weak_ptr<OutputTerminal> OutputHandle;
   
@@ -526,10 +522,8 @@ namespace geoflow {
     // virtual ParameterMap init_parameters() {};
     virtual void process() = 0;
     virtual void gui() {};
-    virtual void on_receive(gfMonoInputTerminal& it){};
-    virtual void on_receive(gfPolyInputTerminal& it){};
-    virtual void on_clear(InputTerminal& it){};
-    virtual void on_waiting(gfInputTerminal& it){};
+    virtual void on_receive(gfInputTerminal& it){};
+    virtual void on_clear(gfInputTerminal& it){};
     virtual void on_connect_input(gfInputTerminal& ot){};
     virtual void on_connect_output(gfOutputTerminal& ot){};
     virtual void on_change_parameter(std::string name, ParameterVariant& param){};

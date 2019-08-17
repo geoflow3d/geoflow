@@ -53,7 +53,7 @@ std::type_index gfMonoInputTerminal::get_connected_type() const {
 
 void gfInputTerminal::clear() {
   parent_.update_status();
-  parent_.on_waiting(*this);
+  parent_.on_clear(*this);
 }
 void gfMonoInputTerminal::update_on_receive(bool queue) {
   if(has_data()) {

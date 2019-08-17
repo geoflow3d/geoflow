@@ -147,9 +147,9 @@ bool Slot(geoflow::gfTerminal* term, int kind)
             else
                 ImGui::TextUnformatted("Family: Unknown");
             
-            ImGui::Text("Accepted types:");
+            ImGui::Text("Compatible types:");
             for (auto& ti : term->get_types())
-                ImGui::Text("\t%s", ti.name());
+                ImGui::Text("  %s", ti.name());
             // ImGui::PopTextWrapPos();
             ImGui::EndTooltip();
         }

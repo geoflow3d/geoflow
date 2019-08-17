@@ -109,7 +109,6 @@ namespace geoflow::nodes::core {
             auto output_term = (gfBasicMonoOutputTerminal*)(nested_output.lock().get());
             if (output_term->has_data()) {
               auto& data = output_term->get_data();
-              std::cerr << data.type().name() << "\n";
               vector_output(output_term->get_name()).push_back_any(data);
             }
           }
