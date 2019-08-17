@@ -522,7 +522,8 @@ namespace geoflow {
     // virtual ParameterMap init_parameters() {};
     virtual void process() = 0;
     virtual void gui() {};
-    virtual void on_receive(gfInputTerminal& it){};
+    virtual void on_receive(gfMonoInputTerminal& it){};
+    virtual void on_receive(gfPolyInputTerminal& it){};
     virtual void on_clear(gfInputTerminal& it){};
     virtual void on_connect_input(gfInputTerminal& ot){};
     virtual void on_connect_output(gfOutputTerminal& ot){};
