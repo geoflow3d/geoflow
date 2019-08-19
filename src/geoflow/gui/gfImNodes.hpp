@@ -36,6 +36,10 @@ class gfImNodes : public RenderObject {
     : node_manager_(node_manager), app_(app) {
       init_node_draw_list();
     };
+  ~gfImNodes() {
+    node_draw_list_.clear();
+    node_manager_.clear();
+  }
 
   void menu() {
 		{
