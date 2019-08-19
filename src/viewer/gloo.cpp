@@ -371,9 +371,9 @@ void Painter::begin_sub_geometries(size_t vertex_count, size_t dim) {
     bbox.clear();
     attributes["position"]->reserve_data<GLfloat>(vertex_count, dim);
 }
-void Painter::set_sub_geometry(GeometryCollection< std::array<arr3f,3> >& geom, size_t& offset) {
+void Painter::set_sub_geometry(Geometry& geom, size_t& offset) {
     size_t n = geom.vertex_count();
-    attributes["position"]->set_subdata(geom[0][0].data(), offset, n);
+    attributes["position"]->set_subdata(geom.get_data_ptr(), offset, n);
     subdata_pairs.push_back(std::make_pair(offset, n));
     offset += n;
     bbox.add(geom.box());

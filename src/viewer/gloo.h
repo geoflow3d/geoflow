@@ -332,7 +332,7 @@ class Painter : public BasePainter {
     void set_sub_attributes(std::string& name, GLfloat* data, size_t count, size_t& offset);
     void end_sub_attributes(std::string& name);
     void begin_sub_geometries(size_t vertex_count, size_t dim);
-    void set_sub_geometry(GeometryCollection< std::array<arr3f,3> >& geom, size_t& offset);
+    void set_sub_geometry(Geometry& geom, size_t& offset);
     void end_sub_geometries();
     
     void clear_attribute(const std::string name);

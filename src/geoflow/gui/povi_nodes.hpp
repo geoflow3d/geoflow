@@ -341,11 +341,11 @@ namespace geoflow::nodes::gui {
     using BasePainterNode::BasePainterNode;
     void init() {
       add_vector_input("geometries", {
-        // typeid(PointCollection), 
+        typeid(PointCollection), 
         typeid(TriangleCollection),
-        // typeid(SegmentCollection),
-        // typeid(LineStringCollection),
-        // typeid(LinearRingCollection),
+        // typeid(Segment),
+        typeid(LineString),
+        typeid(LinearRing),
         // typeid(LinearRing)
       });
       add_vector_input("normals", typeid(vec3f));
@@ -385,25 +385,41 @@ namespace geoflow::nodes::gui {
       painter->end_sub_attributes(name);
     }
 
+    template<typename T> void set_geometry(gfVectorMonoInputTerminal& gterm) {
+      size_t vcount{}, offset{};
+      for(size_t i=0; i< gterm.size(); ++i) {
+        auto& geom = gterm.get<T&>(i);
+        vcount += geom.vertex_count();
+      }
+      painter->begin_sub_geometries(vcount, 3);
+      for(size_t i=0; i<gterm.size(); ++i) {
+        painter->set_sub_geometry(gterm.get<T&>(i), offset);
+      }
+      painter->end_sub_geometries();
+    }
+
     void on_receive(gfMonoInputTerminal& t) {
       // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
       if(t.has_data() && painter->is_initialised()) {
         if(input_terminals["geometries"].get() == &t) {
+          auto& gterm = vector_input("geometries");
           if (t.is_connected_type(typeid(TriangleCollection))) {
-
-            auto& gterm = vector_input("geometries");
-            size_t vcount{}, offset{};
-            for(size_t i=0; i< gterm.size(); ++i) {
-              auto& geom = gterm.get<TriangleCollection&>(i);
-              vcount += geom.vertex_count();
-            }
-            painter->begin_sub_geometries(vcount, 3);
-            for(size_t i=0; i<gterm.size(); ++i) {
-              painter->set_sub_geometry(gterm.get<TriangleCollection&>(i), offset);
-            }
-            painter->end_sub_geometries();
+            set_geometry<TriangleCollection>(gterm);
             painter->set_drawmode(GL_TRIANGLES);
+          } else if (t.is_connected_type(typeid(PointCollection))) {
+            set_geometry<PointCollection>(gterm);
+            painter->set_drawmode(GL_POINTS);
+          } else if (t.is_connected_type(typeid(LinearRing))) {
+            set_geometry<LinearRing>(gterm);
+            painter->set_drawmode(GL_LINE_LOOP);
+          } else if (t.is_connected_type(typeid(LineString))) {
+            set_geometry<LineString>(gterm);
+            painter->set_drawmode(GL_LINE_STRIP);
           }
+          // } else if (t.is_connected_type(typeid(Segment))) {
+          //   set_geometry<Segment>(gterm);
+          //   painter->set_drawmode(GL_LINES);
+          // }
         } else if(input_terminals["normals"].get() == &t) {
           auto& aterm = vector_input("normals");
           set_attribute<vec3f>("normal", aterm, 3);

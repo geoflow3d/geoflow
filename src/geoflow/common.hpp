@@ -126,11 +126,10 @@ class Box {
   }
 };
 
-template<typename geom_def> class GeometryCollection : public std::vector<geom_def> {
+class Geometry {
   protected:
   std::optional<Box> bbox;
   virtual void compute_box() =0;
-
   public:
   virtual size_t vertex_count() const=0;
   virtual Box& box() {
@@ -142,14 +141,74 @@ template<typename geom_def> class GeometryCollection : public std::vector<geom_d
   size_t dimension() {
     return 3;
   }
+  virtual float* get_data_ptr() = 0;
+};
+
+template<typename geom_def> class GeometryCollection : public Geometry, public std::vector<geom_def> {
 };
 
 // geometry types:
 // typedef arr3f Point;
 typedef std::array<arr3f, 3> Triangle;
+
 typedef std::array<arr3f, 2> Segment;
-typedef vec3f LineString;
-typedef vec3f LinearRing;
+// typedef vec3f LineString;
+// typedef vec3f LinearRing;
+// class Segment : public Geometry, public std::array<arr3f,2> {
+//   protected:
+//   void compute_box() {
+//     if (!bbox.has_value()) {
+//       bbox=Box();
+//       bbox->add((*this)[0]);
+//       bbox->add((*this)[1]);
+//     }
+//   };
+//   public:
+//   size_t vertex_count() {
+//     return 2;
+//   }
+//   float* get_data_ptr() {
+//     return (*this)[0].data();
+//   };
+// };
+class LinearRing : public vec3f, public Geometry {
+  protected:
+  void compute_box() {
+    if (!bbox.has_value()) {
+      bbox=Box();
+      for(auto& t : *this){
+        bbox->add(t);
+      }
+    }
+  }
+  public:
+  size_t vertex_count() const {
+    return size();
+  }
+  float* get_data_ptr() {
+    return (*this)[0].data();
+  }
+};
+class LineString : public vec3f, public Geometry {
+  protected:
+  void compute_box() {
+    if (!bbox.has_value()) {
+      bbox=Box();
+      for(auto& t : *this){
+        bbox->add(t);
+      }
+    }
+  }
+  public:
+  size_t vertex_count() const {
+    return size();
+  }
+  float* get_data_ptr() {
+    return (*this)[0].data();
+  }
+};
+
+
 class TriangleCollection:public GeometryCollection<Triangle> {
   public:
   size_t vertex_count() const {
@@ -165,8 +224,11 @@ class TriangleCollection:public GeometryCollection<Triangle> {
       }
     }
   }
+  float* get_data_ptr() {
+    return (*this)[0][0].data();
+  }
 };
-class SegmentCollection:public GeometryCollection<Segment> {
+class SegmentCollection:public GeometryCollection<std::array<arr3f,2>> {
   public:
   size_t vertex_count() const {
     return size()*2;
@@ -180,6 +242,9 @@ class SegmentCollection:public GeometryCollection<Segment> {
       }
     }
   }
+  float* get_data_ptr() {
+    return (*this)[0][0].data();
+  }
 };
 class PointCollection:public GeometryCollection<arr3f> {
   public:
@@ -192,9 +257,12 @@ class PointCollection:public GeometryCollection<arr3f> {
       bbox->add(*this);
     }
   }
+  float* get_data_ptr() {
+    return (*this)[0].data();
+  }
 };
 // typedef GeometryCollection<arr3f, point> PointCollection;
-class LineStringCollection:public GeometryCollection<LineString> {
+class LineStringCollection:public GeometryCollection<vec3f> {
   public:
   size_t vertex_count() const{
     size_t result=0;
@@ -203,7 +271,7 @@ class LineStringCollection:public GeometryCollection<LineString> {
     }
     return result;
   }
-  virtual void compute_box() {
+  void compute_box() {
     if (!bbox.has_value()) {
       bbox=Box();
       for(auto& vec : *this){
@@ -211,8 +279,12 @@ class LineStringCollection:public GeometryCollection<LineString> {
       }
     }
   }
+  float* get_data_ptr() {
+    return (*this)[0][0].data();
+  }
 };
-class LinearRingCollection:public GeometryCollection<LinearRing> {
+class LinearRingCollection:public GeometryCollection<vec3f> {
+  public:
   size_t vertex_count() const{
     size_t result=0;
     for (auto& vec : *this) {
@@ -220,13 +292,16 @@ class LinearRingCollection:public GeometryCollection<LinearRing> {
     }
     return result;
   }
-  virtual void compute_box() {
+  void compute_box() {
     if (!bbox.has_value()) {
       bbox=Box();
       for(auto& vec : *this){
         bbox->add(vec);
       }
     }
+  }
+  float* get_data_ptr() {
+    return (*this)[0][0].data();
   }
 };
 
