@@ -485,7 +485,7 @@ void NodeManager::dump_json(std::string filepath) {
   std::ofstream o(filepath);
   o << std::setw(2) << j << std::endl;
 }
-std::vector<NodeHandle> NodeManager::load_json(std::string filepath) {
+std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict) {
   json j;
   std::vector<NodeHandle> new_nodes;
   std::ifstream i(filepath);
@@ -535,7 +535,9 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath) {
         nhandle->post_parameter_load();
       }
     } else {
-      std::cout << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
+      std::cerr << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
+      if (strict)
+        throw gfException("Unable to load json file");
     }
   }
   for (auto node_j : nodes_j.items()) {
@@ -548,9 +550,17 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath) {
           for (json::const_iterator c=conn_j->begin(); c!=conn_j->end(); ++c) {
             auto cval = c.value().get<std::array<std::string,2>>();
             if (nodes.count(cval[0]))
+            try {
               nhandle->output_terminals[conn_j.key()]->connect(*nodes[cval[0]]->input_terminals[cval[1]]);
+            } catch (const gfException& e) {
+              if(strict) {
+                throw e;
+              } else {
+                std::cerr << e.what();
+              }
+            }
             else 
-              std::cout << "Could not connect output " << conn_j.key() << "\n";
+              std::cerr << "Could not connect output " << conn_j.key() << "\n";
           }
         }
       }

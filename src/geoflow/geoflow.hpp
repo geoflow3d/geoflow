@@ -627,7 +627,7 @@ namespace geoflow {
     std::unordered_map<std::string, NodeHandle>& get_nodes() { return nodes; };
     std::vector<NodeHandle> dump_nodes();
 
-    std::vector<NodeHandle> load_json(std::string filepath);
+    std::vector<NodeHandle> load_json(std::string filepath, bool strict=false);
     void dump_json(std::string filepath);
 
     // load_json() {
