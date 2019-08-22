@@ -550,15 +550,15 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict
           for (json::const_iterator c=conn_j->begin(); c!=conn_j->end(); ++c) {
             auto cval = c.value().get<std::array<std::string,2>>();
             if (nodes.count(cval[0]))
-            try {
-              nhandle->output_terminals[conn_j.key()]->connect(*nodes[cval[0]]->input_terminals[cval[1]]);
-            } catch (const gfException& e) {
-              if(strict) {
-                throw e;
-              } else {
-                std::cerr << e.what();
+              try {
+                nhandle->output_terminals[conn_j.key()]->connect(*nodes[cval[0]]->input_terminals[cval[1]]);
+              } catch (const gfException& e) {
+                if(strict) {
+                  throw e;
+                } else {
+                  std::cerr << e.what();
+                }
               }
-            }
             else 
               std::cerr << "Could not connect output " << conn_j.key() << "\n";
           }

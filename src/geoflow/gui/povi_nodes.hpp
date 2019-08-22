@@ -177,6 +177,11 @@ namespace geoflow::nodes::gui {
       }
     }
 
+    void on_connect_output(gfOutputTerminal& ot){
+      update_texture();
+      output("colormap").set(cmap);
+    }
+
     void gui() {
       if(ImGui::DragFloatRange2("range", &cmap.u_valmin->get_value(), &cmap.u_valmax->get_value(), 0.1f, minval, maxval, "Min: %.2f", "Max: %.2f") )
         compute_histogram(cmap.u_valmin->get_value(), cmap.u_valmax->get_value());
@@ -185,14 +190,13 @@ namespace geoflow::nodes::gui {
 
       ImGui::PlotHistogram("Histogram", histogram.data(), histogram.size(), 0, NULL, 0.0f, (float)max_bin_count, ImVec2(200,80));
       if(ImGui::GradientEditor("Colormap", &gradient, draggingMark, selectedMark, ImVec2(200,80))) {
-        update_texture();
+        // update_texture();
       }
+      update_texture();
+      output("colormap").set(cmap);
     }
 
     void process() {
-      update_texture();
-      // cmap.tex = cmap.tex;
-      output("colormap").set(cmap);
     }
   };
 
@@ -336,6 +340,8 @@ namespace geoflow::nodes::gui {
     void process() {};
   };
 
+  float* get_data_ptr(vec3f& data) { return data[0].data(); }
+  float* get_data_ptr(vec1f& data) { return data.data(); }
   class VectorPainterNode:public BasePainterNode {
     public:
     using BasePainterNode::BasePainterNode;
@@ -349,7 +355,8 @@ namespace geoflow::nodes::gui {
         // typeid(LinearRing)
       });
       add_vector_input("normals", typeid(vec3f));
-      // add_input("colormap", typeid(ColorMap));
+      add_input("colormap", typeid(ColorMap));
+      add_vector_input("attributes", typeid(vec1f));
       // add_vector_input("attributes", {typeid(vec1f),typeid(vec1i)});
     }
 
@@ -380,7 +387,7 @@ namespace geoflow::nodes::gui {
       painter->begin_sub_attributes(name, ecount, stride);
       for(size_t i=0; i< aterm.size(); ++i) {
         auto& data = aterm.get<T&>(i);
-        painter->set_sub_attributes(name, data[0].data(), data.size(), offset);
+        painter->set_sub_attributes(name, get_data_ptr(data), data.size(), offset);
       }
       painter->end_sub_attributes(name);
     }
@@ -423,22 +430,21 @@ namespace geoflow::nodes::gui {
         } else if(input_terminals["normals"].get() == &t) {
           auto& aterm = vector_input("normals");
           set_attribute<vec3f>("normal", aterm, 3);
-        }
-        // } else if(input_terminals["attributes"].get() == &t) {
-        //   auto aterm = input("attributes");
-        //   set_attribute<vec3f>("attr", 1);
+        } else if(input_terminals["attributes"].get() == &t) {
+          auto aterm = vector_input("attributes");
+          set_attribute<vec1f>("value", aterm, 1);
         // } else if(&input("identifiers") == &t) {
         //   map_identifiers();
-        // } else if(&input("colormap") == &t) {
-        //   auto& cmap = input("colormap").get<ColorMap&>();
-        //   if(cmap.is_gradient) {
-        //     painter->register_uniform(cmap.u_valmax);
-        //     painter->register_uniform(cmap.u_valmin);
-        //   } else {
-        //     map_identifiers();
-        //   }
-        //   painter->set_texture(cmap.tex);
-        // }
+        } else if(&input("colormap") == &t) {
+          auto& cmap = input("colormap").get<ColorMap&>();
+          if(cmap.is_gradient) {
+            painter->register_uniform(cmap.u_valmax);
+            painter->register_uniform(cmap.u_valmin);
+          } else {
+            // map_identifiers();
+          }
+          painter->set_texture(cmap.tex);
+        }
       }
     }
     void on_clear(gfInputTerminal& t) {
@@ -448,25 +454,20 @@ namespace geoflow::nodes::gui {
           painter->clear_attribute("position");
         } else if(input_terminals["normals"].get() == &t) {
           painter->clear_attribute("normal");
+        } else if(&input("colormap") == &t) {
+          if(t.has_data()) {
+            auto& cmap = input("colormap").get<ColorMap&>();
+            if (cmap.is_gradient) {
+              painter->unregister_uniform(cmap.u_valmax);
+              painter->unregister_uniform(cmap.u_valmin);
+            }
+          }
+          painter->remove_texture();
         }
-        // } else if(&input("colormap") == &t) {
-        //   if(t.has_data()) {
-        //     auto& cmap = input("colormap").get<ColorMap&>();
-        //     if (cmap.is_gradient) {
-        //       painter->unregister_uniform(cmap.u_valmax);
-        //       painter->unregister_uniform(cmap.u_valmin);
-        //     }
-        //   }
-        //   painter->remove_texture();
-        // }
     }
 
     void gui() {
       painter->gui();
-      // type: points, lines, triangles
-      // fp_painter->attach_shader("basic.vert");
-      // fp_painter->attach_shader("basic.frag");
-      // fp_painter->set_drawmode(GL_LINE_STRIP);
     }
     void process() {};
   };
