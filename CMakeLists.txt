@@ -152,6 +152,14 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
   src/geoflow/geoflow.hpp
 )
 
+file(READ src/geoflow/common.hpp s1)
+file(READ src/geoflow/parameters.hpp s2)
+file(READ src/geoflow/geoflow.hpp s3)
+string(CONCAT GF_SHARED_HEADERS ${s1} ${s2} ${s3})
+string(MD5 GF_SHARED_HEADERS_HASH ${GF_SHARED_HEADERS})
+message(STATUS "Setting Geoflow shared header hash to ${GF_SHARED_HEADERS_HASH}")
+add_definitions(-DGF_SHARED_HEADERS_HASH=\"${GF_SHARED_HEADERS_HASH}\")
+
 install(TARGETS geoflow-core EXPORT geoflow-targets 
   RUNTIME
   ARCHIVE
@@ -163,7 +171,7 @@ include ( CMakePackageConfigHelpers )
 configure_package_config_file(geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
   INSTALL_DESTINATION lib/cmake/geoflow
-  PATH_VARS GF_PLUGIN_FOLDER)
+  PATH_VARS GF_PLUGIN_FOLDER GF_SHARED_HEADERS_HASH)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/cmake/geoflow)
 
