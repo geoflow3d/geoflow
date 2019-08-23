@@ -89,6 +89,8 @@ if(${GF_BUILD_GUI})
   if(APPLE)
     SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_mac.m)
+    SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
+      "-framework AppKit")
   elseif(MSVC)
     SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_win.c)
