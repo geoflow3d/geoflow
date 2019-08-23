@@ -73,10 +73,15 @@ int main(int argc, const char * argv[]) {
     for(auto& p: fs::directory_iterator(GF_PLUGIN_FOLDER)) {
         if (p.path().extension() == GF_PLUGIN_EXTENSION) {
           std::string path = p.path().string();
-          std::cout << "Loading " << path << "\n";
+          std::cout << "Loading " << path << " ...\n";
           dloaders.emplace(path, std::make_unique<DLLoader>(path));
-          dloaders[path]->DLOpenLib();
-          node_registers.emplace( dloaders[path]->DLGetInstance() );
+          if (dloaders[path]->DLOpenLib()) {
+            node_registers.emplace( dloaders[path]->DLGetInstance() );
+            std::cout << "... success :)\n";
+          } else {
+            dloaders.erase(path);
+            std::cout << "... failed :(\n";
+          }
         }
     }
 

@@ -35,10 +35,11 @@ namespace dlloader
 
 		~DLLoader() = default;
 
-		void DLOpenLib() override
+		bool DLOpenLib() override
 		{
 			if (!(_handle = dlopen(_pathToLib.c_str(), RTLD_GLOBAL | RTLD_LAZY))) {
 				std::cerr << dlerror() << std::endl;
+				return false;
 			}
 
 			// check header hash
@@ -47,14 +48,18 @@ namespace dlloader
 					dlsym(_handle, _getHeaderHashSymbol.c_str()));
 			if(!headerHashFunc) {
 				std::cerr << dlerror() << std::endl;
+				DLCloseLib();
+				return false;
 			} else {
 				char plugin_hash[33];
 				headerHashFunc(plugin_hash);
 				if(strcmp(plugin_hash, GF_SHARED_HEADERS_HASH)!=0) {
-					std::cerr << plugin_hash << ", geof: " << GF_SHARED_HEADERS_HASH << "\n";
 					std::cerr << "Plugin header hash incompatible!\n";
+					DLCloseLib();
+					return false;
 				}
 			}
+			return true;
 		}
 
 		std::shared_ptr<T> DLGetInstance() override

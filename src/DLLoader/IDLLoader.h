@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <gfSharedHeadersHash.h>
 
 struct ImGuiContext;
 
@@ -23,7 +24,7 @@ namespace dlloader
 		/*
 		**
 		*/
-		virtual void DLOpenLib() = 0;
+		virtual bool DLOpenLib() = 0;
 
 		/*
 		** Return a shared pointer on an instance of class loaded through

@@ -31,11 +31,32 @@ namespace dlloader
 
 		~DLLoader() = default;
 
-		void DLOpenLib() override
+		bool DLOpenLib() override
 		{
 			if (!(_handle = LoadLibrary(_pathToLib.c_str()))) {
 				std::cerr << "Can't open and load " << _pathToLib << std::endl;
+				return false;
 			}
+
+			// check header hash
+			using getHeaderHash = void (*)(char *);
+			auto headerHashFunc = reinterpret_cast<getHeaderHash>(
+					GetProcAddress(_handle, _getHeaderHashSymbol.c_str()));
+			if(!headerHashFunc) {
+				std::cerr << dlerror() << std::endl;
+				return false;
+				DLCloseLib();
+			} else {
+				char plugin_hash[33];
+				headerHashFunc(plugin_hash);
+				if(strcmp(plugin_hash, GF_SHARED_HEADERS_HASH)!=0) {
+					std::cerr << plugin_hash << ", geof: " << GF_SHARED_HEADERS_HASH << "\n";
+					std::cerr << "Plugin header hash incompatible!\n";
+					DLCloseLib();
+					return false;
+				}
+			}
+			return true;
 		}
 
 		std::shared_ptr<T> DLGetInstance() override

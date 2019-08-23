@@ -57,6 +57,7 @@ include_directories(
   thirdparty/imgui
   thirdparty/imgui/examples
   thirdparty/osdialog
+  ${CMAKE_BINARY_DIR}
 )
 
 # targets
@@ -146,19 +147,19 @@ message(STATUS "Setting Geoflow plugin extension to ${GF_PLUGIN_EXTENSION}")
 add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
 add_definitions(-DGF_PLUGIN_EXTENSION=\"${GF_PLUGIN_EXTENSION}\")
 
+# write the hash of the concatenated shared header files to a new header file, so that we can check compatibility between main geof executable and the plugins
+set(GF_SHH_FILE ${CMAKE_BINARY_DIR}/gfSharedHeadersHash.h)
+add_custom_command(
+  TARGET geoflow-core
+  COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${GF_SHH_FILE} -P "${CMAKE_CURRENT_LIST_DIR}/ComputeSharedHeadersHash.cmake"
+)
+  
 set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
   src/geoflow/common.hpp
   src/geoflow/parameters.hpp
   src/geoflow/geoflow.hpp
+  ${GF_SHH_FILE}
 )
-
-file(READ src/geoflow/common.hpp s1)
-file(READ src/geoflow/parameters.hpp s2)
-file(READ src/geoflow/geoflow.hpp s3)
-string(CONCAT GF_SHARED_HEADERS ${s1} ${s2} ${s3})
-string(MD5 GF_SHARED_HEADERS_HASH ${GF_SHARED_HEADERS})
-message(STATUS "Setting Geoflow shared header hash to ${GF_SHARED_HEADERS_HASH}")
-add_definitions(-DGF_SHARED_HEADERS_HASH=\"${GF_SHARED_HEADERS_HASH}\")
 
 install(TARGETS geoflow-core EXPORT geoflow-targets 
   RUNTIME
@@ -171,7 +172,7 @@ include ( CMakePackageConfigHelpers )
 configure_package_config_file(geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
   INSTALL_DESTINATION lib/cmake/geoflow
-  PATH_VARS GF_PLUGIN_FOLDER GF_SHARED_HEADERS_HASH)
+  PATH_VARS GF_PLUGIN_FOLDER)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/cmake/geoflow)
 
