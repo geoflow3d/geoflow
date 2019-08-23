@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: macOS-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Checkout submodules
+      run: git submodule update --init thirdparty/imgui thirdparty/osdialog
+    - name: Install dependencies
+      run: brew install gflw glm nlohmann-json
+    - name: Build
+      run: |
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j2
