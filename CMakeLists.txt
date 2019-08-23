@@ -8,15 +8,6 @@ option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 find_package(glfw3 3.3 REQUIRED)
 find_package(nlohmann_json)
 find_package(glm)
-
-if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
-execute_process(
-  COMMAND             git submodule update --init thirdparty/imgui thirdparty/osdialog
-  WORKING_DIRECTORY   ${PROJECT_SOURCE_DIR}
-  OUTPUT_QUIET
-  ERROR_QUIET
-  )
-endif()  
   
 # DLLoader
 if (WIN32)

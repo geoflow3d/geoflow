@@ -4,16 +4,11 @@ flowchart tool for geo-spatial data processing
 ## Building
 Requires compiler with c++17 support  (see https://en.cppreference.com/w/cpp/compiler_support).
 
-All dependencies are included in this repository. Build with cmake:
+Install dependencies `nlohmann-json` and also 'glfw' and `glm` when building with GUI (the default). Then build using:
 ```
+git submodule update --init thirdparty/imgui thirdparty/osdialog
 mkdir build
 cd build
-cmake ..
+cmake .. -DGF_BUILD_GUI=[ON|OFF]
 make
-```
-
-### Building without GUI
-Set the CMake variable `GF_BUILD_GUI` to `OFF`, eg:
-```
-cmake .. -DGF_BUILD_GUI=OFF
 ```

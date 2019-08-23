@@ -15,7 +15,7 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init thirdparty/imgui thirdparty/osdialog
     - name: Install dependencies
-      run: brew install gflw glm nlohmann-json
+      run: brew install glfw glm nlohmann-json
     - name: Build
       run: |
         mkdir build && cd build
