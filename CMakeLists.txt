@@ -45,10 +45,6 @@ endif()
 include_directories(
   src
   thirdparty/glad/include
-  thirdparty/imgui
-  thirdparty/imgui/examples
-  thirdparty/osdialog
-  thirdparty/filesystem/include
   ${CMAKE_BINARY_DIR}
 )
 
@@ -63,6 +59,12 @@ set_target_properties(geoflow-core PROPERTIES
 )
 
 if(${GF_BUILD_GUI})
+  include_directories(
+    thirdparty/imgui
+    thirdparty/imgui/examples
+    thirdparty/osdialog
+    thirdparty/filesystem/include
+  )
   set(GF_SHADER_FILES 
     ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.frag 
     ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.vert 
