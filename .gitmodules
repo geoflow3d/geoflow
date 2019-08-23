@@ -4,3 +4,6 @@
 [submodule "thirdparty/osdialog"]
 	path = thirdparty/osdialog
 	url = https://github.com/AndrewBelt/osdialog.git
+[submodule "thirdparty/filesystem"]
+	path = thirdparty/filesystem
+	url = https://github.com/gulrak/filesystem.git

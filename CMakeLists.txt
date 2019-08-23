@@ -48,6 +48,7 @@ include_directories(
   thirdparty/imgui
   thirdparty/imgui/examples
   thirdparty/osdialog
+  thirdparty/filesystem/include
   ${CMAKE_BINARY_DIR}
 )
 
