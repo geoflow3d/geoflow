@@ -1,10 +1,7 @@
-#include <filesystem>
 #include "geoflow.hpp"
 #ifdef GF_BUILD_GUI
   #include "imgui.h"
 #endif
-
-namespace fs = std::filesystem;
 
 namespace geoflow::nodes::core {
 
