@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install glfw3 glm nlohmann-json-dev
+        sudo apt-get install libglfw3-dev libglm-dev nlohmann-json-dev
     - name: Build
       run: |
         mkdir build && cd build
