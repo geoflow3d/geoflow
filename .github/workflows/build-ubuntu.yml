@@ -15,8 +15,9 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init thirdparty/imgui thirdparty/osdialog thirdparty/filesystem
     - name: Install dependencies
-      run: sudo apt-get update
-      run: sudo apt-get install glfw3 glm nlohmann-json-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install glfw3 glm nlohmann-json-dev
     - name: Build
       run: |
         mkdir build && cd build
