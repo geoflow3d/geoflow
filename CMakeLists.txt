@@ -5,7 +5,11 @@ project (Geoflow VERSION 0.0.1)
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 
 # dependencies
-find_package(glfw3 3.3 REQUIRED)
+if(APPLE)
+	find_package(glfw3 3.3 REQUIRED)
+else ()
+	find_package(glfw3 REQUIRED)
+endif()
 find_package(nlohmann_json)
 find_package(glm)
   
