@@ -20,8 +20,8 @@ namespace dlloader
 	public:
 		DLLoader(std::string const &pathToLib,
 			std::string const &allocClassSymbol = "allocator",
-			std::string const &deleteClassSymbol = "deleter") 
-			std::string const &getHeaderHashSymbol = "get_shared_headers_hash") 
+			std::string const &deleteClassSymbol = "deleter",
+			std::string const &getHeaderHashSymbol = "get_shared_headers_hash")
 			:
 			_handle(nullptr), _pathToLib(pathToLib),
 			_allocClassSymbol(allocClassSymbol), 
