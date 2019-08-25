@@ -18,7 +18,7 @@ jobs:
         git clone https://github.com/glfw/glfw.git
         cd glfw
         mkdir build && cd build
-        cmake ..
+        cmake .. -DCMAKE_INSTALL_PREFIX=C:\software
         cmake --build . --target install
     - name: Install glm
       run: |
@@ -26,11 +26,11 @@ jobs:
         git clone https://github.com/g-truc/glm.git
         cd glm
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGLM_TEST_ENABLE=OFF
+        cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=C:\software
         cmake --build . --target install
     - uses: actions/checkout@v1
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=OFF
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=C:\software
         cmake --build .
