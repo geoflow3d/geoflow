@@ -12,15 +12,15 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Install dependencies
+    - name: Install vcpkg and deps
       run: |
         git clone https://github.com/Microsoft/vcpkg.git
         cd vcpkg
-        .\bootstrap-vcpkg.bat
+        .\bootstrap-vcpkg.ba
         .\vcpkg integrate install
         .\vcpkg install glfw3 glm nlohmann-json
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=ON -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALLATION_ROOT%\scripts\buildsystems\vcpkg.cmake
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=ON -DCMAKE_TOOLCHAIN_FILE=..\vcpkg\scripts\buildsystems\vcpkg.cmake
         cmake --build .
