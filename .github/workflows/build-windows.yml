@@ -17,5 +17,6 @@ jobs:
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=ON
+        echo $End:VCPKG_INSTALLATION_ROOT
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=ON -DCMAKE_TOOLCHAIN_FILE=$Env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems
         cmake --build .
