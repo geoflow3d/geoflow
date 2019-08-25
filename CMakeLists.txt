@@ -108,6 +108,7 @@ if(${GF_BUILD_GUI})
     execute_process (
       COMMAND "pkg-config --libs gtk+-2.0"
       OUTPUT_VARIABLE gtklib
+    )
     execute_process (
       COMMAND "pkg-config  --cflags-only-I gtk+-2.0"
       OUTPUT_VARIABLE gtkinclude
