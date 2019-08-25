@@ -1,8 +1,9 @@
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.13)
 
 project (Geoflow VERSION 0.0.1)
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
+option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
 
 # dependencies
 if(APPLE)
@@ -10,8 +11,9 @@ if(APPLE)
 else ()
 	find_package(glfw3 REQUIRED)
 endif()
-find_package(nlohmann_json)
 find_package(glm)
+
+add_subdirectory(thirdparty)
   
 # DLLoader
 if (WIN32)
@@ -48,7 +50,7 @@ endif()
 # includes
 include_directories(
   src
-  thirdparty/glad/include
+  thirdparty/filesystem/include
   ${CMAKE_BINARY_DIR}
 )
 
@@ -56,7 +58,7 @@ include_directories(
 add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
 )
-target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json glm)
+target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json)
 set_target_properties(geoflow-core PROPERTIES 
   CXX_STANDARD 17
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
@@ -64,10 +66,10 @@ set_target_properties(geoflow-core PROPERTIES
 
 if(${GF_BUILD_GUI})
   include_directories(
+    thirdparty/glad/include
     thirdparty/imgui
     thirdparty/imgui/examples
     thirdparty/osdialog
-    thirdparty/filesystem/include
   )
   set(GF_SHADER_FILES 
     ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.frag 
