@@ -18,7 +18,6 @@ jobs:
         git clone https://github.com/glfw/glfw.git
         cd glfw
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
         cmake --build . --target install
     - name: Install glm
       run: |
@@ -26,11 +25,11 @@ jobs:
         git clone https://github.com/g-truc/glm.git
         cd glm
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DGLM_TEST_ENABLE=OFF
         cmake --build . --target install
     - uses: actions/checkout@v1
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_TOOLCHAIN_FILE=..\vcpkg\scripts\buildsystems\vcpkg.cmake
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=OFF
         cmake --build .
