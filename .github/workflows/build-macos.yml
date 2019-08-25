@@ -17,5 +17,5 @@ jobs:
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=ON
-        make -j2
+        cmake .. -DGF_USE_EXTERNAL_JSON=ON
+        cmake --build . --parallel 4 --target install --config Release

@@ -158,7 +158,7 @@ add_definitions(-DGF_PLUGIN_EXTENSION=\"${GF_PLUGIN_EXTENSION}\")
 set(GF_SHH_FILE ${CMAKE_BINARY_DIR}/gfSharedHeadersHash.h)
 add_custom_command(
   TARGET geoflow-core
-  COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${GF_SHH_FILE} -P "${CMAKE_CURRENT_LIST_DIR}/ComputeSharedHeadersHash.cmake"
+  COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${GF_SHH_FILE} -P "${CMAKE_CURRENT_LIST_DIR}/cmake/ComputeSharedHeadersHash.cmake"
 )
   
 set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
@@ -176,7 +176,7 @@ install(TARGETS geoflow-core EXPORT geoflow-targets
 install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
 
 include ( CMakePackageConfigHelpers )
-configure_package_config_file(geoflow-config.cmake.in
+configure_package_config_file(cmake/geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
   INSTALL_DESTINATION lib/cmake/geoflow
   PATH_VARS GF_PLUGIN_FOLDER)

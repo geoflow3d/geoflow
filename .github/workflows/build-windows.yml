@@ -33,4 +33,4 @@ jobs:
       run: |
         mkdir build && cd build
         cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=C:\software
-        cmake --build . --config Release
+        cmake --build . --parallel 4 --target install --config Release
