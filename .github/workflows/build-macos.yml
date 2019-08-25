@@ -12,8 +12,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Checkout submodules
-      run: git submodule update --init thirdparty/imgui thirdparty/osdialog thirdparty/filesystem
     - name: Install dependencies
       run: brew install glfw glm nlohmann-json
     - name: Build
