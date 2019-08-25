@@ -12,11 +12,13 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Install vcpkg and deps
+    - name: Install vcpkg
       run: |
         git clone https://github.com/Microsoft/vcpkg.git
         cd vcpkg
         .\bootstrap-vcpkg.bat
+    - name: Install deps
+      run: |
         .\vcpkg integrate install
         .\vcpkg install glfw3 glm nlohmann-json
     - name: Build
