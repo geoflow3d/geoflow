@@ -11,8 +11,6 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.gitmodules")
   execute_process(
     COMMAND             git submodule update --init ${GF_GIT_SUBMODULES}
     WORKING_DIRECTORY   ${PROJECT_SOURCE_DIR}/thirdparty
-    OUTPUT_QUIET
-    ERROR_QUIET
     )
 endif()  
   
