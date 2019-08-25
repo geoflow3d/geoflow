@@ -19,6 +19,7 @@ jobs:
         .\bootstrap-vcpkg.bat
     - name: Install deps
       run: |
+        cd vcpkg
         .\vcpkg integrate install
         .\vcpkg install glfw3 glm nlohmann-json
     - name: Build
