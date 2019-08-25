@@ -15,10 +15,11 @@ jobs:
     - name: Install dependencies
       run: |
         cd %VCPKG_INSTALLATION_ROOT%
-        git checkout master
         git pull origin master
-        git status
+        git log -n 1
+        vcpkg update
         vcpkg install glfw3 glm nlohmann-json
+        vcpkg integrate install
     - name: Build
       run: |
         mkdir build && cd build
