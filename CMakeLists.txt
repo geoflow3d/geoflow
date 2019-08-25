@@ -108,11 +108,15 @@ if(${GF_BUILD_GUI})
     execute_process (
       COMMAND "pkg-config --libs gtk+-2.0"
       OUTPUT_VARIABLE gtklib
+    execute_process (
+      COMMAND "pkg-config  --cflags-only-I gtk+-2.0"
+      OUTPUT_VARIABLE gtkinclude
     )
     SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_gtk2.c)
     SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
       gtklib)
+    include_directories(gtkinclude)
   endif()
 
   add_library(geoflow-gui STATIC ${GF_GUI_SOURCES})
