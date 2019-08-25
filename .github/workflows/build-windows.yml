@@ -14,9 +14,11 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: |
-        vcpkg version
-        vcpkg install glfw3 glm nlohmann-json
-        vcpkg integrate install
+        git clone https://github.com/Microsoft/vcpkg.git
+        cd vcpkg
+        .\bootstrap-vcpkg.bat
+        .\vcpkg integrate install
+        .\vcpkg install glfw3 glm nlohmann-json
     - name: Build
       run: |
         mkdir build && cd build
