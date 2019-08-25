@@ -12,8 +12,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Checkout submodules
-      run: git submodule update --init thirdparty/imgui thirdparty/osdialog thirdparty/filesystem
     - name: Get cmake 3.15
       run: |
         wget https://github.com/Kitware/CMake/releases/download/v3.15.2/cmake-3.15.2-Linux-x86_64.tar.gz
@@ -25,5 +23,5 @@ jobs:
     - name: Build
       run: |
         mkdir build && cd build
-        ../cmake-3.15.2-Linux-x86_64/bin/cmake .. -DCMAKE_BUILD_TYPE=Release
+        ../cmake-3.15.2-Linux-x86_64/bin/cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=ON
         make -j2
