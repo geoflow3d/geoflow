@@ -12,6 +12,9 @@ else ()
 	find_package(glfw3 REQUIRED)
 endif()
 find_package(glm)
+if(GF_USE_EXTERNAL_JSON)
+  find_package(nlohmann_json 3.2.0 REQUIRED)
+endif()
 
 add_subdirectory(thirdparty)
   
@@ -105,19 +108,14 @@ if(${GF_BUILD_GUI})
     SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
       comdlg32)
   else()
-    execute_process (
-      COMMAND "pkg-config --libs gtk+-2.0"
-      OUTPUT_VARIABLE gtklib
-    )
-    execute_process (
-      COMMAND "pkg-config  --cflags-only-I gtk+-2.0"
-      OUTPUT_VARIABLE gtkinclude
-    )
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
+
     SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
       thirdparty/osdialog/osdialog_gtk2.c)
     SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
-      gtklib)
-    include_directories(gtkinclude)
+      ${GTK2_LIBRARIES})
+    include_directories(${GTK2_INCLUDE_DIRS})
   endif()
 
   add_library(geoflow-gui STATIC ${GF_GUI_SOURCES})
