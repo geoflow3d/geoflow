@@ -43,9 +43,9 @@ namespace dlloader
 			auto headerHashFunc = reinterpret_cast<getHeaderHash>(
 					GetProcAddress(_handle, _getHeaderHashSymbol.c_str()));
 			if(!headerHashFunc) {
-				std::cerr << dlerror() << std::endl;
-				return false;
+				std::cerr << "Can't find _getHeaderHashSymbol symbol in " << _pathToLib << std::endl;
 				DLCloseLib();
+				return false;
 			} else {
 				char plugin_hash[33];
 				headerHashFunc(plugin_hash);

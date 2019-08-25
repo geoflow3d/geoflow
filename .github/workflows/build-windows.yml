@@ -19,7 +19,7 @@ jobs:
         cd glfw
         mkdir build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=C:\software
-        cmake --build . --target install
+        cmake --build . --target install --config Release
     - name: Install glm
       run: |
         cd deps
@@ -27,10 +27,10 @@ jobs:
         cd glm
         mkdir build && cd build
         cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=C:\software
-        cmake --build . --target install
+        cmake --build . --target install --config Release
     - uses: actions/checkout@v1
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=C:\software
-        cmake --build .
+        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=C:\software
+        cmake --build . --config Release
