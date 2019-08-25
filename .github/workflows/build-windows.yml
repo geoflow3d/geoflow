@@ -13,7 +13,10 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install dependencies
-      run: vcpkg install glfw3 glm nlohmann-json
+      run: |
+        cd %VCPKG_INSTALLATION_ROOT%
+        git pull
+        vcpkg install glfw3 glm nlohmann-json
     - name: Build
       run: |
         mkdir build && cd build
