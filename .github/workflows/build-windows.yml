@@ -11,19 +11,26 @@ jobs:
     runs-on: windows-latest
     
     steps:
+    - name: Install glfw
+      run: |
+        mkdir deps
+        cd deps
+        git clone https://github.com/glfw/glfw.git
+        cd glfw
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --target install
+    - name: Install glm
+      run: |
+        cd deps
+        git clone https://github.com/g-truc/glm.git
+        cd glm
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --target install
     - uses: actions/checkout@v1
-    - name: Install vcpkg
-      run: |
-        git clone https://github.com/Microsoft/vcpkg.git
-        cd vcpkg
-        .\bootstrap-vcpkg.bat -win64
-    - name: Install deps
-      run: |
-        cd vcpkg
-        .\vcpkg integrate install
-        .\vcpkg install glfw3:x64-windows glm:x64-windows nlohmann-json:x64-windows
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=ON -DCMAKE_TOOLCHAIN_FILE=..\vcpkg\scripts\buildsystems\vcpkg.cmake
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_TOOLCHAIN_FILE=..\vcpkg\scripts\buildsystems\vcpkg.cmake
         cmake --build .
