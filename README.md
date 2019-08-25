@@ -3,6 +3,7 @@ flowchart tool for geo-spatial data processing
 
 ![badge](https://github.com/tudelft3d/geoflow/workflows/CI%20macOS/badge.svg)
 ![badge](https://github.com/tudelft3d/geoflow/workflows/CI%20linux/badge.svg)
+![badge](https://github.com/tudelft3d/geoflow/workflows/CI%20Windows/badge.svg)
 
 
 ## Building
