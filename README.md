@@ -9,23 +9,15 @@ flowchart tool for geo-spatial data processing
 ## Building
 Requires compiler with c++17 support  (see https://en.cppreference.com/w/cpp/compiler_support).
 
-### Build without GUI
 ```
 mkdir build
 cd build
-cmake .. -DGF_BUILD_GUI=OFF
-make
+cmake .. -DGF_BUILD_GUI=[ON|OFF]
+cmake --build . --parallel 4 --target install --config Release
 ```
 
-### Build with GUI
-Install additional dependencies `glm` and `glfw`.
+### Building with GUI
+Requires additional dependencies `glm` and `glfw` that need to be installed by  the user.
 
-```
-mkdir build
-cd build
-cmake .. -DGF_BUILD_GUI=ON
-make
-```
-
-### platform specific instructions
+### Platform specific instructions
 Have a look at the [workflow files](https://github.com/tudelft3d/geoflow/tree/master/.github/workflows).
