@@ -16,7 +16,7 @@ jobs:
       run: |
         git clone https://github.com/Microsoft/vcpkg.git
         cd vcpkg
-        .\bootstrap-vcpkg.bat
+        .\bootstrap-vcpkg.bat -win64
     - name: Install deps
       run: |
         cd vcpkg
