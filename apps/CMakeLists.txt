@@ -5,7 +5,7 @@ if(${GF_BUILD_GUI})
 endif()
 
 
-if(APPLE)
+if(APPLE AND ${GF_BUILD_GUI})
   set(RESOURCE_FILES
     ${CMAKE_SOURCE_DIR}/resources/AppIcon.icns
   )
