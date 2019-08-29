@@ -7,12 +7,12 @@ endif()
 
 if(APPLE)
   set(RESOURCE_FILES
-    ${CMAKE_SOURCE_DIR}/cmake/AppIcon.icns
+    ${CMAKE_SOURCE_DIR}/resources/AppIcon.icns
   )
   add_executable(geoflow geof.cpp ${RESOURCE_FILES})
   set_target_properties(geoflow PROPERTIES
   MACOSX_BUNDLE TRUE
-  MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/cmake/Info.plist
+  MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/resources/Info.plist
   RESOURCE ${RESOURCE_FILES}
   )
 else()
