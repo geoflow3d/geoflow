@@ -46,11 +46,7 @@ class gfImNodes : public RenderObject {
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save to JSON", "Ctrl+S")) {
-					#ifndef __APPLE__
 					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
-					#else
-					std::optional<std::string> result = "flowchart.json";
-					#endif
 					if (result.has_value()) {
 						for (auto& [node,pos,selected] : node_draw_list_) {
 							node->set_position(pos.x, pos.y);
