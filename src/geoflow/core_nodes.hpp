@@ -1,6 +1,7 @@
 #include "geoflow.hpp"
 #ifdef GF_BUILD_GUI
   #include "imgui.h"
+  #include "gui/parameter_widgets.hpp"
 #endif
 
 namespace geoflow::nodes::core {
@@ -59,7 +60,7 @@ namespace geoflow::nodes::core {
     using Node::Node;
 
     void init() {
-      nested_node_manager_ = std::make_unique<NodeManager>(manager); // this will only transfer the node registers
+      nested_node_manager_ = std::make_unique<NodeManager>(manager.get_node_registers()); // this will only transfer the node registers
       add_param("filepath", ParamPath(filepath_, "Flowchart file"));
 
     };
@@ -69,6 +70,14 @@ namespace geoflow::nodes::core {
 
     #ifdef GF_BUILD_GUI
       void gui() {
+        for( auto& [name, node] : nested_node_manager_->get_nodes() ) {
+          ImGui::PushID(node.get());
+          if (ImGui::CollapsingHeader(name.c_str())) {
+            geoflow::draw_parameters(node);
+          }
+          ImGui::PopID();
+        }
+        ImGui::Separator();
         if(ImGui::Button("Load Nodes"))
           flowchart_loaded = load_nodes();
       };
