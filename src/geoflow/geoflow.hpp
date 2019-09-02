@@ -604,8 +604,6 @@ namespace geoflow {
     std::unordered_map<std::string, NodeHandle> nodes;
 
     public:
-    size_t ID=0;
-
     std::optional<std::array<double,3>> data_offset;
     NodeManager(NodeRegisterMap&  node_registers)
       : registers_(node_registers) {};
@@ -615,7 +613,6 @@ namespace geoflow {
       registers_ = other_manager.get_node_registers();
     };
 
-    NodeHandle create_node(NodeRegister& node_register, std::string type_name);
     NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name);
     NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);
     NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name, std::pair<float,float> pos);

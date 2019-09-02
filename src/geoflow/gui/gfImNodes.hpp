@@ -13,7 +13,7 @@ class gfImNodes : public RenderObject {
   geoflow::NodeManager& node_manager_;
   poviApp& app_;
 
-  typedef std::vector<std::tuple<geoflow::NodeHandle, ImVec2, bool>> NodeDrawVec;
+  typedef std::vector<std::tuple<geoflow::NodeHandle, ImVec2, bool, std::string>> NodeDrawVec;
   NodeDrawVec node_draw_list_;
 
   public:
@@ -23,7 +23,8 @@ class gfImNodes : public RenderObject {
       node_draw_list_.push_back(std::make_tuple(
         node, 
         ImVec2(node->position[0], node->position[1]),
-        false
+        false,
+        node->get_name()
       ));
       if(node->get_type_name() == "Painter" || node->get_type_name() == "VectorPainter") {
         auto* painter_node = (geoflow::nodes::gui::PainterNode*)(node.get());
@@ -48,7 +49,7 @@ class gfImNodes : public RenderObject {
 				if (ImGui::MenuItem("Save to JSON", "Ctrl+S")) {
 					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
 					if (result.has_value()) {
-						for (auto& [node,pos,selected] : node_draw_list_) {
+						for (auto& [node,pos,selected,name_buffer] : node_draw_list_) {
 							node->set_position(pos.x, pos.y);
 						}
 						node_manager_.dump_json(result.value());
@@ -93,6 +94,7 @@ class gfImNodes : public RenderObject {
             auto& node = std::get<0>(*node_it);
             auto& pos = std::get<1>(*node_it);
             auto& selected = std::get<2>(*node_it);
+            auto& name_buffer = std::get<3>(*node_it);
             // Start rendering node
             if (ImNodes::Ez::BeginNode(node.get(), &pos, &selected))
             {
@@ -167,21 +169,30 @@ class gfImNodes : public RenderObject {
               // ImGui::Text("%s", node->debug_info().c_str());
               // ImGui::Text("position: %.2f, %.2f", element_.node_slot0_->position_.x, element_.node_slot0_->position_.y);
               // node->gui();
-              if (node->get_register().get_name() == "Visualisation") {
-                node->gui();
-              } else { 
-                node->gui();
-                geoflow::draw_parameters(node);
-                ImGui::Text("%s", node->info().c_str());
+              ImGui::InputText("##name", &name_buffer);
+              ImGui::SameLine();
+              if(ImGui::Button("Rename")) {
+                if(!node_manager_.name_node(node, name_buffer))
+                  name_buffer = node->get_name();
               }
-              if (ImGui::MenuItem("Run")) {		
+              if (ImGui::MenuItem("Run")) {
                 node_manager_.run(*node);
+              }
+              ImGui::Separator();
+              node->gui();
+              if (node->get_register().get_name() != "Visualisation") {
+                if (ImGui::CollapsingHeader("Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+                  geoflow::draw_parameters(node);
+                  ImGui::Text("%s", node->info().c_str());
+                }
               }
               // if (ImGui::MenuItem("Destroy")) {					
               // 	gf_manager.run(*node);
               // 	// element_.node_slot0_ = nullptr;
               // }
               ImGui::EndPopup();
+            } else {
+              name_buffer = node->get_name();
             }
             ImGui::PopID();
 
@@ -221,7 +232,8 @@ class gfImNodes : public RenderObject {
                   node_draw_list_.push_back(std::make_tuple(
                     handle, 
                     ImVec2(),
-                    false
+                    false,
+                    handle->get_name()
                   ));
                   ImNodes::AutoPositionNode(handle.get());
                 }

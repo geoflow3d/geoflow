@@ -386,25 +386,14 @@ bool NodeManager::run(Node &node) {
   } 
   return false;
 }
-NodeHandle NodeManager::create_node(NodeRegister& node_register, std::string type_name) {
-  // add node through a node register
-  NodeHandle handle = node_register.create(type_name, *this);
-  std::string new_name = type_name + "(" + std::to_string(++ID) + ")";
-  handle->name = new_name;
-  nodes[new_name] = handle;
-  return handle;
-}
 NodeHandle NodeManager::create_node(NodeRegisterHandle node_register, std::string type_name) {
   // add node through a node register
   NodeHandle handle = node_register->create(type_name, *this);
-  std::string new_name = type_name + "(" + std::to_string(++ID) + ")";
-  handle->name = new_name;
-  nodes[new_name] = handle;
-  return handle;
-}
-NodeHandle NodeManager::create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos) {
-  auto handle = create_node(node_register, type_name);
-  handle->set_position(pos.first, pos.second);
+  std::stringstream new_name;
+  new_name << type_name << "-" << std::hex << std::hash<NodeHandle>{}(handle);
+  std::string new_name_ = new_name.str();
+  handle->name = new_name_.substr(0,new_name_.size()-9);
+  nodes[handle->name] = handle;
   return handle;
 }
 NodeHandle NodeManager::create_node(NodeRegisterHandle node_register, std::string type_name, std::pair<float,float> pos) {
@@ -418,7 +407,6 @@ void NodeManager::remove_node(NodeHandle node) {
 void NodeManager::clear() {
   nodes.clear();
   data_offset.reset();
-  ID=0;
 }
 bool NodeManager::name_node(NodeHandle node, std::string new_name) {
   // rename a node, ensure uniqueness of name, return true if it wasn't already used
