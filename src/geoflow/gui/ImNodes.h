@@ -61,6 +61,10 @@ struct IMGUI_API CanvasState
     float zoom = 1.0;
     /// Current scroll offset of canvas.
     ImVec2 offset{};
+    /// bounding box of nodes
+    ImRect nodes_bbox{};
+    bool nodes_bbox_empty;
+    bool center_on_nodes = false;
     /// Colors used to style elements of this canvas.
     ImColor colors[StyleColor::ColMax];
     /// Style parameters

@@ -249,6 +249,8 @@ void BeginCanvas(CanvasState* canvas)
         }
     }
 
+    canvas->nodes_bbox_empty = true;
+
     const float grid = 64.0f * canvas->zoom;
 
     ImVec2 pos = ImGui::GetWindowPos();
@@ -286,6 +288,10 @@ void EndCanvas()
     auto* impl = canvas->_impl;
     const ImGuiStyle& style = ImGui::GetStyle();
 
+    if (canvas->center_on_nodes) {
+        canvas->offset =  ImGui::GetWindowSize()/2 - canvas->nodes_bbox.GetCenter();
+        canvas->center_on_nodes = false;
+    }
     // Draw pending connection
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload())
     {
@@ -473,6 +479,19 @@ void EndNode()
         impl->cached_data.SetBool(prev_selected_id, node_selected);
     }
 
+    if (canvas->center_on_nodes) {
+        ImVec2 node_max = node_pos + node_rect.GetSize();
+        ImVec2 node_min = node_pos;
+        if(canvas->nodes_bbox_empty) {
+            canvas->nodes_bbox.Max = node_max;
+            canvas->nodes_bbox.Min = node_min;
+            canvas->nodes_bbox_empty = false;
+        } else {
+            canvas->nodes_bbox.Max = ImMax(canvas->nodes_bbox.Max, node_max);
+            canvas->nodes_bbox.Min = ImMin(canvas->nodes_bbox.Min, node_min);
+        }
+    }
+    
     ImGuiIO& io = ImGui::GetIO();
     switch (impl->state)
     {

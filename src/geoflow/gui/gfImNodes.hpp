@@ -3,15 +3,17 @@
 #include "povi_nodes.hpp"
 #include "parameter_widgets.hpp"
 
-// #ifndef IMGUI_DEFINE_MATH_OPERATORS
-// #   define IMGUI_DEFINE_MATH_OPERATORS
-// #endif
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#   define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 #include "ImNodesEz.h"
 
 class gfImNodes : public RenderObject {
   private:
   geoflow::NodeManager& node_manager_;
   poviApp& app_;
+
+  ImNodes::CanvasState canvas_;
 
   typedef std::vector<std::tuple<geoflow::NodeHandle, ImVec2, bool, std::string>> NodeDrawVec;
   NodeDrawVec node_draw_list_;
@@ -36,6 +38,7 @@ class gfImNodes : public RenderObject {
   gfImNodes(geoflow::NodeManager& node_manager, poviApp& app)
     : node_manager_(node_manager), app_(app) {
       init_node_draw_list();
+      canvas_.style.curve_thickness = 2.f;
     };
   ~gfImNodes() {
     node_draw_list_.clear();
@@ -62,6 +65,7 @@ class gfImNodes : public RenderObject {
 
 						auto new_nodes = node_manager_.load_json(result.value());
 						init_node_draw_list();
+            canvas_.center_on_nodes = true;
 						// CenterScroll();
 					}
 				}
@@ -70,17 +74,15 @@ class gfImNodes : public RenderObject {
 					node_draw_list_.clear();
 					node_manager_.clear();
 				}
-				// if (ImGui::MenuItem("Center flowchart")) {
-				// 	// CenterScroll();
-				// }
+				if (ImGui::MenuItem("Center flowchart")) {
+          canvas_.center_on_nodes = true;
+				}
 				ImGui::EndMenu();
 			}
 		}
 	}
     
   void render() {
-    static ImNodes::CanvasState canvas{};
-    canvas.style.curve_thickness = 2.f;
 
     const ImGuiStyle& style = ImGui::GetStyle();
 
@@ -88,7 +90,7 @@ class gfImNodes : public RenderObject {
     if (ImGui::Begin("Flowchart", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
     {
         // We probably need to keep some state, like positions of nodes/slots for rendering connections.
-        ImNodes::BeginCanvas(&canvas);
+        ImNodes::BeginCanvas(&canvas_);
         bool one_node_hovered = false;
         for (auto node_it = node_draw_list_.begin(); node_it!=node_draw_list_.end();) {
             auto& node = std::get<0>(*node_it);
@@ -101,10 +103,8 @@ class gfImNodes : public RenderObject {
                 // Render input nodes first (order is important)
                 ImNodes::Ez::InputSlots(node->input_terminals);
 
-                
                 // Custom node content may go here
-                // ImGui::Text("Content of %s", node->title);
-
+                // ImGui::Text("Pos: %f, %f", pos.x, pos.y);
 
                 // Render output nodes first (order is important)
                 ImNodes::Ez::OutputSlots(node->output_terminals);
