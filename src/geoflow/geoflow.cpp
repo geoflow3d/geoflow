@@ -17,6 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 
 #include "geoflow.hpp"
 
@@ -25,6 +26,18 @@ using json = nlohmann::json;
 
 using namespace geoflow;
 
+std::string random_string(size_t length) {
+  auto randchar = []() -> char {
+    const char charset[] =
+    "0123456789"
+    "abcdefghijklmnopqrstuvwxyz";
+    const size_t max_index = (sizeof(charset) - 1);
+    return charset[ rand() % max_index ];
+  };
+  std::string str(length,0);
+  std::generate_n( str.begin(), length, randchar );
+  return str;
+}
 
 bool gfTerminal::accepts_type(std::type_index ttype) const {
   for (auto& t : types_) {
@@ -253,8 +266,8 @@ Node::~Node() {
 void Node::remove_from_manager() {
   manager.remove_node(get_handle());
 }
-bool Node::set_name(std::string new_name) { 
-  return manager.name_node(get_handle(), new_name); 
+void Node::set_name(std::string new_name) { 
+  name_ = new_name;
 };
 void Node::set_param(std::string name, ParameterVariant param, bool quiet) {
   if (parameters.find(name) != parameters.end()) {
@@ -388,12 +401,13 @@ bool NodeManager::run(Node &node) {
 }
 NodeHandle NodeManager::create_node(NodeRegisterHandle node_register, std::string type_name) {
   // add node through a node register
-  NodeHandle handle = node_register->create(type_name, *this);
-  std::stringstream new_name;
-  new_name << type_name << "-" << std::hex << std::hash<NodeHandle>{}(handle);
-  std::string new_name_ = new_name.str();
-  handle->name = new_name_.substr(0,new_name_.size()-9);
-  nodes[handle->name] = handle;
+  std::string new_name = type_name + "-" + random_string(6);
+  NodeHandle handle = node_register->create(
+    new_name,
+    type_name, 
+    *this
+  );
+  nodes[new_name] = handle;
   return handle;
 }
 NodeHandle NodeManager::create_node(NodeRegisterHandle node_register, std::string type_name, std::pair<float,float> pos) {
@@ -415,7 +429,7 @@ bool NodeManager::name_node(NodeHandle node, std::string new_name) {
     if (nodes[node->get_name()] == node) { // node object must exist in nodes
       remove_node(node);
       nodes[new_name] = node;
-      node->name = new_name;
+      node->set_name(new_name);
       return true;
     }
   return false;

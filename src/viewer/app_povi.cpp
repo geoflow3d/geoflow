@@ -73,7 +73,7 @@ void poviApp::center(float x, float y, float z) {
     center_point = glm::vec3(x,y,z);
 }
 
-void poviApp::add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible) 
+void poviApp::add_painter(std::shared_ptr<Painter> painter, const  std::string* name, bool visible) 
 {
     painter->register_uniform(light_color);
     painter->register_uniform(light_direction);
@@ -221,7 +221,7 @@ void poviApp::on_draw(){
         auto p = std::get<0>(painter);
         ImGui::PushID(p.get());
 
-        ImGui::Checkbox(std::get<1>(painter).c_str(), &std::get<2>(painter));
+        ImGui::Checkbox(std::get<1>(painter)->c_str(), &std::get<2>(painter));
         
         ImGui::SameLine();
         if (ImGui::Button("Center"))

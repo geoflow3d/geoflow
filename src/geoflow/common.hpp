@@ -53,12 +53,13 @@ protected:
 };
 
 class gfObject {
-  private:
-  const std::string name_;
+  protected:
+  std::string name_;
 
   public:
   gfObject(std::string name) : name_(name) {};
   const std::string& get_name() const { return name_; };
+  const std::string* get_name_ptr() const { return &name_; };
 };
 
 typedef std::array<float,2> arr2f;

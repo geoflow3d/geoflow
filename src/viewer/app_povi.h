@@ -64,7 +64,7 @@ poviApp(int width, int height, std::string title):App(width, height, title) {
 	light_color = std::make_shared<Uniform4f>("u_light_color");
 	cam_pos = std::make_shared<Uniform1f>("u_cam_pos", -15);
 };
-void add_painter(std::shared_ptr<Painter> painter, std::string name, bool visible=true);
+void add_painter(std::shared_ptr<Painter> painter, const std::string* name, bool visible=true);
 void remove_painter(std::shared_ptr<Painter> painter); 
 void draw_that(RenderObject* o) { render_objects.push_back(o); };
 void center(float, float, float z=0);
@@ -88,7 +88,7 @@ private:
 GLuint FramebufferName, renderedTexture, depthrenderbuffer;
 ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-std::vector< std::tuple<std::shared_ptr<Painter>,std::string,bool> > painters;
+std::vector< std::tuple<std::shared_ptr<Painter>,const std::string*,bool> > painters;
 std::vector<RenderObject*> render_objects;
 
 glm::mat4 model;

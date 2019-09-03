@@ -349,7 +349,7 @@ namespace geoflow {
     static const gfTerminalFamily value = GF_POLY;
   };
 
-  class Node : public std::enable_shared_from_this<Node> {
+  class Node : public std::enable_shared_from_this<Node>, public gfObject {
     private:
     template<typename T> void add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional) {
       // TODO: check if name is unique key in input_terminals map
@@ -412,7 +412,7 @@ namespace geoflow {
     ParameterMap parameters;
     arr2f position;
 
-    Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name): node_register(node_register), manager(manager), type_name(type_name) {};
+    Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name, std::string node_name): node_register(node_register), manager(manager), type_name(type_name), gfObject(node_name) {};
     ~Node();
 
     void remove_from_manager();
@@ -532,14 +532,12 @@ namespace geoflow {
     virtual std::string info() {return std::string();};
 
     std::string debug_info();
-    const std::string get_name() { return name; };
     const std::string get_type_name() { return type_name; };
     const NodeRegister& get_register() { return *node_register; };
     const NodeManager& get_manager() { return manager; };
-    bool set_name(std::string new_name);
 
     protected:
-    std::string name;
+    void set_name(std::string new_name);
     const std::string type_name; // to be managed only by node manager because uniqueness constraint (among all nodes in the manager)
     NodeManager& manager;
     NodeRegisterHandle node_register;
@@ -558,24 +556,25 @@ namespace geoflow {
       return std::shared_ptr<NodeRegister>(new NodeRegister(std::forward<T>(t)...));
     }
 
-    std::map<std::string, std::function<NodeHandle(NodeRegisterHandle, NodeManager&, std::string)>> node_types;
+    std::map<std::string, std::function<NodeHandle(NodeRegisterHandle, NodeManager&, std::string, std::string)>> node_types;
 
     template<class NodeClass> void register_node(std::string type_name) {
       node_types[type_name] = create_node_type<NodeClass>;
     }
     std::string get_name() const {return name;}
+    
     protected:
-    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegisterHandle nr, NodeManager& nm, std::string type_name){
-      auto node = std::make_shared<NodeClass>(nr, nm, type_name);
+    template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegisterHandle nr, NodeManager& nm, std::string type_name, std::string node_name){
+      auto node = std::make_shared<NodeClass>(nr, nm, type_name, node_name);
       node->init();
       return node;
     }
-    NodeHandle create(std::string type_name, NodeManager& nm) {
+    NodeHandle create(std::string node_name, std::string type_name, NodeManager& nm) {
       if (node_types.find(type_name) == node_types.end())
         throw gfException("No such node type - \""+type_name+"\"");
 
       auto f = node_types[type_name];
-      auto n = f(shared_from_this(), nm, type_name);
+      auto n = f(shared_from_this(), nm, type_name, node_name);
       return n;
     }
     std::string name;

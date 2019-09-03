@@ -206,7 +206,7 @@ namespace geoflow::nodes::gui {
     std::weak_ptr<poviApp> pv_app;
 
     public:    
-    BasePainterNode (NodeRegisterHandle nr, NodeManager &nm, std::string type_name):Node(nr, nm,type_name) {
+    BasePainterNode (NodeRegisterHandle nr, NodeManager &nm, std::string type_name, std::string node_name):Node(nr, nm, type_name, node_name) {
       painter = std::make_shared<Painter>();
       // painter->set_attribute("position", nullptr, 0, {3});
       // painter->set_attribute("value", nullptr, 0, {1});
@@ -223,7 +223,7 @@ namespace geoflow::nodes::gui {
       } else std::cout << "remove painter failed\n";
     }
     void add_to(poviApp& a) {
-      a.add_painter(painter, get_name());
+      a.add_painter(painter, get_name_ptr());
       pv_app = a.get_ptr();
     }
   };
@@ -361,7 +361,7 @@ namespace geoflow::nodes::gui {
     }
 
     void add_to(poviApp& a) {
-      a.add_painter(painter, get_name());
+      a.add_painter(painter, get_name_ptr());
       pv_app = a.get_ptr();
     }
 
