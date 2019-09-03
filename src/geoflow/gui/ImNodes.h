@@ -65,6 +65,8 @@ struct IMGUI_API CanvasState
     ImRect nodes_bbox{};
     bool nodes_bbox_empty;
     bool center_on_nodes = false;
+    ///
+    ImVec2 new_creation_mouse_pos;
     /// Colors used to style elements of this canvas.
     ImColor colors[StyleColor::ColMax];
     /// Style parameters

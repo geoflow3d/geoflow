@@ -411,7 +411,7 @@ bool BeginNode(void* node_id, ImVec2* pos, bool* selected)
     if (node_id == impl->auto_position_node_id)
     {
         // Somewhere out of view so that we dont see node flicker when it will be repositioned
-        ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() + style.WindowPadding);
+        ImGui::SetCursorScreenPos(canvas->new_creation_mouse_pos);
     }
     else
     {
@@ -491,7 +491,7 @@ void EndNode()
             canvas->nodes_bbox.Min = ImMin(canvas->nodes_bbox.Min, node_min);
         }
     }
-    
+
     ImGuiIO& io = ImGui::GetIO();
     switch (impl->state)
     {
@@ -532,7 +532,7 @@ void EndNode()
         {
             // Upon node creation we would like it to be positioned at the center of mouse cursor. This can be done only
             // once widget dimensions are known at the end of rendering and thus on the next frame.
-            node_pos = ImGui::GetMousePos() - ImGui::GetCurrentWindow()->Pos - canvas->offset - (node_rect.GetSize() / 2);
+            node_pos = canvas->new_creation_mouse_pos - ImGui::GetCurrentWindow()->Pos - canvas->offset;
             impl->auto_position_node_id = nullptr;
         }
         break;

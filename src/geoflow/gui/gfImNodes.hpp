@@ -212,6 +212,7 @@ class gfImNodes : public RenderObject {
         ) {
             ImGui::FocusWindow(ImGui::GetCurrentWindow());
             ImGui::OpenPopup("NodesContextMenu");
+            canvas_.new_creation_mouse_pos = ImGui::GetMousePos();
         }
 
         if (ImGui::BeginPopup("NodesContextMenu"))
