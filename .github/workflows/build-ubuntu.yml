@@ -27,7 +27,7 @@ jobs:
         git checkout 3.3-stable
         mkdir build && cd build
         cmake .. -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
-        cmake --build . --target install --config Release
+        sudo cmake --build . --target install --config Release
     - name: Build
       run: |
         mkdir build && cd build
