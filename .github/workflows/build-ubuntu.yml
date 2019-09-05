@@ -16,10 +16,18 @@ jobs:
       run: |
         wget https://github.com/Kitware/CMake/releases/download/v3.15.2/cmake-3.15.2-Linux-x86_64.tar.gz
         tar -zxf cmake-3.15.2-Linux-x86_64.tar.gz
-    - name: Install dependencies
+    - name: Install gflw 3.3
+      run: |
+        git clone https://github.com/glfw/glfw.git
+        cd glfw
+        git checkout 3.3-stable
+        mkdir build && cd build
+        cmake .. -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
+        cmake --build . --target install --config Release
+    - name: Install glm and gtk
       run: |
         sudo apt-get update
-        sudo apt-get install libglfw3-dev libglm-dev libgtk2.0-dev
+        sudo apt-get install libglm-dev libgtk2.0-dev
     - name: Build
       run: |
         mkdir build && cd build
