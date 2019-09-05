@@ -51,6 +51,17 @@ bool BeginNode(void* node_id, ImVec2* pos, bool* selected)
 
     // Render node title
     ImGui::TextUnformatted(title);
+    // ImGui::SameLine();
+    // ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::Text("%s [%s]", 
+            gf_node->get_type_name().c_str(), 
+            gf_node->get_register().get_name().c_str()
+        );
+        ImGui::EndTooltip();
+    }
 
     ImGui::BeginGroup();
     return result;
@@ -120,6 +131,7 @@ bool Slot(geoflow::gfTerminal* term, int kind)
 
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f,1.0f,1.0f,1.0f));
             // ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
             if (term->get_side()==geoflow::GF_IN) {
                 auto* it = (geoflow::gfInputTerminal*) term;
@@ -151,6 +163,7 @@ bool Slot(geoflow::gfTerminal* term, int kind)
             for (auto& ti : term->get_types())
                 ImGui::Text("  %s", ti.name());
             // ImGui::PopTextWrapPos();
+            ImGui::PopStyleColor();
             ImGui::EndTooltip();
         }
 
