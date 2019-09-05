@@ -7,11 +7,7 @@ option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
 
 # dependencies
 if(GF_BUILD_GUI)
-  if(APPLE)
-    find_package(glfw3 3.3 REQUIRED)
-  else ()
-    find_package(glfw3 3.2 REQUIRED)
-  endif()
+  find_package(glfw3 3.3 REQUIRED)
   find_package(glm)
 endif()
 if(GF_USE_EXTERNAL_JSON)
