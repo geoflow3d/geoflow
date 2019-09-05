@@ -31,5 +31,5 @@ if(${GF_BUILD_GUI})
   install(FILES ${GF_SHADER_FILES} DESTINATION ${GF_SHADER_PATH})
 endif()
 install(TARGETS geoflow 
-  RUNTIME
+  RUNTIME DESTINATION bin
   BUNDLE DESTINATION /Applications)

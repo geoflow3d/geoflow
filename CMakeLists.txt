@@ -169,9 +169,8 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
 )
 
 install(TARGETS geoflow-core EXPORT geoflow-targets 
-  RUNTIME
-  ARCHIVE
-  LIBRARY
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   PUBLIC_HEADER DESTINATION include/geoflow)
 install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
 
