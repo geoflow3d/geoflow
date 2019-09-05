@@ -16,10 +16,10 @@ jobs:
       run: |
         wget https://github.com/Kitware/CMake/releases/download/v3.15.2/cmake-3.15.2-Linux-x86_64.tar.gz
         tar -zxf cmake-3.15.2-Linux-x86_64.tar.gz
-    - name: Install glm and gtk
+    - name: Install dependencies with apt
       run: |
         sudo apt-get update
-        sudo apt-get install libglm-dev libgtk2.0-dev xrandr-dev
+        sudo apt-get install libglm-dev libgtk2.0-dev libxrandr-dev
     - name: Install gflw 3.3
       run: |
         git clone https://github.com/glfw/glfw.git
