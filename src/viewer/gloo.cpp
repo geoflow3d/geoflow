@@ -499,6 +499,7 @@ void Painter::init() {
     uniforms.push_back(std::unique_ptr<Uniform>(new Uniform1f("u_specular", 0.1,0,1)));
     attributes["position"] = std::make_unique<Buffer>();
     attributes["normal"] = std::make_unique<Buffer>();
+    attributes["color"] = std::make_unique<Buffer>();
     attributes["value"] = std::make_unique<Buffer>();
     attributes["identifier"] = std::make_unique<Buffer>();
 

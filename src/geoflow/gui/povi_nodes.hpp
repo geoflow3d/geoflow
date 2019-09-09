@@ -357,6 +357,7 @@ namespace geoflow::nodes::gui {
       add_vector_input("normals", typeid(vec3f));
       add_input("colormap", typeid(ColorMap));
       add_vector_input("attributes", typeid(vec1f));
+      add_vector_input("colors", typeid(vec3f));
       // add_vector_input("attributes", {typeid(vec1f),typeid(vec1i)});
     }
 
@@ -430,6 +431,9 @@ namespace geoflow::nodes::gui {
         } else if(input_terminals["normals"].get() == &t) {
           auto& aterm = vector_input("normals");
           set_attribute<vec3f>("normal", aterm, 3);
+        } else if(input_terminals["colors"].get() == &t) {
+          auto& aterm = vector_input("colors");
+          set_attribute<vec3f>("color", aterm, 3);
         } else if(input_terminals["attributes"].get() == &t) {
           auto aterm = vector_input("attributes");
           set_attribute<vec1f>("value", aterm, 1);
@@ -454,6 +458,8 @@ namespace geoflow::nodes::gui {
           painter->clear_attribute("position");
         } else if(input_terminals["normals"].get() == &t) {
           painter->clear_attribute("normal");
+        } else if(input_terminals["colors"].get() == &t) {
+          painter->clear_attribute("color");
         } else if(&input("colormap") == &t) {
           if(t.has_data()) {
             auto& cmap = input("colormap").get<ColorMap&>();
