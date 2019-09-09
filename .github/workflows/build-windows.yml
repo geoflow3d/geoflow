@@ -23,7 +23,7 @@ jobs:
     - name: Install glm
       run: |
         cd deps
-        git clone https://github.com/g-truc/    
+        git clone https://github.com/g-truc/glm    
         cd glm
         git checkout 0.9.9.5
         mkdir build && cd build
