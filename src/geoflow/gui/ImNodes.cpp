@@ -42,7 +42,7 @@ bool operator ==(const ImVec2& a, const ImVec2& b)
 enum _ImNodesState
 {
     State_None,
-    State_Drag,
+    State_NodeDrag,
     State_Select,
 };
 
@@ -230,24 +230,20 @@ void BeginCanvas(CanvasState* canvas)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImGuiIO& io = ImGui::GetIO();
 
-    if (!ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+    if (ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0) && !io.KeyShift)
     {
-        if (ImGui::IsMouseDragging(1))
-            canvas->offset += io.MouseDelta;
-
-        // if (io.KeyShift && !io.KeyCtrl)
+        canvas->offset += io.MouseDelta;
+    } else if(ImGui::IsWindowHovered()) {
         canvas->offset.x += io.MouseWheelH * 16.0f;
-
-
         canvas->offset.y += io.MouseWheel * 16.0f;
-
-        if (!io.KeyShift && io.KeyCtrl)
-        {
-            // if (io.MouseWheel != 0)
-            //     canvas->zoom = ImClamp(canvas->zoom + io.MouseWheel * canvas->zoom / 16.f, 0.3f, 3.f);
-            canvas->offset += ImGui::GetMouseDragDelta();
-        }
     }
+        // if (!io.KeyShift && io.KeyCtrl)
+        // {
+        //     // if (io.MouseWheel != 0)
+        //     //     canvas->zoom = ImClamp(canvas->zoom + io.MouseWheel * canvas->zoom / 16.f, 0.3f, 3.f);
+        //     canvas->offset += ImGui::GetMouseDragDelta();
+        // }
+    // }
 
     canvas->nodes_bbox_empty = true;
 
@@ -334,7 +330,7 @@ void EndCanvas()
     case State_None:
     {
         ImGuiID canvas_id = ImGui::GetID("canvas");
-        if (ImGui::IsMouseDown(0) && ImGui::GetCurrentWindow()->ContentsRegionRect.Contains(ImGui::GetMousePos()))
+        if (ImGui::IsMouseDown(0) && ImGui::GetIO().KeyShift && ImGui::GetCurrentWindow()->ContentsRegionRect.Contains(ImGui::GetMousePos()))
         {
             if (ImGui::IsWindowHovered())
             {
@@ -345,7 +341,7 @@ void EndCanvas()
                 {
                     ImGui::SetActiveID(canvas_id, ImGui::GetCurrentWindow());
                     const ImGuiIO& io = ImGui::GetIO();
-                    if (!io.KeyCtrl && !io.KeyShift)
+                    if (io.KeyCtrl)
                     {
                         impl->single_selected_node = nullptr;   // unselect all
                         impl->do_selections_frame = ImGui::GetCurrentContext()->FrameCount + 1;
@@ -353,7 +349,7 @@ void EndCanvas()
                 }
             }
 
-            if (ImGui::GetActiveID() == canvas_id && ImGui::IsMouseDragging(0))
+            if (ImGui::GetActiveID() == canvas_id && ImGui::IsMouseDragging(0) && ImGui::GetIO().KeyShift)
             {
                 impl->selection_start = ImGui::GetMousePos();
                 impl->state = State_Select;
@@ -363,7 +359,7 @@ void EndCanvas()
             ImGui::ClearActiveID();
         break;
     }
-    case State_Drag:
+    case State_NodeDrag:
     {
         if (!ImGui::IsMouseDown(0))
         {
@@ -508,18 +504,18 @@ void EndNode()
             // Unselect other nodes when some node was left-clicked.
             node_selected = impl->single_selected_node == node_id;
         }
-        else if (ImGui::IsMouseClicked(0) && ImGui::IsItemHovered() && ImGui::IsItemActive())
+        else if (ImGui::IsMouseClicked(0) && io.KeyShift && ImGui::IsItemHovered() && ImGui::IsItemActive())
         {
             node_selected ^= true;
-            if (!io.KeyCtrl && node_selected)
-            {
-                impl->single_selected_node = node_id;
-                impl->do_selections_frame = ImGui::GetCurrentContext()->FrameCount + 1;
-            }
+            // if (!io.KeyCtrl && node_selected)
+            // {
+            //     impl->single_selected_node = node_id;
+            //     impl->do_selections_frame = ImGui::GetCurrentContext()->FrameCount + 1;
+            // }
         }
         else if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0))
         {
-            impl->state = State_Drag;
+            impl->state = State_NodeDrag;
             if (impl->drag_node == nullptr)
             {
                 impl->drag_node = node_id;
@@ -537,7 +533,7 @@ void EndNode()
         }
         break;
     }
-    case State_Drag:
+    case State_NodeDrag:
     {
         if (ImGui::IsMouseDown(0))
         {
@@ -556,15 +552,7 @@ void EndNode()
         selection_rect.Max.y = ImMax(impl->selection_start.y, ImGui::GetMousePos().y);
 
         ImGuiID prev_selected_id = ImHashStr("prev-selected", 0, ImHashData(&impl->node.id, sizeof(impl->node.id)));
-        if (io.KeyShift)
-        {
-            // Append selection
-            if (selection_rect.Contains(node_rect))
-                node_selected = true;
-            else
-                node_selected = impl->cached_data.GetBool(prev_selected_id);
-        }
-        else if (io.KeyCtrl)
+        if (io.KeyCtrl)
         {
             // Subtract from selection
             if (selection_rect.Contains(node_rect))
@@ -574,8 +562,11 @@ void EndNode()
         }
         else
         {
-            // Assign selection
-            node_selected = selection_rect.Contains(node_rect);
+            // Append selection
+            if (selection_rect.Contains(node_rect))
+                node_selected = true;
+            else
+                node_selected = impl->cached_data.GetBool(prev_selected_id);
         }
         break;
     }
