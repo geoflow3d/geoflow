@@ -23,8 +23,9 @@ jobs:
     - name: Install glm
       run: |
         cd deps
-        git clone https://github.com/g-truc/glm.git
+        git clone https://github.com/g-truc/glm    
         cd glm
+        git checkout 0.9.9.5
         mkdir build && cd build
         cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=C:\software
         cmake --build . --target install --config Release
