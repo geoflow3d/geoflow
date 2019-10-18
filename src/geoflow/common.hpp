@@ -145,7 +145,7 @@ class Geometry {
   virtual void compute_box() =0;
   public:
   virtual size_t vertex_count() const=0;
-  virtual Box& box() {
+  virtual const Box& box() {
     if (!bbox.has_value()){
       compute_box();
     }
