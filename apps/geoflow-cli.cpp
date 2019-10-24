@@ -22,12 +22,9 @@
 
 #include <geoflow/geoflow.hpp>
 #include <geoflow/core_nodes.hpp>
+
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
-
-#ifdef GF_BUILD_GUI
-    #include <geoflow/gui/gfImNodes.hpp>
-#endif
 
 int main(int argc, const char * argv[]) {
 
@@ -54,18 +51,6 @@ int main(int argc, const char * argv[]) {
     auto R_core = geoflow::NodeRegister::create("Core");
     R_core->register_node<geoflow::nodes::core::NestNode>("NestedFlowchart");
     node_registers.emplace(R_core);
-    #ifdef GF_BUILD_GUI
-      auto R_gui = geoflow::NodeRegister::create("Visualisation");
-      R_gui->register_node<geoflow::nodes::gui::ColorMapperNode>("ColorMapper");
-      R_gui->register_node<geoflow::nodes::gui::GradientMapperNode>("GradientMapper");
-      R_gui->register_node<geoflow::nodes::gui::PainterNode>("Painter");
-      R_gui->register_node<geoflow::nodes::gui::VectorPainterNode>("VectorPainter");
-      R_gui->register_node<geoflow::nodes::gui::CubeNode>("Cube");
-      R_gui->register_node<geoflow::nodes::gui::TriangleNode>("Triangle");
-      node_registers.emplace(R_gui);
-      
-      ImGui::CreateContext();
-    #endif
     
     for(auto& p: fs::directory_iterator(GF_PLUGIN_FOLDER)) {
         if (p.path().extension() == GF_PLUGIN_EXTENSION) {
@@ -99,15 +84,11 @@ int main(int argc, const char * argv[]) {
     // }
     // load flowchart from file
     geoflow::NodeManager node_manager(node_registers);
-    if(*opt_flowchart_path)
+    if(*opt_flowchart_path) {
       node_manager.load_json(flowchart_path);
-
-    // launch gui or just run the flowchart in cli mode
-    #ifdef GF_BUILD_GUI
-      geoflow::launch_flowchart(node_manager);
-    #else
-      //N.run();
-    #endif
+      // launch gui or just run the flowchart in cli mode
+      node_manager.run();
+    }
   }
 
   // unload node libraries

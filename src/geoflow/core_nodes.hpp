@@ -1,5 +1,5 @@
 #include "geoflow.hpp"
-#ifdef GF_BUILD_GUI
+#ifdef GF_INCLUDE_WITH_GUI
   #include "imgui.h"
   #include "gui/parameter_widgets.hpp"
 #endif
@@ -68,7 +68,7 @@ namespace geoflow::nodes::core {
       flowchart_loaded = load_nodes();
     }
 
-    #ifdef GF_BUILD_GUI
+    #ifdef GF_INCLUDE_WITH_GUI
       void gui() {
         for( auto& [name, node] : nested_node_manager_->get_nodes() ) {
           ImGui::PushID(node.get());

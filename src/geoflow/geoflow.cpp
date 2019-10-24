@@ -70,7 +70,7 @@ void gfInputTerminal::clear() {
 }
 void gfMonoInputTerminal::update_on_receive(bool queue) {
   if(has_data()) {
-    if (queue && parent_.update_status()) 
+    if (queue && parent_.update_status() && parent_.autorun) 
       parent_.queue();
     parent_.on_receive(*this);
   }
@@ -222,7 +222,7 @@ void gfPolyInputTerminal::update_on_receive(bool queue) {
   rebuild_terminal_refs();
   if (parent_.update_status()) {
     parent_.on_receive(*this);
-    if (queue)
+    if (queue && parent_.autorun)
       parent_.queue();
   }
 }
@@ -378,6 +378,16 @@ std::string Node::debug_info() {
 
 void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
+}
+bool NodeManager::run() {
+  // find all root nodes with autorun enabled
+  bool ran_something = false;
+  for (auto& [name, node] : nodes) {
+    if(node->is_root() && node->autorun) {
+      ran_something |= run(node);
+    }
+  }
+  return ran_something;
 }
 bool NodeManager::run(Node &node) {
   std::queue<std::shared_ptr<Node>>().swap(node_queue); // clear to prevent double processing of nodes ()

@@ -69,17 +69,23 @@ class gfImNodes : public RenderObject {
 						// CenterScroll();
 					}
 				}
+				ImGui::EndMenu();
+			}
+		}
+    if (ImGui::BeginMenu("Flowchart")) {
+        if (ImGui::MenuItem("Run all root nodes")) {
+					node_manager_.run();
+				}
 				ImGui::Separator();
-				if (ImGui::MenuItem("Clear flowchart")) {
+        if (ImGui::MenuItem("Clear flowchart")) {
 					node_draw_list_.clear();
 					node_manager_.clear();
 				}
 				if (ImGui::MenuItem("Center flowchart")) {
           canvas_.center_on_nodes = true;
 				}
-				ImGui::EndMenu();
-			}
-		}
+      ImGui::EndMenu();
+    }
 	}
     
   void render() {
@@ -175,10 +181,12 @@ class gfImNodes : public RenderObject {
                 if(!node_manager_.name_node(node, name_buffer))
                   name_buffer = node->get_name();
               }
+              ImGui::Checkbox("Autorun", &(node->autorun));
               if (ImGui::MenuItem("Run")) {
                 node_manager_.run(*node);
               }
               ImGui::Separator();
+              
               node->gui();
               if (node->get_register().get_name() != "Visualisation") {
                 if (ImGui::CollapsingHeader("Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {

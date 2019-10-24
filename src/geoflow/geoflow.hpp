@@ -410,6 +410,7 @@ namespace geoflow {
     // std::map<std::string,std::shared_ptr<OutputGroup>> outputGroups;
 
     ParameterMap parameters;
+    bool autorun = true;
     arr2f position;
 
     Node(NodeRegisterHandle node_register, NodeManager& manager, std::string type_name, std::string node_name): node_register(node_register), manager(manager), type_name(type_name), gfObject(node_name) {};
@@ -503,6 +504,15 @@ namespace geoflow {
     std::pair<float,float> get_position() {
       return std::make_pair(position[0], position[1]);
     }
+    void set_autorun(bool b) {
+      autorun = b;
+    }
+    bool is_root() {
+      return input_terminals.size()==0;
+    }
+    bool is_leaf() {
+      return output_terminals.size()==0;
+    }
 
     NodeHandle get_handle(){ return shared_from_this(); };
     WeakNodeHandle get_weak_handle(){ return shared_from_this(); };
@@ -513,7 +523,6 @@ namespace geoflow {
     void notify_children();
     // void preprocess();
 
-    // private:
 
     virtual void init() = 0;
     virtual void post_parameter_load() {};
@@ -630,6 +639,7 @@ namespace geoflow {
 
     // }
     
+    bool run();
     bool run(Node &node);
     bool run(NodeHandle node) {
       return run(*node);
