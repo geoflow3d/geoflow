@@ -1,9 +1,7 @@
 # Geoflow
 flowchart tool for geo-spatial data processing
 
-![macOS CI](https://github.com/tudelft3d/geoflow/workflows/CI%20macOS/badge.svg)
-![linux CI](https://github.com/tudelft3d/geoflow/workflows/CI%20linux/badge.svg)
-![Windows CI](https://github.com/tudelft3d/geoflow/workflows/CI%20Windows/badge.svg)
+![Build](https://github.com/geoflow3d/geoflow/workflows/Build/badge.svg)
 
 
 ## Building
