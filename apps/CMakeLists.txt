@@ -22,8 +22,14 @@ if(${GF_BUILD_GUI})
   set_target_properties( geoflow PROPERTIES CXX_STANDARD 17 )
   install(FILES ${GF_SHADER_FILES} DESTINATION ${GF_SHADER_PATH})
   install(TARGETS geoflow
-    RUNTIME DESTINATION bin
-    BUNDLE DESTINATION /Applications)
+    RUNTIME DESTINATION bin COMPONENT gui
+    BUNDLE DESTINATION /Applications COMPONENT gui)
+  if(APPLE)
+    install(CODE "
+    include(BundleUtilities)
+    fixup_bundle(/Applications/geoflow.app \"\" \"\")
+  " COMPONENT gui)
+  endif()
 endif()
 
 # cli application
@@ -36,4 +42,4 @@ target_link_directories(geof PRIVATE ${CMAKE_SOURCE_DIR}/src)
 set_target_properties( geof PROPERTIES CXX_STANDARD 17 )
 
 install(TARGETS geof
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin COMPONENT cli)

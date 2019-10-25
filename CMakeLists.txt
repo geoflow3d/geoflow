@@ -180,3 +180,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/c
 
 add_subdirectory(apps)
 # add_subdirectory(examples)
+
+option(BUILD_INSTALLER "Build Installer" ON)
+if(BUILD_INSTALLER)
+    add_subdirectory(installer)
+endif()
