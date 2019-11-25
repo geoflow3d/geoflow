@@ -17,24 +17,23 @@
 #include <iostream>
 #include <fstream>
 
-#include <DLLoader.h>
-#include "CLI11.hpp"
-
 #include <geoflow/geoflow.hpp>
 #include <geoflow/core_nodes.hpp>
+#include <geoflow/plugin_manager.hpp>
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include "CLI11.hpp"
+
+using namespace geoflow;
 
 int main(int argc, const char * argv[]) {
 
-  const std::string config_path = "/Users/ravi/git/geoflow/apps/geoflow-config.json";
   std::string flowchart_path = "/Users/ravi/git/geoflow/apps/add.json";
-
+  std::string plugin_folder = GF_PLUGIN_FOLDER;
 
   CLI::App cli{"Geoflow"};
 
   CLI::Option* opt_flowchart_path = cli.add_option("-f,--flowchart", flowchart_path, "Flowchart file");
+  CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
 
   try {
     cli.parse(argc, argv);
@@ -42,59 +41,23 @@ int main(int argc, const char * argv[]) {
     return cli.exit(e);
   }
 
-  typedef dlloader::DLLoader<geoflow::NodeRegister> DLLoader;
-  std::unordered_map<std::string, std::unique_ptr<DLLoader>> dloaders;
-
   // load node registers from libraries
   {
-    geoflow::NodeRegisterMap node_registers;
-    auto R_core = geoflow::NodeRegister::create("Core");
-    R_core->register_node<geoflow::nodes::core::NestNode>("NestedFlowchart");
+    NodeRegisterMap node_registers;
+    auto R_core = NodeRegister::create("Core");
+    R_core->register_node<nodes::core::NestNode>("NestedFlowchart");
     node_registers.emplace(R_core);
-    
-    for(auto& p: fs::directory_iterator(GF_PLUGIN_FOLDER)) {
-        if (p.path().extension() == GF_PLUGIN_EXTENSION) {
-          std::string path = p.path().string();
-          std::cout << "Loading " << path << " ...\n";
-          dloaders.emplace(path, std::make_unique<DLLoader>(path));
-          if (dloaders[path]->DLOpenLib()) {
-            node_registers.emplace( dloaders[path]->DLGetInstance() );
-            std::cout << "... success :)\n";
-          } else {
-            dloaders.erase(path);
-            std::cout << "... failed :(\n";
-          }
-        }
-    }
 
-    // {   
-    //   json j;
-    //   std::ifstream i(config_path);
-    //   i >> j;
-    //   auto node_paths = j.at("node-libs").get<std::vector<std::string>>();
+    PluginManager plugin_manager;
+    plugin_manager.load(plugin_folder, node_registers);
 
-    //   for (const auto& path : node_paths)  {
-    //     dloaders.emplace(path, std::make_unique<DLLoader>(path));
-    //     // auto lib = ;
-    //     std::cout << "Loading " << path << std::endl;
-    //     dloaders[path]->DLOpenLib();
-
-    //     node_registers.emplace( dloaders[path]->DLGetInstance() );
-    //   }
-    // }
     // load flowchart from file
-    geoflow::NodeManager node_manager(node_registers);
+    NodeManager node_manager(node_registers);
     if(*opt_flowchart_path) {
       node_manager.load_json(flowchart_path);
       // launch gui or just run the flowchart in cli mode
       node_manager.run();
     }
-  }
-
-  // unload node libraries
-  for ( auto& [path, loader] : dloaders) {
-    std::cout << "Unloading " << path << std::endl;
-    loader->DLCloseLib();
   }
 
   return 0;
