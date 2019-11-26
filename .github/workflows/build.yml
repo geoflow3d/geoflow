@@ -50,7 +50,9 @@ jobs:
         cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
         cmake --build . --parallel 4 --config Release
         # cmake --install . --verbose
-        cpack -C Release
+    - name: Create installer
+      run: |
+        cpack -C Release --verbose
     - name: Upload nsis installer as artifact
       uses: actions/upload-artifact@master
       with:
