@@ -15,7 +15,7 @@ jobs:
     - name: Install glm
       run: |
         echo $env:VCPKG_INSTALLATION_ROOT
-        echo $env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\
+        ls $env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\
         vcpkg install glm
       # run: |
       #   mkdir deps
@@ -44,7 +44,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake
+        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
         cmake --build . --parallel 4 --config Release
         cmake --install .
 
