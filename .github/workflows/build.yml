@@ -21,7 +21,8 @@ jobs:
         mkdir build
         cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=C:\software -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
-        cmake --build . --target install --config Release
+        cmake --build . --config Release
+        cmake --install .
     - name: Install glm
       run: |
         cd deps
@@ -31,14 +32,16 @@ jobs:
         mkdir build
         cd build
         cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=C:\software
-        cmake --build . --target install --config Release
+        cmake --build . --config Release
+        cmake --install .
     - uses: actions/checkout@v1
     - name: Build
       run: |
         mkdir build
         cd build
         cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=C:\software
-        cmake --build . --parallel 4 --target install --config Release
+        cmake --build . --parallel 4 --config Release
+        cmake --install .
 
   Ubuntu:
     name: Build Ubuntu
