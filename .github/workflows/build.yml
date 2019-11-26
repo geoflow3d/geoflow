@@ -12,17 +12,6 @@ jobs:
     name: Build Windows
     runs-on: windows-latest
     steps:
-    - name: Install glfw
-      run: |
-        mkdir deps
-        cd deps
-        git clone https://github.com/glfw/glfw.git
-        cd glfw
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=C:\software -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
-        cmake --build . --config Release
-        cmake --install .
     - name: Install glm
       run: |
         cd deps
@@ -31,7 +20,18 @@ jobs:
         git checkout 0.9.9.6
         mkdir build
         cd build
-        cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=C:\software
+        cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=D:\software
+        cmake --build . --config Release
+        cmake --install .
+    - name: Install glfw
+      run: |
+        mkdir deps
+        cd deps
+        git clone https://github.com/glfw/glfw.git
+        cd glfw
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=D:\software -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
         cmake --build . --config Release
         cmake --install .
     - uses: actions/checkout@v1
@@ -39,7 +39,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=C:\software
+        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software
         cmake --build . --parallel 4 --config Release
         cmake --install .
 
