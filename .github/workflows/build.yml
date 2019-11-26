@@ -16,7 +16,7 @@ jobs:
       run: |
         echo $env:VCPKG_INSTALLATION_ROOT
         $env:VCPKG_DEFAULT_TRIPLET="x64-windows"
-        vcpkg install glm
+        vcpkg install glm glfw3
       # run: |
       #   mkdir deps
       #   cd deps
@@ -28,17 +28,17 @@ jobs:
       #   cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=D:\software
       #   cmake --build . --config Release
       #   cmake --install .
-    - name: Install glfw
-      run: |
-        mkdir deps
-        cd deps
-        git clone https://github.com/glfw/glfw.git
-        cd glfw
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=D:\software -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
-        cmake --build . --config Release
-        cmake --install .
+    # - name: Install glfw
+    #   run: |
+    #     mkdir deps
+    #     cd deps
+    #     git clone https://github.com/glfw/glfw.git
+    #     cd glfw
+    #     mkdir build
+    #     cd build
+    #     cmake .. -DCMAKE_INSTALL_PREFIX=D:\software -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
+    #     cmake --build . --config Release
+    #     cmake --install .
     - uses: actions/checkout@v1
     - name: Build
       run: |
