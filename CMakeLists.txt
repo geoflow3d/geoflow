@@ -33,11 +33,11 @@ endif(UNIX)
 # definitions
 set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/geoflow)
 if(WIN32)
-  set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share)
+  set(GF_SHADER_PATH "bin\\share")
 endif()
 add_definitions(
   -DGLFW_INCLUDE_NONE
-  -DGF_SHADER_PATH=\"${GF_SHADER_PATH}\"
+  -DGF_SHADER_PATH=\"share\"
   -DIMGUI_IMPL_OPENGL_LOADER_GLAD
   -DGLM_FORCE_CTOR_INIT
 )
@@ -165,6 +165,7 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
 )
 
 install(TARGETS geoflow-core EXPORT geoflow-targets 
+  RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   PUBLIC_HEADER DESTINATION include/geoflow)
@@ -180,3 +181,16 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/c
 
 add_subdirectory(apps)
 # add_subdirectory(examples)
+
+set(CPACK_GENERATOR NSIS)
+set(CPACK_PACKAGE_NAME "Geoflow")
+set(CPACK_PACKAGE_VENDOR "Ravi Peters")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Geoflow - Software")
+set(CPACK_PACKAGE_VERSION "0.1.0")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Geoflow")
+SET(CPACK_NSIS_MODIFY_PATH ON)
+
+INCLUDE(CPack)
