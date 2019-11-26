@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Install glm
       run: |
+        echo $env:VCPKG_INSTALLATION_ROOT
+        echo $env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\
         vcpkg install glm
       # run: |
       #   mkdir deps
