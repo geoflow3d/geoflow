@@ -14,16 +14,18 @@ jobs:
     steps:
     - name: Install glm
       run: |
-        mkdir deps
-        cd deps
-        git clone https://github.com/g-truc/glm    
-        cd glm
-        git checkout 0.9.9.6
-        mkdir build
-        cd build
-        cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=D:\software
-        cmake --build . --config Release
-        cmake --install .
+        vcpkg install glm
+      # run: |
+      #   mkdir deps
+      #   cd deps
+      #   git clone https://github.com/g-truc/glm    
+      #   cd glm
+      #   git checkout 0.9.9.6
+      #   mkdir build
+      #   cd build
+      #   cmake .. -DGLM_TEST_ENABLE=OFF -DCMAKE_INSTALL_PREFIX=D:\software
+      #   cmake --build . --config Release
+      #   cmake --install .
     - name: Install glfw
       run: |
         cd deps
@@ -39,7 +41,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software
+        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake
         cmake --build . --parallel 4 --config Release
         cmake --install .
 
