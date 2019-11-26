@@ -17,6 +17,9 @@ jobs:
         echo $env:VCPKG_INSTALLATION_ROOT
         $env:VCPKG_DEFAULT_TRIPLET="x64-windows"
         vcpkg install glm glfw3
+    - name: Install NSIS
+      run: |
+        choco install nsis
       # run: |
       #   mkdir deps
       #   cd deps
@@ -47,6 +50,12 @@ jobs:
         cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
         cmake --build . --parallel 4 --config Release
         # cmake --install . --verbose
+        cpack -C Release
+    - name: Upload nsis installer as artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: installer-win64
+        path: build/Geoflow-0.1.0-win64.exe
 
   Ubuntu:
     name: Build Ubuntu
