@@ -14,6 +14,7 @@ jobs:
     steps:
     - name: Install glm
       run: |
+        mkdir deps
         cd deps
         git clone https://github.com/g-truc/glm    
         cd glm
@@ -25,7 +26,6 @@ jobs:
         cmake --install .
     - name: Install glfw
       run: |
-        mkdir deps
         cd deps
         git clone https://github.com/glfw/glfw.git
         cd glfw
