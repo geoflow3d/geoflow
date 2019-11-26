@@ -12,10 +12,10 @@ jobs:
     name: Build Windows
     runs-on: windows-latest
     steps:
-    - name: Install glm
+    - name: Install glm, glfw3
       run: |
         echo $env:VCPKG_INSTALLATION_ROOT
-        ls $env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\
+        $env:VCPKG_DEFAULT_TRIPLET="x64-windows"
         vcpkg install glm glfw3
       # run: |
       #   mkdir deps
