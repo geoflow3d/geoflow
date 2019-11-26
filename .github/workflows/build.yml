@@ -28,6 +28,7 @@ jobs:
       #   cmake --install .
     - name: Install glfw
       run: |
+        mkdir deps
         cd deps
         git clone https://github.com/glfw/glfw.git
         cd glfw
