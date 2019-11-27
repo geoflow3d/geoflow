@@ -65,6 +65,9 @@ set_target_properties(geoflow-core PROPERTIES
   CXX_STANDARD 17
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
+if(MSVC)
+  target_compile_options(geoflow-core PUBLIC "/Zc:__cplusplus")
+endif(MSVC)
 
 if(${GF_BUILD_GUI})
   include_directories(
@@ -176,6 +179,8 @@ install(TARGETS geoflow-core EXPORT geoflow-targets
   LIBRARY DESTINATION lib
   PUBLIC_HEADER DESTINATION include/geoflow)
 install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
+
+install(DIRECTORY thirdparty/filesystem/include/ghc DESTINATION include)
 
 include ( CMakePackageConfigHelpers )
 configure_package_config_file(cmake/geoflow-config.cmake.in
