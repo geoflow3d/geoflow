@@ -53,6 +53,7 @@ jobs:
         .\nsis-setup.exe /S
     - name: Create installer
       run: |
+        cd build
         & "C:\Program Files\CMake\bin\cpack" -C Release --verbose
     - name: Upload nsis installer as artifact
       uses: actions/upload-artifact@master
