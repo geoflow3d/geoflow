@@ -49,8 +49,7 @@ jobs:
         # cmake --install . --verbose
     - name: Install NSIS
       run: |
-        Invoke-WebRequest https://netcologne.dl.sourceforge.net/project/nsis/NSIS%203/3.04/nsis-3.04-s
-etup.exe -OutFile nsis-setup.exe
+        Invoke-WebRequest https://netcologne.dl.sourceforge.net/project/nsis/NSIS%203/3.04/nsis-3.04-setup.exe -OutFile nsis-setup.exe
         .\nsis-setup.exe /S
     - name: Create installer
       run: |
