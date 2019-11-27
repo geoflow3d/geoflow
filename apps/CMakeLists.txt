@@ -27,7 +27,7 @@ if(${GF_BUILD_GUI})
 endif()
 
 # cli application
-add_executable(geof geoflow-cli.cpp)
+add_executable(geof geoflow-app.cpp)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(geof PRIVATE -ldl)
 endif()

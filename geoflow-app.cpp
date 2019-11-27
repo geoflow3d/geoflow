@@ -16,10 +16,19 @@
 
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 #include <geoflow/geoflow.hpp>
-#include <geoflow/core_nodes.hpp>
 #include <geoflow/plugin_manager.hpp>
+
+#ifdef GF_BUILD_WITH_GUI
+  #include <geoflow/gui/gfImNodes.hpp>
+  #define GF_INCLUDE_WITH_GUI
+  #include <geoflow/core_nodes.hpp>
+  #undef GF_INCLUDE_WITH_GUI
+#else 
+  #include <geoflow/core_nodes.hpp>
+#endif
 
 #include "CLI11.hpp"
 
@@ -27,8 +36,13 @@ using namespace geoflow;
 
 int main(int argc, const char * argv[]) {
 
-  std::string flowchart_path = "/Users/ravi/git/geoflow/apps/add.json";
-  std::string plugin_folder = GF_PLUGIN_FOLDER;
+  std::string flowchart_path = "flowchart.json";
+  std::string plugin_folder = "plugins";
+  
+  if(const char* env_p = std::getenv("GF_PLUGIN_FOLDER")) {
+    plugin_folder = env_p;
+    std::cout << "Detected environment variable GF_PLUGIN_FOLDER = " << plugin_folder << "\n";
+  }
 
   CLI::App cli{"Geoflow"};
 
@@ -48,15 +62,35 @@ int main(int argc, const char * argv[]) {
     R_core->register_node<nodes::core::NestNode>("NestedFlowchart");
     node_registers.emplace(R_core);
 
-    PluginManager plugin_manager;
-    plugin_manager.load(plugin_folder, node_registers);
+    #ifdef GF_BUILD_WITH_GUI
+      auto R_gui = NodeRegister::create("Visualisation");
+      R_gui->register_node<nodes::gui::ColorMapperNode>("ColorMapper");
+      R_gui->register_node<nodes::gui::GradientMapperNode>("GradientMapper");
+      R_gui->register_node<nodes::gui::PainterNode>("Painter");
+      R_gui->register_node<nodes::gui::VectorPainterNode>("VectorPainter");
+      R_gui->register_node<nodes::gui::CubeNode>("Cube");
+      R_gui->register_node<nodes::gui::TriangleNode>("Triangle");
+      node_registers.emplace(R_gui);
 
+      ImGui::CreateContext();
+    #endif
+
+    if(fs::exists(plugin_folder)) {
+      PluginManager plugin_manager;
+      plugin_manager.load(plugin_folder, node_registers);
+    } else {
+      std::cout << "Notice that this plugin folder does not exist: " << plugin_folder << "\n";
+    }
     // load flowchart from file
     NodeManager node_manager(node_registers);
     if(*opt_flowchart_path) {
       node_manager.load_json(flowchart_path);
       // launch gui or just run the flowchart in cli mode
-      node_manager.run();
+      #ifdef GF_BUILD_WITH_GUI
+        launch_flowchart(node_manager);
+      #else
+        node_manager.run();
+      #endif
     }
   }
 
