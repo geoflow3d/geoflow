@@ -36,7 +36,7 @@ Have a look at the [workflow files](https://github.com/tudelft3d/geoflow/tree/ma
 
 # Usage
 ## GUI
-*. Right click to open the menu to create new nodes
-*. Drag from input/output terminals to make connections
-*. Right click on a node to access its context menu
-*. Translate in the 3D viewer by left-mouse dragging while holding `ctrl`, faster zooming by holding `ctrl` while scrolling.
+- Right click to open the menu to create new nodes
+- Drag from input/output terminals to make connections
+- Right click on a node to access its context menu
+- Translate in the 3D viewer by left-mouse dragging while holding `ctrl`, faster zooming by holding `ctrl` while scrolling.
