@@ -3,6 +3,7 @@ Flowchart tool for geo-spatial data processing. Highly experimental with many ro
 
 ![Build](https://github.com/geoflow3d/geoflow/workflows/Build/badge.svg)
 
+# Installation
 ## Using the precompiled binaries for Windows
 This is the easiest way to get Geoflow running on Windows. Simply download and run the Geoflow installer from the [latest release](https://github.com/geoflow3d/geoflow/releases/latest). Launch `geoflow.exe` to start Geoflow.
 
@@ -32,3 +33,10 @@ Requires additional dependencies `glm` and `glfw` that need to be installed by t
 
 ### Platform specific instructions
 Have a look at the [workflow files](https://github.com/tudelft3d/geoflow/tree/master/.github/workflows).
+
+# Usage
+## GUI
+*. Right click to open the menu to create new nodes
+*. Drag from input/output terminals to make connections
+*. Right click on a node to access its context menu
+*. Translate in the 3D viewer by left-mouse dragging while holding `ctrl`, faster zooming by holding `ctrl` while scrolling.
