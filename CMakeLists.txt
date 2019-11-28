@@ -35,10 +35,13 @@ endif(UNIX)
 set(GF_SHADER_PATH ${CMAKE_INSTALL_PREFIX}/share/geoflow)
 if(WIN32)
   set(GF_SHADER_PATH "bin\\share")
+  add_definitions(
+    -DGF_SHADER_PATH=\"share\"
+  )
 endif()
 add_definitions(
   -DGLFW_INCLUDE_NONE
-  -DGF_SHADER_PATH=\"share\"
+  -DGF_SHADER_PATH=\"${GF_SHADER_PATH}\"
   -DIMGUI_IMPL_OPENGL_LOADER_GLAD
   -DGLM_FORCE_CTOR_INIT
 )

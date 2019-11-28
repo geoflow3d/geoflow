@@ -54,6 +54,7 @@ int main(int argc, const char * argv[]) {
   }
 
   // load node registers from libraries
+  PluginManager plugin_manager;
   {
     NodeRegisterMap node_registers;
     auto R_core = NodeRegister::create("Core");
@@ -74,7 +75,6 @@ int main(int argc, const char * argv[]) {
     #endif
 
     if(fs::exists(plugin_folder)) {
-      PluginManager plugin_manager;
       plugin_manager.load(plugin_folder, node_registers);
     } else {
       std::cout << "Notice that this plugin folder does not exist: " << plugin_folder << "\n";
@@ -91,6 +91,8 @@ int main(int argc, const char * argv[]) {
       node_manager.run();
     #endif
   }
+  // NOTICE that we first must destroy any related node_registers before we can unload the plugin_manager!
+  plugin_manager.unload();
 
   return 0;
 }

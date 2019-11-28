@@ -8,7 +8,7 @@ namespace geoflow {
     public:
     PluginManager() {};
     ~PluginManager() {
-      unload();
+      // unload();
     };
     void load(std::string& plugin_directory, NodeRegisterMap& node_registers) {
       for(auto& p: fs::directory_iterator(plugin_directory)) {
