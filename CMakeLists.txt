@@ -68,9 +68,9 @@ set_target_properties(geoflow-core PROPERTIES
   CXX_STANDARD 17
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
-if(MSVC)
+if(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
   target_compile_options(geoflow-core PUBLIC "/Zc:__cplusplus")
-endif(MSVC)
+endif()
 
 if(${GF_BUILD_GUI})
   include_directories(
