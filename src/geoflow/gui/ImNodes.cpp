@@ -225,7 +225,7 @@ void BeginCanvas(CanvasState* canvas)
     const ImGuiWindow* w = ImGui::GetCurrentWindow();
     ImGui::PushID(canvas);
 
-    ImGui::ItemAdd(w->ContentsRegionRect, ImGui::GetID("canvas"));
+    ImGui::ItemAdd(w->ContentRegionRect, ImGui::GetID("canvas"));
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImGuiIO& io = ImGui::GetIO();
@@ -330,7 +330,7 @@ void EndCanvas()
     case State_None:
     {
         ImGuiID canvas_id = ImGui::GetID("canvas");
-        if (ImGui::IsMouseDown(0) && ImGui::GetIO().KeyShift && ImGui::GetCurrentWindow()->ContentsRegionRect.Contains(ImGui::GetMousePos()))
+        if (ImGui::IsMouseDown(0) && ImGui::GetIO().KeyShift && ImGui::GetCurrentWindow()->ContentRegionRect.Contains(ImGui::GetMousePos()))
         {
             if (ImGui::IsWindowHovered())
             {
