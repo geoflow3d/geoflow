@@ -95,6 +95,7 @@ namespace geoflow {
     ParamFloatRange,
     // ParamDoubleRange,
     ParamIntRange,
+    ParamString,
     ParamPath,
     ParamSelector
     > ParameterVariant;
