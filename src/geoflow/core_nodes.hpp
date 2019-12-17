@@ -85,6 +85,7 @@ namespace geoflow::nodes::core {
 
     void process() {
       if(flowchart_loaded) {
+        std::cout << "Begin processing for NestNode " << get_name() << "\n";
         // set up proxy node
         auto R = std::make_shared<NodeRegister>("ProxyRegister");
         R->register_node<ProxyNode>("Proxy");
@@ -107,6 +108,7 @@ namespace geoflow::nodes::core {
             proxy_node->output(name) = data_vec[i];
           }
           // run
+          std::cout << "Processing item " << i << "/" << n << "\n";
           for (auto& child : proxy_node->get_child_nodes()) {
             nested_node_manager_->run(child);
           }
@@ -119,6 +121,7 @@ namespace geoflow::nodes::core {
             }
           }
         }
+        std::cout << "End processing for NestNode " << get_name() << "\n";
       }
     };
   };
