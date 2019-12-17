@@ -47,6 +47,10 @@ namespace geoflow {
 				if (valptr->visible()) {
 					changed = ImGui::SliderInt(valptr->get_label().c_str(), &valptr->get(), valptr->min(), valptr->max());
 				}
+			} else if( auto valptr = std::get_if<ParamString>(&param) ) {
+				if (valptr->visible()) {
+					changed = ImGui::InputText(valptr->get_label().c_str(), &valptr->get());
+				}
 			} else if( auto valptr = std::get_if<ParamPath>(&param) ) {
 				if (valptr->visible()) {
 					changed = ImGui::FilePicker(OSDIALOG_OPEN, valptr->get());
