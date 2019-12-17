@@ -186,8 +186,6 @@ install(TARGETS geoflow-core EXPORT geoflow-targets
   PUBLIC_HEADER DESTINATION include/geoflow)
 install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
 
-install(DIRECTORY thirdparty/filesystem/include/ghc DESTINATION include)
-
 include ( CMakePackageConfigHelpers )
 configure_package_config_file(cmake/geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
