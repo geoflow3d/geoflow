@@ -108,7 +108,7 @@ namespace geoflow::nodes::core {
             proxy_node->output(name) = data_vec[i];
           }
           // run
-          std::cout << "Processing item " << i << "/" << n << "\n";
+          std::cout << "Processing item " << i+1 << "/" << n << "\n";
           for (auto& child : proxy_node->get_child_nodes()) {
             nested_node_manager_->run(child);
           }
