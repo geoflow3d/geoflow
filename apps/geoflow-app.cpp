@@ -36,6 +36,7 @@ int main(int argc, const char * argv[]) {
 
   std::string flowchart_path = "flowchart.json";
   std::string plugin_folder = GF_PLUGIN_FOLDER;
+  std::string log_filename = "";
   
   if(const char* env_p = std::getenv("GF_PLUGIN_FOLDER")) {
     plugin_folder = env_p;
@@ -46,11 +47,19 @@ int main(int argc, const char * argv[]) {
 
   CLI::Option* opt_flowchart_path = cli.add_option("-f,--flowchart", flowchart_path, "Flowchart file");
   CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
-
+  CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
+  
   try {
     cli.parse(argc, argv);
   } catch (const CLI::ParseError &e) {
     return cli.exit(e);
+  }
+
+  std::ofstream logfile;  
+  if(*opt_log) {
+    logfile.open(log_filename);
+    std::cout.rdbuf(logfile.rdbuf());
+    std::cerr.rdbuf(logfile.rdbuf());
   }
 
   // load node registers from libraries
