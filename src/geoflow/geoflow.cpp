@@ -563,12 +563,14 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict
             auto cval = c.value().get<std::array<std::string,2>>();
             if (nodes.count(cval[0]))
               try {
+                if (!nodes[cval[0]]->input_terminals.count(cval[1]))
+                  throw gfException("No input terminal '" + cval[1] + "' on node '" + cval[0] + "', failed to connect.");
                 nhandle->output_terminals[conn_j.key()]->connect(*nodes[cval[0]]->input_terminals[cval[1]]);
               } catch (const gfException& e) {
                 if(strict) {
                   throw e;
                 } else {
-                  std::cerr << e.what();
+                  std::cerr << e.what() << "\n";
                 }
               }
             else 
