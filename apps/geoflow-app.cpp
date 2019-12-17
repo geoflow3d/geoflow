@@ -55,7 +55,9 @@ int main(int argc, const char * argv[]) {
     return cli.exit(e);
   }
 
-  std::ofstream logfile;  
+  std::ofstream logfile; 
+  auto cout_rdbuf = std::cout.rdbuf();
+  auto cerr_rdbuf = std::cerr.rdbuf(); 
   if(*opt_log) {
     logfile.open(log_filename);
     std::cout.rdbuf(logfile.rdbuf());
@@ -103,5 +105,8 @@ int main(int argc, const char * argv[]) {
   // NOTICE that we first must destroy any related node_registers before we can unload the plugin_manager!
   plugin_manager.unload();
 
+  std::cout.rdbuf(cout_rdbuf);
+  std::cerr.rdbuf(cerr_rdbuf);
+  
   return 0;
 }
