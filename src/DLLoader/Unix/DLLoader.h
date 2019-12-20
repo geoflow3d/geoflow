@@ -37,7 +37,7 @@ namespace dlloader
 
 		bool DLOpenLib() override
 		{
-			if (!(_handle = dlopen(_pathToLib.c_str(), RTLD_GLOBAL | RTLD_LAZY))) {
+			if (!(_handle = dlopen(_pathToLib.c_str(), RTLD_LAZY))) {
 				std::cerr << dlerror() << std::endl;
 				return false;
 			}
