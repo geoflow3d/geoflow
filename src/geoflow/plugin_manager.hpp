@@ -13,11 +13,12 @@ namespace geoflow {
     void load(std::string& plugin_directory, NodeRegisterMap& node_registers) {
       for(auto& p: fs::directory_iterator(plugin_directory)) {
         if (p.path().extension() == GF_PLUGIN_EXTENSION) {
-          std::string path = p.path().string();
+          const std::string path = p.path().string();
+          const std::string plugin_target_name = p.path().stem().string();
           
           std::cout << "Loading " << path << " ...\n";
           
-          dloaders_.emplace(path, std::make_unique<DLLoader>(path));
+          dloaders_.emplace(path, std::make_unique<DLLoader>(path, plugin_target_name));
           
           if (dloaders_[path]->DLOpenLib()) {
             node_registers.emplace( dloaders_[path]->DLGetInstance() );

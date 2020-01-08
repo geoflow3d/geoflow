@@ -192,7 +192,10 @@ configure_package_config_file(cmake/geoflow-config.cmake.in
   INSTALL_DESTINATION lib/cmake/geoflow
   PATH_VARS GF_PLUGIN_FOLDER)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake DESTINATION lib/cmake/geoflow)
+install(FILES 
+  ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake 
+  cmake/gf_plugin.cpp.in
+  DESTINATION lib/cmake/geoflow)
 
 add_subdirectory(apps)
 # add_subdirectory(examples)

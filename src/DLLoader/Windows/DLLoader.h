@@ -19,14 +19,12 @@ namespace dlloader
 
 	public:
 		DLLoader(std::string const &pathToLib,
-			std::string const &allocClassSymbol = "allocator",
-			std::string const &deleteClassSymbol = "deleter",
-			std::string const &getHeaderHashSymbol = "get_shared_headers_hash")
+			std::string const &pluginTargetName)
 			:
 			_handle(nullptr), _pathToLib(pathToLib),
-			_allocClassSymbol(allocClassSymbol), 
-			_deleteClassSymbol(deleteClassSymbol),
-			_getHeaderHashSymbol(getHeaderHashSymbol)
+			_allocClassSymbol("allocator_"+pluginTargetName), 
+			_deleteClassSymbol("deleter_"+pluginTargetName), 
+			_getHeaderHashSymbol("get_shared_headers_hash_"+pluginTargetName)
 		{}
 
 		~DLLoader() = default;

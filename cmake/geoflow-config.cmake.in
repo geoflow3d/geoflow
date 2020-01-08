@@ -4,6 +4,7 @@ get_filename_component(geoflow_INCLUDE_DIRS "${SELF_DIR}/../../../include" ABSOL
 set_property(TARGET geoflow-core PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${geoflow_INCLUDE_DIRS})
 
 set(geoflow_FOUND true)
+set(GF_PLUGIN_FILE ${SELF_DIR}/gf_plugin.cpp.in)
 
 @PACKAGE_INIT@
 set(geoflow_PLUGIN_FOLDER @PACKAGE_GF_PLUGIN_FOLDER@)
