@@ -20,6 +20,9 @@ if(${GF_BUILD_GUI})
   target_link_libraries(geoflow PRIVATE geoflow-gui nlohmann_json::nlohmann_json glm)
   target_link_directories(geoflow PRIVATE ${CMAKE_SOURCE_DIR}/src)
   set_target_properties( geoflow PROPERTIES CXX_STANDARD 17 )
+  if (LINUX)
+    target_compile_options( geoflow PRIVATE -Wl,-E ) # https://gcc.gnu.org/faq.html#dso
+  endif()
   install(FILES ${GF_SHADER_FILES} DESTINATION ${GF_SHADER_PATH})
   install(TARGETS geoflow
     RUNTIME DESTINATION bin
@@ -34,6 +37,9 @@ endif()
 target_link_libraries(geof PRIVATE geoflow-core nlohmann_json::nlohmann_json)
 target_link_directories(geof PRIVATE ${CMAKE_SOURCE_DIR}/src)
 set_target_properties( geof PROPERTIES CXX_STANDARD 17 )
+if (LINUX)
+    target_compile_options( geof PRIVATE -Wl,-E ) # https://gcc.gnu.org/faq.html#dso
+  endif()
 
 install(TARGETS geof
   RUNTIME DESTINATION bin)
