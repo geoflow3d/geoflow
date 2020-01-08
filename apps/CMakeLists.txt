@@ -38,8 +38,8 @@ target_link_libraries(geof PRIVATE geoflow-core nlohmann_json::nlohmann_json)
 target_link_directories(geof PRIVATE ${CMAKE_SOURCE_DIR}/src)
 set_target_properties( geof PROPERTIES CXX_STANDARD 17 )
 if (LINUX)
-    target_compile_options( geof PRIVATE -Wl,-E ) # https://gcc.gnu.org/faq.html#dso
-  endif()
+  target_compile_options( geof PRIVATE -Wl,-E ) # https://gcc.gnu.org/faq.html#dso
+endif()
 
 install(TARGETS geof
   RUNTIME DESTINATION bin)
