@@ -21,7 +21,10 @@ namespace geoflow {
           dloaders_.emplace(path, std::make_unique<DLLoader>(path, plugin_target_name));
           
           if (dloaders_[path]->DLOpenLib()) {
-            node_registers.emplace( dloaders_[path]->DLGetInstance() );
+            auto [reg, success] = node_registers.emplace( dloaders_[path]->DLGetInstance() );
+             for (auto& [key, val] : reg->second->node_types) {
+               std::cout << "loaded type: " << key << "\n";
+             }
             std::cout << "... success :)\n";
           } else {
             dloaders_.erase(path);
