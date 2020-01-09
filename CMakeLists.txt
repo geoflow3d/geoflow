@@ -65,6 +65,7 @@ include_directories(
 # targets
 add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
+  src/geoflow/common.cpp
 )
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json)
 set_target_properties(geoflow-core PROPERTIES 

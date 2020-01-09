@@ -40,6 +40,30 @@
 
 namespace geoflow {
 
+  class gfObject {
+    protected:
+    std::string name_;
+
+    public:
+    gfObject(std::string name) : name_(name) {};
+    const std::string& get_name() const { return name_; };
+    const std::string* get_name_ptr() const { return &name_; };
+  };
+
+  class gfException: public std::exception
+  {
+  public:
+    explicit gfException(const std::string& message):
+      msg_(message)
+      {}
+    virtual const char* what() const throw (){
+      return msg_.c_str();
+    }
+
+  protected:
+      std::string msg_;
+  };
+
   class Node;
   class NodeManager;
   class NodeRegister;
