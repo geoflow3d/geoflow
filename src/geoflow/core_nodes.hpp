@@ -4,6 +4,9 @@
   #include "gui/parameter_widgets.hpp"
 #endif
 
+#include <chrono>
+#include <ctime>
+
 namespace geoflow::nodes::core {
 
   class ProxyNode : public Node {
@@ -109,9 +112,14 @@ namespace geoflow::nodes::core {
           }
           // run
           std::cout << "Processing item " << i+1 << "/" << n << "\n";
+          std::clock_t c_start = std::clock(); // CPU time
+          // auto t_start = std::chrono::high_resolution_clock::now(); // Wall time
           for (auto& child : proxy_node->get_child_nodes()) {
             nested_node_manager_->run(child);
           }
+          std::clock_t c_end = std::clock(); // CPU time
+          // auto t_end = std::chrono::high_resolution_clock::now(); // Wall time
+          std::cout << ".. " << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
           // collect outputs and push directly to vector outputs
           for(auto nested_output : nested_outputs_) {
             auto output_term = (gfBasicMonoOutputTerminal*)(nested_output.lock().get());
