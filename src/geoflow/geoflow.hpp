@@ -387,13 +387,13 @@ namespace geoflow {
         *this, name, types, is_marked
       );
     }
-    template<typename T> void add_input(std::string name, std::vector<std::type_index> types, bool is_optional) {
+    template<typename T> void add_input(std::string name, const std::vector<std::type_index> types, bool is_optional) {
       // TODO: check if name is unique key in input_terminals map
       input_terminals[name] = std::make_shared<T>(
         *this, name, types, is_optional
       );
     }
-    template<typename T> void add_output(std::string name, std::vector<std::type_index> types, bool is_marked=false) {
+    template<typename T> void add_output(std::string name, const std::vector<std::type_index> types, bool is_marked=false) {
       // TODO: check if name is unique key in output_terminals map
       output_terminals[name] = std::make_shared<T>(
         *this, name, types, is_marked
@@ -501,6 +501,9 @@ namespace geoflow {
 
     void add_output(std::string name, std::type_index type, bool is_marked=false) {
       add_output<gfBasicMonoOutputTerminal>(name, {type}, is_marked);
+    };
+    void add_output(std::string name, const std::vector<std::type_index> types, bool is_marked=false) {
+      add_output<gfBasicMonoOutputTerminal>(name, types, is_marked);
     };
     void add_vector_output(std::string name, std::type_index type, bool is_marked=false) {
       add_output<gfVectorMonoOutputTerminal>(name, {type});
@@ -653,6 +656,7 @@ namespace geoflow {
 
     bool name_node(NodeHandle node, std::string new_name);
 
+    NodeHandle& get_node(std::string& node_name) { return nodes[node_name]; };
     std::unordered_map<std::string, NodeHandle>& get_nodes() { return nodes; };
     std::vector<NodeHandle> dump_nodes();
 
@@ -664,9 +668,9 @@ namespace geoflow {
     // }
     
     bool run();
-    bool run(Node &node);
-    bool run(NodeHandle node) {
-      return run(*node);
+    bool run(Node &node, bool notify_children=true);
+    bool run(NodeHandle node, bool notify_children=true) {
+      return run(*node, notify_children);
     };
     
     protected:

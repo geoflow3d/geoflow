@@ -389,19 +389,19 @@ bool NodeManager::run() {
   }
   return ran_something;
 }
-bool NodeManager::run(Node &node) {
+bool NodeManager::run(Node &node, bool notify_children) {
   std::queue<std::shared_ptr<Node>>().swap(node_queue); // clear to prevent double processing of nodes ()
   node.update_status();
   if (node.queue()) {
-    node.notify_children();
+    if (notify_children) node.notify_children();
     while (!node_queue.empty()) {
       auto n = node_queue.front();
       node_queue.pop();
       n->status_ = GF_NODE_PROCESSING;
       // n->preprocess();
-      // std::cout << "Starting node " << n->get_name();
+      std::cerr << "Starting node " << n->get_name();
       n->process();
-      // std::cout << " ...processing complete\n";
+      std::cerr << " ...processing complete\n";
       n->status_ = GF_NODE_DONE;
       n->propagate_outputs();
     }

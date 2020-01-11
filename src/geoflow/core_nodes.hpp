@@ -23,6 +23,7 @@ namespace geoflow::nodes::core {
     std::unique_ptr<NodeManager> nested_node_manager_;
     std::vector<std::weak_ptr<gfInputTerminal>> nested_inputs_;
     std::vector<std::weak_ptr<gfOutputTerminal>> nested_outputs_;
+    std::string proxy_node_name_;
 
     bool load_nodes() {
       if (fs::exists(filepath_)) {
@@ -52,6 +53,20 @@ namespace geoflow::nodes::core {
         for (auto output_term_ : nested_outputs_) {
           auto output_term = (gfBasicMonoOutputTerminal*)(output_term_.lock().get());
           add_vector_output(output_term->get_name(), output_term->get_type());
+        }
+
+        // set up proxy node
+        auto R = std::make_shared<NodeRegister>("ProxyRegister");
+        R->register_node<ProxyNode>("Proxy");
+        // create proxy
+        auto proxy_node = nested_node_manager_->create_node(R, "Proxy");
+        proxy_node_name_ = proxy_node->get_name();
+        // create proxy outputs
+        for(auto nested_input : nested_inputs_) {
+          auto input_term = (gfBasicMonoInputTerminal*)(nested_input.lock().get());
+          auto& input_name = input_term->get_name();
+          proxy_node->add_output(input_name, input_term->get_types());
+          proxy_node->output(input_name).connect(*input_term);
         }
 
         return true;
@@ -89,21 +104,12 @@ namespace geoflow::nodes::core {
     void process() {
       if(flowchart_loaded) {
         std::cout << "Begin processing for NestNode " << get_name() << "\n";
-        // set up proxy node
-        auto R = std::make_shared<NodeRegister>("ProxyRegister");
-        R->register_node<ProxyNode>("Proxy");
-        auto proxy_node = nested_node_manager_->create_node(R, "Proxy");
-        for(auto nested_input : nested_inputs_) {
-          auto input_term = (gfBasicMonoInputTerminal*)(nested_input.lock().get());
-          auto& input_name = input_term->get_name();
-          proxy_node->add_output(input_name, vector_input(input_name).get_connected_type());
-          proxy_node->output(input_name).connect(*input_term);
-        }
         // repack input data
         // assume all vector inputs have the same size
-        // std::map<std::string, std::vector<std::any>> output_vecs;
         size_t n = vector_input(nested_inputs_[0].lock()->get_name()).get().size();
+        auto proxy_node = nested_node_manager_->get_node(proxy_node_name_);
         for(size_t i=0; i<n; ++i) {
+          proxy_node->notify_children();
           // prep inputs
           for(auto nested_input_ : nested_inputs_) {
             auto& name = nested_input_.lock()->get_name();
@@ -114,9 +120,7 @@ namespace geoflow::nodes::core {
           std::cout << "Processing item " << i+1 << "/" << n << "\n";
           std::clock_t c_start = std::clock(); // CPU time
           // auto t_start = std::chrono::high_resolution_clock::now(); // Wall time
-          for (auto& child : proxy_node->get_child_nodes()) {
-            nested_node_manager_->run(child);
-          }
+          nested_node_manager_->run(proxy_node, false);
           std::clock_t c_end = std::clock(); // CPU time
           // auto t_end = std::chrono::high_resolution_clock::now(); // Wall time
           std::cout << ".. " << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
