@@ -106,7 +106,7 @@ int main(int argc, const char * argv[]) {
     NodeManager node_manager(node_registers);
     if(*opt_flowchart_path) {
       // set current work directory to folder containing flowchart file
-      fs::current_path(fs::path(flowchart_path).parent_path());
+      fs::current_path(fs::absolute(fs::path(flowchart_path)).parent_path());
       node_manager.load_json(flowchart_path);
     }
     // launch gui or just run the flowchart in cli mode
