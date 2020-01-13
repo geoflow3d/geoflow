@@ -63,9 +63,9 @@ class gfImNodes : public RenderObject {
 					if (result.has_value()) {
 						node_manager_.clear();
 
-						auto new_nodes = node_manager_.load_json(result.value());
             // set current work directory to folder containing flowchart file
             fs::current_path(fs::path(result.value()).parent_path());
+						auto new_nodes = node_manager_.load_json(result.value());
 						init_node_draw_list();
             canvas_.center_on_nodes = true;
 						// CenterScroll();
