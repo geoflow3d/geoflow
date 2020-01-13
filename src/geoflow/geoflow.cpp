@@ -18,6 +18,8 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <chrono>
+#include <ctime>
 
 #include "geoflow.hpp"
 
@@ -399,9 +401,11 @@ bool NodeManager::run(Node &node, bool notify_children) {
       node_queue.pop();
       n->status_ = GF_NODE_PROCESSING;
       // n->preprocess();
-      std::cerr << "Starting node " << n->get_name();
+      std::cerr << "P " << n->get_name() << "...";
+      std::clock_t c_start = std::clock(); // CPU time
       n->process();
-      std::cerr << " ...processing complete\n";
+      std::clock_t c_end = std::clock(); // CPU time
+      std::cerr << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
       n->status_ = GF_NODE_DONE;
       n->propagate_outputs();
     }
