@@ -483,6 +483,8 @@ void NodeManager::dump_json(std::string filepath) {
         n["parameters"][pname] = ptr->get();
       else if (auto ptr = std::get_if<ParamPath>(&pvalue))
         n["parameters"][pname] = ptr->get();
+      else if (auto ptr = std::get_if<ParamString>(&pvalue))
+        n["parameters"][pname] = ptr->get();
       else
         std::cerr << "Parameter '" << pname << "' has an unknown type and is not serialised!\n";
     }
@@ -546,6 +548,8 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict
           else if (auto param_ptr = std::get_if<ParamFloatRange>(&nhandle->parameters.at(pel.key())))
             param_ptr->set(pel.value().get<std::pair<float,float>>());
           else if (auto param_ptr = std::get_if<ParamPath>(&nhandle->parameters.at(pel.key())))
+            param_ptr->set(pel.value().get<std::string>());
+          else if (auto param_ptr = std::get_if<ParamString>(&nhandle->parameters.at(pel.key())))
             param_ptr->set(pel.value().get<std::string>());
         }
         nhandle->post_parameter_load();
