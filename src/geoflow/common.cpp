@@ -127,6 +127,12 @@ float *LinearRing::get_data_ptr()
 {
   return (*this)[0].data();
 }
+std::vector<vec3f>& LinearRing::interior_rings() {
+  return interior_rings_;
+}
+const std::vector<vec3f>& LinearRing::interior_rings() const {
+  return interior_rings_;
+}
 
 void LineString::compute_box()
 {

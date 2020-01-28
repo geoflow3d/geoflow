@@ -78,13 +78,22 @@ typedef std::array<arr3f, 2> Segment;
 
 class LinearRing : public vec3f, public Geometry
 {
+  std::vector<vec3f> interior_rings_;
 protected:
   void compute_box();
 
 public:
   size_t vertex_count() const;
   float *get_data_ptr();
+  std::vector<vec3f>& interior_rings();
+  const std::vector<vec3f>& interior_rings() const;
 };
+
+// class Polygon : public LinearRing
+// {
+// public:
+  // std::vector<vec3f> interior_rings_;
+// };
 
 class LineString : public vec3f, public Geometry
 {
