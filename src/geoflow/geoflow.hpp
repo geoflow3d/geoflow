@@ -193,7 +193,7 @@ namespace geoflow {
   class gfMonoOutputTerminal : public gfOutputTerminal {
     public:
     using gfOutputTerminal::gfOutputTerminal;
-    const std::type_index& get_type() { return types_[0]; };
+    const std::type_index& get_type() const { return types_[0]; };
   };
 
 
@@ -226,6 +226,9 @@ namespace geoflow {
     }
     std::any& get_data() { return data_; };
     template<typename T> const T get() const { 
+      return std::any_cast<T>(data_); 
+    };
+    template<typename T> T get() { 
       return std::any_cast<T>(data_); 
     };
 
