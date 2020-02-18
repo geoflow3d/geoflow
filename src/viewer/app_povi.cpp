@@ -194,6 +194,7 @@ void poviApp::on_draw(){
             // xy_pos p0 = screen2view(last_mouse_pos);
             // ImGui::Text("Mouse pos [screen]: (%g, %g)", last_mouse_pos.x, last_mouse_pos.y);
             // ImGui::Text("Mouse pos [view]: (%g, %g)", p0.x, p0.y);
+            ImGui::DragFloat3("translation", glm::value_ptr(translation));
             ImGui::SliderFloat("Field of view", &fov, 1, 180);
             ImGui::SliderFloat("Clip near", &clip_near, 0.01, 100);
             ImGui::SliderFloat("Clip far", &clip_far, 1, 1000);
