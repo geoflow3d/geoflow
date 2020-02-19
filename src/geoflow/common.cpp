@@ -78,6 +78,20 @@ void Box::add(vec3f &vec)
   for (auto &p : vec)
     add(p);
 }
+float Box::size_x() const
+{
+  return pmax[0] - pmin[0];
+}
+float Box::size_y() const
+{
+  return pmax[1] - pmin[1];
+}
+bool Box::intersects(Box &otherBox) const
+{
+  bool intersect_x = (pmin[0] < otherBox.pmax[0]) && (pmax[0] > otherBox.pmin[0]);
+  bool intersect_y = (pmin[1] < otherBox.pmax[1]) && (pmax[1] > otherBox.pmin[1]);
+  return intersect_x && intersect_y;
+}
 void Box::clear()
 {
   pmin.fill(0);
