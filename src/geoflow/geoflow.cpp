@@ -381,13 +381,20 @@ std::string Node::debug_info() {
 void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
 }
-bool NodeManager::run() {
+bool NodeManager::run_all() {
   // find all root nodes with autorun enabled
-  bool ran_something = false;
+  std::vector<NodeHandle> to_run;
   for (auto& [name, node] : nodes) {
     if(node->is_root() && node->autorun) {
-      ran_something |= run(node);
+      to_run.push_back(node);
     }
+  }
+  for (auto& node : to_run){
+    node->notify_children();
+  }
+  bool ran_something = false;
+  for (auto& node : to_run){
+    ran_something |= run(node);
   }
   return ran_something;
 }

@@ -2,6 +2,7 @@
 #include "geoflow/geoflow.hpp"
 #include "povi_nodes.hpp"
 #include "parameter_widgets.hpp"
+#include <thread>
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #   define IMGUI_DEFINE_MATH_OPERATORS
@@ -77,8 +78,12 @@ class gfImNodes : public RenderObject {
 		}
     if (ImGui::BeginMenu("Flowchart")) {
         if (ImGui::MenuItem("Run all root nodes")) {
-					node_manager_.run();
+					node_manager_.run_all();
 				}
+        if (ImGui::MenuItem("Run all threaded")) {
+          std::thread t_run(&geoflow::NodeManager::run_all, &node_manager_);
+          t_run.detach();
+        }
 				ImGui::Separator();
         if (ImGui::MenuItem("Clear flowchart")) {
 					node_draw_list_.clear();

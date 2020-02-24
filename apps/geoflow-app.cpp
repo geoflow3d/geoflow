@@ -114,7 +114,7 @@ int main(int argc, const char * argv[]) {
     #ifdef GF_BUILD_WITH_GUI
       launch_flowchart(node_manager);
     #else
-      node_manager.run();
+      node_manager.run_all();
     #endif
   }
   // NOTICE that we first must destroy any related node_registers before we can unload the plugin_manager!
