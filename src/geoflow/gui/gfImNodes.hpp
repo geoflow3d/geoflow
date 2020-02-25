@@ -80,10 +80,11 @@ class gfImNodes : public RenderObject {
         if (ImGui::MenuItem("Run all root nodes")) {
 					node_manager_.run_all();
 				}
-        if (ImGui::MenuItem("Run all threaded")) {
-          std::thread t_run(&geoflow::NodeManager::run_all, &node_manager_);
-          t_run.detach();
-        }
+        // This sort of works, but very prone to crashes because most of geoflow is not threadsafe atm. Especially painters.
+        // if (ImGui::MenuItem("Run all threaded")) {
+        //   std::thread t_run(&geoflow::NodeManager::run_all, &node_manager_);
+        //   t_run.detach();
+        // }
 				ImGui::Separator();
         if (ImGui::MenuItem("Clear flowchart")) {
 					node_draw_list_.clear();
