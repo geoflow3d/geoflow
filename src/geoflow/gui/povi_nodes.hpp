@@ -349,10 +349,9 @@ namespace geoflow::nodes::gui {
       add_vector_input("geometries", {
         typeid(PointCollection), 
         typeid(TriangleCollection),
-        // typeid(Segment),
+        typeid(Segment),
         typeid(LineString),
-        typeid(LinearRing),
-        // typeid(LinearRing)
+        typeid(LinearRing)
       });
       add_vector_input("normals", typeid(vec3f));
       add_input("colormap", typeid(ColorMap));
@@ -423,11 +422,10 @@ namespace geoflow::nodes::gui {
           } else if (t.is_connected_type(typeid(LineString))) {
             set_geometry<LineString>(gterm);
             painter->set_drawmode(GL_LINE_STRIP);
+          } else if (t.is_connected_type(typeid(Segment))) {
+            set_geometry<Segment>(gterm);
+            painter->set_drawmode(GL_LINES);
           }
-          // } else if (t.is_connected_type(typeid(Segment))) {
-          //   set_geometry<Segment>(gterm);
-          //   painter->set_drawmode(GL_LINES);
-          // }
         } else if(input_terminals["normals"].get() == &t) {
           auto& aterm = vector_input("normals");
           set_attribute<vec3f>("normal", aterm, 3);

@@ -77,7 +77,7 @@ public:
 // geometry types:
 // typedef arr3f Point;
 typedef std::array<arr3f, 3> Triangle;
-typedef std::array<arr3f, 2> Segment;
+// typedef std::array<arr3f, 2> Segment;
 
 class LinearRing : public vec3f, public Geometry
 {
@@ -90,6 +90,15 @@ public:
   float *get_data_ptr();
   std::vector<vec3f>& interior_rings();
   const std::vector<vec3f>& interior_rings() const;
+};
+class Segment : public std::array<arr3f, 2>, public Geometry
+{
+protected:
+  void compute_box();
+
+public:
+  size_t vertex_count() const;
+  float *get_data_ptr();
 };
 
 // class Polygon : public LinearRing

@@ -148,6 +148,24 @@ const std::vector<vec3f>& LinearRing::interior_rings() const {
   return interior_rings_;
 }
 
+void Segment::compute_box()
+{
+  if (!bbox.has_value())
+  {
+    bbox = Box();
+    bbox->add((*this)[0]);
+    bbox->add((*this)[1]);
+  }
+}
+size_t Segment::vertex_count() const
+{
+  return 2;
+}
+float *Segment::get_data_ptr()
+{
+  return (*this)[0].data();
+}
+
 void LineString::compute_box()
 {
   if (!bbox.has_value())
