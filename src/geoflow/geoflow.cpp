@@ -461,8 +461,9 @@ std::vector<NodeHandle> NodeManager::dump_nodes() {
     node_dump.push_back(kv.second);
   }
   return node_dump;
-}
-void NodeManager::dump_json(std::string filepath) {
+}    
+
+void NodeManager::json_serialise(std::ostream& json_sstream) {
   json j;
   j["globals"] = json::object();
   for (auto& [name, value] : global_flowchart_params) {
@@ -511,18 +512,20 @@ void NodeManager::dump_json(std::string filepath) {
     }
     j["nodes"][name] = n;
   }
-  std::ofstream o(filepath);
-  o << std::setw(2) << j << std::endl;
+  json_sstream << std::setw(2) << j << std::endl;
 }
-std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict) {
+void NodeManager::dump_json(std::string filepath) {
+  std::ofstream ofs(filepath);
+  json_serialise(ofs);
+}
+std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream, bool strict) {
   json j;
   std::vector<NodeHandle> new_nodes;
-  std::ifstream i(filepath);
-  if (i.peek() == std::ifstream::traits_type::eof()) {
-    std::cout << "bad json file\n";
+  if (json_sstream.peek() == std::ifstream::traits_type::eof()) {
+    std::cout << "bad json stream\n";
     return new_nodes;
   }
-  i >> j;
+  json_sstream >> j;
   for (auto global_param : j["globals"].items()) {
     global_flowchart_params[global_param.key()] = global_param.value().get<std::string>();
   }
@@ -604,6 +607,11 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict
   }
   return new_nodes;
 }
+std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict) {
+  std::ifstream ifs(filepath);
+  return json_unserialise(ifs, strict);
+}
+
 
 std::string NodeManager::substitute_globals(const std::string& textt) const {
   size_t start_pos=0;

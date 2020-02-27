@@ -647,6 +647,12 @@ namespace geoflow {
     std::optional<std::array<double,3>> data_offset;
     NodeManager(NodeRegisterMap&  node_registers)
       : registers_(node_registers) {};
+    NodeManager(NodeManager&  other_node_manager)
+      : registers_(other_node_manager.registers_) {
+        std::stringstream ss;
+        other_node_manager.json_serialise(ss);
+        json_unserialise(ss);
+      };
     
     NodeRegisterMap& get_node_registers() const { return registers_; };
     void operator= (const NodeManager& other_manager) {
@@ -667,6 +673,10 @@ namespace geoflow {
 
     std::vector<NodeHandle> load_json(std::string filepath, bool strict=false);
     void dump_json(std::string filepath);
+
+    std::vector<NodeHandle> json_unserialise(std::istream& json_sstream, bool strict=false);
+    void json_serialise(std::ostream& json_sstream);
+
 
     std::string substitute_globals(const std::string& text) const;
     
