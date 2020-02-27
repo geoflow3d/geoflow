@@ -148,6 +148,11 @@ const std::vector<vec3f>& LinearRing::interior_rings() const {
   return interior_rings_;
 }
 
+Segment::Segment() {}
+Segment::Segment(arr3f source, arr3f target) {
+  (*this)[0] = source;
+  (*this)[1] = target;
+}
 void Segment::compute_box()
 {
   if (!bbox.has_value())

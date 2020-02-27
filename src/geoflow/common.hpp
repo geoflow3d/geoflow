@@ -97,6 +97,9 @@ protected:
   void compute_box();
 
 public:
+  // using std::array<arr3f, 2>::array;
+  Segment();
+  Segment(arr3f source, arr3f target);
   size_t vertex_count() const;
   float *get_data_ptr();
 };

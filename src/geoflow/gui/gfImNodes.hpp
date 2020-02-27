@@ -19,6 +19,8 @@ class gfImNodes : public RenderObject {
   typedef std::vector<std::tuple<geoflow::NodeHandle, ImVec2, bool, std::string>> NodeDrawVec;
   NodeDrawVec node_draw_list_;
 
+  std::string global_new_key="";
+
   public:
   void init_node_draw_list() {
     node_draw_list_.clear();
@@ -246,7 +248,6 @@ class gfImNodes : public RenderObject {
                     auto* painter_node = (geoflow::nodes::gui::PainterNode*)(handle.get());
                     painter_node->add_to(app_);
                   }
-\
                   node_draw_list_.push_back(std::make_tuple(
                     handle, 
                     ImVec2(),
@@ -269,6 +270,28 @@ class gfImNodes : public RenderObject {
         }
 
         ImNodes::EndCanvas();
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Globals")) {
+      // std::string to_remove;
+      for (auto it=node_manager_.global_flowchart_params.begin(); it!=node_manager_.global_flowchart_params.end(); ) {
+        ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
+        ImGui::SameLine();
+        ImGui::PushID(it->first.c_str());
+        if(ImGui::Button("Remove")) {
+          node_manager_.global_flowchart_params.erase(it++);
+        } else {
+          ++it;
+        }
+        ImGui::PopID();
+      }
+      ImGui::InputTextWithHint("##key", "Global name", &global_new_key);
+      ImGui::SameLine();
+      if(ImGui::Button("Create") && !global_new_key.empty()) {
+        node_manager_.global_flowchart_params[global_new_key]="";
+        global_new_key="";
+      }
     }
     ImGui::End();
   };

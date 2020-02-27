@@ -464,6 +464,10 @@ std::vector<NodeHandle> NodeManager::dump_nodes() {
 }
 void NodeManager::dump_json(std::string filepath) {
   json j;
+  j["globals"] = json::object();
+  for (auto& [name, value] : global_flowchart_params) {
+    j["globals"][name] = value;
+  }
   j["nodes"] = json::object();
   for (auto& [name, node_handle] : nodes) {
     json n;
@@ -519,6 +523,9 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict
     return new_nodes;
   }
   i >> j;
+  for (auto global_param : j["globals"].items()) {
+    global_flowchart_params[global_param.key()] = global_param.value().get<std::string>();
+  }
   json nodes_j = j["nodes"];
   for (auto node_j : nodes_j.items()) {
     auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
@@ -596,6 +603,25 @@ std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict
     }
   }
   return new_nodes;
+}
+
+std::string NodeManager::substitute_globals(const std::string& textt) const {
+  size_t start_pos=0;
+  std::string text(textt);
+  while(true) {
+    auto open = text.find("{{", start_pos);
+    if (open==std::string::npos) break;
+
+    auto close = text.find("}}", start_pos);
+    if (close==std::string::npos) break;
+    open+=2;
+    auto len = close-open;
+    std::string global_name = text.substr(open, len);
+    if (global_flowchart_params.find(global_name) != global_flowchart_params.end())
+      text.replace(open-2, len+4, global_flowchart_params.at(global_name));
+    start_pos = close;
+  }
+  return text;
 }
 
 bool geoflow::connect(gfOutputTerminal& oT, gfInputTerminal& iT) {

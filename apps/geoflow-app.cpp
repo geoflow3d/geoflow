@@ -49,6 +49,7 @@ int main(int argc, const char * argv[]) {
   std::string flowchart_path = "flowchart.json";
   std::string plugin_folder = GF_PLUGIN_FOLDER;
   std::string log_filename = "";
+  std::vector<std::string> globals;
   
   if(const char* env_p = std::getenv("GF_PLUGIN_FOLDER")) {
     plugin_folder = env_p;
@@ -60,6 +61,7 @@ int main(int argc, const char * argv[]) {
   CLI::Option* opt_flowchart_path = cli.add_option("-f,--flowchart", flowchart_path, "Flowchart file");
   CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
   CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
+  CLI::Option* opt_globals = cli.add_option("-G,--global", globals, "Pass globals to flowchart");
   
   try {
     cli.parse(argc, argv);
@@ -109,6 +111,20 @@ int main(int argc, const char * argv[]) {
       auto abs_path = fs::absolute(fs::path(flowchart_path));
       fs::current_path(abs_path.parent_path());
       node_manager.load_json(abs_path.string());
+
+    }
+    if(*opt_globals) {
+      for (auto& glob :  globals) {
+        auto pos = glob.find("=");
+        if(pos!=std::string::npos) {
+          auto key = glob.substr(0,pos);
+          auto val = glob.substr(pos+1, glob.size()-(pos+1));
+          node_manager.global_flowchart_params[key]=val;
+        }
+      }
+    }
+    for (auto&[key,val] : node_manager.global_flowchart_params) {
+      std::cout << "global " << key << " = " << val <<"\n";
     }
     // launch gui or just run the flowchart in cli mode
     #ifdef GF_BUILD_WITH_GUI

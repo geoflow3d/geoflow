@@ -640,8 +640,10 @@ namespace geoflow {
     private:
     NodeRegisterMap& registers_;
     std::unordered_map<std::string, NodeHandle> nodes;
+    // global flowchart parameters
 
     public:
+    std::unordered_map<std::string, std::string> global_flowchart_params;
     std::optional<std::array<double,3>> data_offset;
     NodeManager(NodeRegisterMap&  node_registers)
       : registers_(node_registers) {};
@@ -666,9 +668,7 @@ namespace geoflow {
     std::vector<NodeHandle> load_json(std::string filepath, bool strict=false);
     void dump_json(std::string filepath);
 
-    // load_json() {
-
-    // }
+    std::string substitute_globals(const std::string& text) const;
     
     bool run_all();
     bool run(Node &node, bool notify_children=true);
