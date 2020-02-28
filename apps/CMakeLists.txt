@@ -32,7 +32,7 @@ endif()
 # cli application
 add_executable(geof geoflow-app.cpp)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_link_libraries(geof PRIVATE -ldl)
+  target_link_libraries(geof PRIVATE Threads::Threads -ldl)
 endif()
 target_link_libraries(geof PRIVATE geoflow-core nlohmann_json::nlohmann_json)
 target_link_directories(geof PRIVATE ${CMAKE_SOURCE_DIR}/src)

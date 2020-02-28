@@ -16,7 +16,9 @@ if(GF_USE_EXTERNAL_JSON)
 endif()
 
 add_subdirectory(thirdparty)
-  
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads)
+
 # DLLoader
 if (WIN32)
 	include_directories(
