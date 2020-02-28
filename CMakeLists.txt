@@ -59,6 +59,7 @@ endif()
 include_directories(
   src
   thirdparty/filesystem/include
+  thirdparty/cpp-taskflow
   ${CMAKE_BINARY_DIR}
 )
 
