@@ -19,6 +19,7 @@ namespace geoflow::nodes::core {
   class NestNode : public Node {
     private:
     bool flowchart_loaded=false;
+    bool use_parallel_processing=false;
     std::string filepath_;
     std::unique_ptr<NodeManager> nested_node_manager_;
     std::vector<std::weak_ptr<gfInputTerminal>> nested_inputs_;
@@ -80,6 +81,7 @@ namespace geoflow::nodes::core {
     void init() {
       nested_node_manager_ = std::make_unique<NodeManager>(manager.get_node_registers()); // this will only transfer the node registers
       add_param("filepath", ParamPath(filepath_, "Flowchart file"));
+      add_param("use_parallel_processing", ParamBool(use_parallel_processing, "Use parallel processing"));
 
     };
     void post_parameter_load() {
@@ -101,40 +103,90 @@ namespace geoflow::nodes::core {
       };
     #endif
 
+    void process_parallel() {
+      // repack input data
+      // assume all vector inputs have the same size
+      std::vector<std::shared_ptr<NodeManager>> flowcharts;
+      size_t n = vector_input(nested_inputs_[0].lock()->get_name()).get().size();
+      for(size_t i=0; i<n; ++i) {
+        auto flowchart = std::make_shared<NodeManager>(*nested_node_manager_);
+        auto proxy_node = flowchart->get_node(proxy_node_name_);
+        proxy_node->notify_children();
+        // prep inputs
+        for(auto nested_input_ : nested_inputs_) {
+          auto& name = nested_input_.lock()->get_name();
+          auto& data_vec = vector_input(name).get();
+          proxy_node->output(name) = data_vec[i];
+        }
+        flowcharts.push_back(flowchart);
+      }
+
+      std::for_each(
+        // std::execution::par_unseq, 
+        flowcharts.begin(), flowcharts.end(), 
+        [&](std::shared_ptr<NodeManager>& fc){
+        // run
+        // std::cout << "Processing item " << i+1 << "/" << n << "\n";
+        auto proxy_node = fc->get_node(proxy_node_name_);
+        // std::clock_t c_start = std::clock(); // CPU time
+        // auto t_start = std::chrono::high_resolution_clock::now(); // Wall time
+        fc->run(proxy_node, false);
+        // std::clock_t c_end = std::clock(); // CPU time
+        // auto t_end = std::chrono::high_resolution_clock::now(); // Wall time
+        // std::cout << ".. " << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
+        // collect outputs and push directly to vector outputs
+        // for(auto nested_output : nested_outputs_) {
+        //   auto output_term = (gfBasicMonoOutputTerminal*)(nested_output.lock().get());
+        //   if (output_term->has_data()) {
+        //     auto& data = output_term->get_data();
+        //     vector_output(output_term->get_name()).push_back_any(data);
+        //   }
+        // }
+      });
+    };
+
+    void process_sequential() {
+      // repack input data
+      // assume all vector inputs have the same size
+      size_t n = vector_input(nested_inputs_[0].lock()->get_name()).get().size();
+      auto proxy_node = nested_node_manager_->get_node(proxy_node_name_);
+      for(size_t i=0; i<n; ++i) {
+        proxy_node->notify_children();
+        // prep inputs
+        for(auto nested_input_ : nested_inputs_) {
+          auto& name = nested_input_.lock()->get_name();
+          auto& data_vec = vector_input(name).get();
+          proxy_node->output(name) = data_vec[i];
+        }
+        // run
+        std::cout << "Processing item " << i+1 << "/" << n << "\n";
+        std::clock_t c_start = std::clock(); // CPU time
+        // auto t_start = std::chrono::high_resolution_clock::now(); // Wall time
+        nested_node_manager_->run(proxy_node, false);
+        std::clock_t c_end = std::clock(); // CPU time
+        // auto t_end = std::chrono::high_resolution_clock::now(); // Wall time
+        std::cout << ".. " << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
+        // collect outputs and push directly to vector outputs
+        for(auto nested_output : nested_outputs_) {
+          auto output_term = (gfBasicMonoOutputTerminal*)(nested_output.lock().get());
+          if (output_term->has_data()) {
+            auto& data = output_term->get_data();
+            vector_output(output_term->get_name()).push_back_any(data);
+          }
+        }
+      }
+    };
+
     void process() {
       if(flowchart_loaded) {
         std::cout << "Begin processing for NestNode " << get_name() << "\n";
-        // repack input data
-        // assume all vector inputs have the same size
-        size_t n = vector_input(nested_inputs_[0].lock()->get_name()).get().size();
-        auto proxy_node = nested_node_manager_->get_node(proxy_node_name_);
-        for(size_t i=0; i<n; ++i) {
-          proxy_node->notify_children();
-          // prep inputs
-          for(auto nested_input_ : nested_inputs_) {
-            auto& name = nested_input_.lock()->get_name();
-            auto& data_vec = vector_input(name).get();
-            proxy_node->output(name) = data_vec[i];
-          }
-          // run
-          std::cout << "Processing item " << i+1 << "/" << n << "\n";
-          std::clock_t c_start = std::clock(); // CPU time
-          // auto t_start = std::chrono::high_resolution_clock::now(); // Wall time
-          nested_node_manager_->run(proxy_node, false);
-          std::clock_t c_end = std::clock(); // CPU time
-          // auto t_end = std::chrono::high_resolution_clock::now(); // Wall time
-          std::cout << ".. " << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
-          // collect outputs and push directly to vector outputs
-          for(auto nested_output : nested_outputs_) {
-            auto output_term = (gfBasicMonoOutputTerminal*)(nested_output.lock().get());
-            if (output_term->has_data()) {
-              auto& data = output_term->get_data();
-              vector_output(output_term->get_name()).push_back_any(data);
-            }
-          }
+        if (use_parallel_processing) {
+          process_parallel();
+        } else {
+          process_sequential();
         }
         std::cout << "End processing for NestNode " << get_name() << "\n";
       }
-    };
+    }
   };
 }

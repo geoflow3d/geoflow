@@ -97,6 +97,27 @@ class gfImNodes : public RenderObject {
 				}
       ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("Globals")) {
+      // std::string to_remove;
+      for (auto it=node_manager_.global_flowchart_params.begin(); it!=node_manager_.global_flowchart_params.end(); ) {
+        ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
+        ImGui::SameLine();
+        ImGui::PushID(it->first.c_str());
+        if(ImGui::Button("Remove")) {
+          node_manager_.global_flowchart_params.erase(it++);
+        } else {
+          ++it;
+        }
+        ImGui::PopID();
+      }
+      ImGui::InputTextWithHint("##key", "Global name", &global_new_key);
+      ImGui::SameLine();
+      if(ImGui::Button("Create") && !global_new_key.empty()) {
+        node_manager_.global_flowchart_params[global_new_key]="";
+        global_new_key="";
+      }
+      ImGui::EndMenu();
+    }
 	}
     
   void render() {
@@ -270,28 +291,6 @@ class gfImNodes : public RenderObject {
         }
 
         ImNodes::EndCanvas();
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Globals")) {
-      // std::string to_remove;
-      for (auto it=node_manager_.global_flowchart_params.begin(); it!=node_manager_.global_flowchart_params.end(); ) {
-        ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
-        ImGui::SameLine();
-        ImGui::PushID(it->first.c_str());
-        if(ImGui::Button("Remove")) {
-          node_manager_.global_flowchart_params.erase(it++);
-        } else {
-          ++it;
-        }
-        ImGui::PopID();
-      }
-      ImGui::InputTextWithHint("##key", "Global name", &global_new_key);
-      ImGui::SameLine();
-      if(ImGui::Button("Create") && !global_new_key.empty()) {
-        node_manager_.global_flowchart_params[global_new_key]="";
-        global_new_key="";
-      }
     }
     ImGui::End();
   };
