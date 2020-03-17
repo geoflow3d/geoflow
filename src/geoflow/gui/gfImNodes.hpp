@@ -21,6 +21,8 @@ class gfImNodes : public RenderObject {
 
   std::string global_new_key="";
 
+  std::string flowchart_file_;
+
   public:
   void init_node_draw_list() {
     node_draw_list_.clear();
@@ -38,8 +40,8 @@ class gfImNodes : public RenderObject {
     }
   }
 
-  gfImNodes(geoflow::NodeManager& node_manager, poviApp& app)
-    : node_manager_(node_manager), app_(app) {
+  gfImNodes(geoflow::NodeManager& node_manager, poviApp& app, std::string flowchart_file)
+    : node_manager_(node_manager), app_(app), flowchart_file_(flowchart_file) {
       init_node_draw_list();
       canvas_.style.curve_thickness = 2.f;
     };
@@ -52,29 +54,38 @@ class gfImNodes : public RenderObject {
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Save to JSON", "Ctrl+S")) {
-					auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
-					if (result.has_value()) {
-						for (auto& [node,pos,selected,name_buffer] : node_draw_list_) {
-							node->set_position(pos.x, pos.y);
-						}
-						node_manager_.dump_json(result.value());
-					}
-				}
-				if (ImGui::MenuItem("Load from JSON", "Ctrl+O")) {
-					auto result = osdialog_file(OSDIALOG_OPEN, NULL, "JSON:json");
-					if (result.has_value()) {
-						node_manager_.clear();
+        if (ImGui::MenuItem("Save", "Ctrl+S")) {
+          for (auto& [node,pos,selected,name_buffer] : node_draw_list_) {
+            node->set_position(pos.x, pos.y);
+          }
+          node_manager_.dump_json(flowchart_file_);
+        }
+        #ifdef GF_BUILD_GUI_FILE_DIALOGS
+          if (ImGui::MenuItem("Save as  ...", "")) {
+            auto result = osdialog_file(OSDIALOG_SAVE, "flowchart.json", "JSON:json");
+            if (result.has_value()) {
+              for (auto& [node,pos,selected,name_buffer] : node_draw_list_) {
+                node->set_position(pos.x, pos.y);
+              }
+              node_manager_.dump_json(result.value());
+            }
+          }
+          if (ImGui::MenuItem("Load from JSON", "Ctrl+O")) {
+            auto result = osdialog_file(OSDIALOG_OPEN, NULL, "JSON:json");
+            if (result.has_value()) {
+              node_manager_.clear();
 
-            // set current work directory to folder containing flowchart file
-            auto abs_path = fs::absolute(fs::path(result.value()));
-            fs::current_path(abs_path.parent_path());
-						auto new_nodes = node_manager_.load_json(abs_path.string());
-						init_node_draw_list();
-            canvas_.center_on_nodes = true;
-						// CenterScroll();
-					}
-				}
+              // set current work directory to folder containing flowchart file
+              auto abs_path = fs::absolute(fs::path(result.value()));
+              fs::current_path(abs_path.parent_path());
+              flowchart_file_ = abs_path.string()
+              auto new_nodes = node_manager_.load_json(flowchart_file_);
+              init_node_draw_list();
+              canvas_.center_on_nodes = true;
+              // CenterScroll();
+            }
+          }
+        #endif
 				ImGui::EndMenu();
 			}
 		}
@@ -297,9 +308,9 @@ class gfImNodes : public RenderObject {
 };
 
 namespace geoflow {
-	void launch_flowchart(NodeManager& manager) {
+	void launch_flowchart(NodeManager& manager, std::string flowchart_file) {
 		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
-		gfImNodes nodes(manager, *a);
+		gfImNodes nodes(manager, *a, flowchart_file);
 		a->draw_that(&nodes);
 		a->run();
 	};

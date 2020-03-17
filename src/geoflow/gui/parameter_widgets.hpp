@@ -3,7 +3,9 @@
 #include <geoflow/parameters.hpp>
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include "osdialog.hpp"
+#ifdef GF_BUILD_GUI_FILE_DIALOGS
+  #include "osdialog.hpp"
+#endif
 
 namespace geoflow {
 	void draw_parameters(NodeHandle& node) {
@@ -53,9 +55,13 @@ namespace geoflow {
 				}
 			} else if( auto valptr = std::get_if<ParamPath>(&param) ) {
 				if (valptr->visible()) {
-					changed = ImGui::FilePicker(OSDIALOG_OPEN, valptr->get());
-					ImGui::SameLine();
-					ImGui::Text("%s",valptr->get_label().c_str());
+          #ifdef GF_BUILD_GUI_FILE_DIALOGS
+            changed = ImGui::FilePicker(OSDIALOG_OPEN, valptr->get());
+            ImGui::SameLine();
+            ImGui::Text("%s",valptr->get_label().c_str());
+          #else
+            changed = ImGui::InputText(valptr->get_label().c_str(), &valptr->get());
+          #endif
 				}
 			} else if( auto valptr = std::get_if<ParamBool>(&param) ) {
 				if (valptr->visible()) {
@@ -64,9 +70,9 @@ namespace geoflow {
 			} else {
 				ImGui::Text("%s", name.c_str());
 			}
-			if(changed) {
-				node->on_change_parameter(name, param);
-			}
+      if(changed) {
+        node->on_change_parameter(name, param);
+      }
 		}
 	};
 }

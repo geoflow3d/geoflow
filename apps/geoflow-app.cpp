@@ -110,8 +110,10 @@ int main(int argc, const char * argv[]) {
       // set current work directory to folder containing flowchart file
       auto abs_path = fs::absolute(fs::path(flowchart_path));
       fs::current_path(abs_path.parent_path());
-      node_manager.load_json(abs_path.string());
-
+      flowchart_path = abs_path.string();
+      if(fs::exists(abs_path)) {
+        node_manager.load_json(flowchart_path);
+      }
     }
     if(*opt_globals) {
       for (auto& glob :  globals) {
@@ -128,7 +130,7 @@ int main(int argc, const char * argv[]) {
     }
     // launch gui or just run the flowchart in cli mode
     #ifdef GF_BUILD_WITH_GUI
-      launch_flowchart(node_manager);
+      launch_flowchart(node_manager, flowchart_path);
     #else
       node_manager.run_all();
     #endif

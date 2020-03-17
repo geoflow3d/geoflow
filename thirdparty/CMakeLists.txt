@@ -1,7 +1,11 @@
 set(GF_GIT_SUBMODULES "filesystem")
 if(${GF_BUILD_GUI})
-  set(GF_GIT_SUBMODULES ${GF_GIT_SUBMODULES} imgui osdialog)
+  set(GF_GIT_SUBMODULES ${GF_GIT_SUBMODULES} imgui)
+  if(${GF_BUILD_GUI_FILE_DIALOGS})
+    set(GF_GIT_SUBMODULES ${GF_GIT_SUBMODULES} osdialog)
+  endif()
 endif()
+
 if(NOT GF_USE_EXTERNAL_JSON)
   set(GF_GIT_SUBMODULES ${GF_GIT_SUBMODULES} json)
 endif()

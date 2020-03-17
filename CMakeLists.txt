@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.13)
 project (Geoflow VERSION 0.0.1)
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
+option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
 option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
 
 # dependencies
@@ -56,6 +57,9 @@ endif()
 if(GF_BUILD_GUI)
   add_definitions(-DGF_BUILD_GUI)
 endif()
+if(GF_BUILD_GUI_FILE_DIALOGS)
+  add_definitions(-DGF_BUILD_GUI_FILE_DIALOGS)
+endif()
 
 # includes
 include_directories(
@@ -84,13 +88,12 @@ if(${GF_BUILD_GUI})
     thirdparty/glad/include
     thirdparty/imgui
     thirdparty/imgui/examples
-    thirdparty/osdialog
   )
   set(GF_SHADER_FILES 
-    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.frag 
-    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.vert 
-    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.frag 
-    ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.vert)
+  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.frag 
+  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.vert 
+  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.frag 
+  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.vert)
   SET(GF_GUI_SOURCES
     src/viewer/app.cpp 
     src/viewer/app_povi.cpp 
@@ -106,29 +109,39 @@ if(${GF_BUILD_GUI})
     src/geoflow/gui/ImNodes.cpp 
     src/geoflow/gui/ImNodesEz.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
-    thirdparty/osdialog/osdialog.c
-    src/geoflow/gui/osdialog.cpp)
+  )
+  
   SET(GF_FILEDIALOG_LIBS "")
-  if(APPLE)
-    SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
-      thirdparty/osdialog/osdialog_mac.m)
-    SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
-      "-framework AppKit")
-  elseif(MSVC)
-    SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
-      thirdparty/osdialog/osdialog_win.c)
-    SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
-      comdlg32)
-  else()
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
+  if(GF_BUILD_GUI_FILE_DIALOGS)
+    SET(GF_GUI_SOURCES
+      ${GF_GUI_SOURCES}
+      thirdparty/osdialog/osdialog.c
+      src/geoflow/gui/osdialog.cpp
+    )
+    include_directories(
+      thirdparty/osdialog
+    )
+    if(APPLE)
+      SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
+        thirdparty/osdialog/osdialog_mac.m)
+      SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
+        "-framework AppKit")
+    elseif(MSVC)
+      SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
+        thirdparty/osdialog/osdialog_win.c)
+      SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
+        comdlg32)
+    else()
+      find_package(PkgConfig REQUIRED)
+      pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
 
-    SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
-      thirdparty/osdialog/osdialog_gtk2.c)
-    SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
-      ${GTK2_LIBRARIES})
-    include_directories(${GTK2_INCLUDE_DIRS})
-  endif()
+      SET(GF_GUI_SOURCES ${GF_GUI_SOURCES}
+        thirdparty/osdialog/osdialog_gtk2.c)
+      SET(GF_FILEDIALOG_LIBS ${GF_FILEDIALOG_LIBS}
+        ${GTK2_LIBRARIES})
+      include_directories(${GTK2_INCLUDE_DIRS})
+    endif()
+  endif(GF_BUILD_GUI_FILE_DIALOGS)
 
   add_library(geoflow-gui STATIC ${GF_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
