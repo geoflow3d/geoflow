@@ -49,52 +49,62 @@ bool gfTerminal::accepts_type(std::type_index ttype) const {
   return false;
 }
 
-gfMonoInputTerminal::~gfMonoInputTerminal(){
+void gfInputTerminal::clear() {
+  parent_.update_status();
+  parent_.on_clear(*this);
+}
+
+gfSingleFeatureInputTerminal::~gfSingleFeatureInputTerminal(){
   if (auto connected_output = connected_output_.lock())
     connected_output->connections_.erase(get_ptr());
 }
-bool gfMonoInputTerminal::is_connected_type(std::type_index ttype) const {
+bool gfSingleFeatureInputTerminal::is_connected_type(std::type_index ttype) const {
   if(auto output_term = connected_output_.lock()) {
     return output_term->accepts_type(ttype);
   }
   return false;
 }
-std::type_index gfMonoInputTerminal::get_connected_type() const {
+std::type_index gfSingleFeatureInputTerminal::get_connected_type() const {
   if(auto output_term = connected_output_.lock()) {
     return output_term->types_[0];
   }
   return typeid(void);
 }
-
-void gfInputTerminal::clear() {
-  parent_.update_status();
-  parent_.on_clear(*this);
-}
-void gfMonoInputTerminal::update_on_receive(bool queue) {
+void gfSingleFeatureInputTerminal::update_on_receive(bool queue) {
   if(has_data()) {
     if (queue && parent_.update_status() && parent_.autorun) 
       parent_.queue();
     parent_.on_receive(*this);
   }
 }
-bool gfMonoInputTerminal::has_connection() {
+bool gfSingleFeatureInputTerminal::has_connection() {
   return !connected_output_.expired();
 }
-bool gfMonoInputTerminal::has_data() {
+bool gfSingleFeatureInputTerminal::has_data() {
   if (auto output_term = connected_output_.lock()) {
     return output_term->has_data();
   }
   return false;
 }
-void gfMonoInputTerminal::connect_output(gfOutputTerminal& output_term) {
+void gfSingleFeatureInputTerminal::connect_output(gfOutputTerminal& output_term) {
   //check if we are already connected and if so disconnect from that output term first 
   if(auto output = connected_output_.lock()) {
     output->disconnect(*this);
   }
   connected_output_ = output_term.get_ptr();
 }
-void gfMonoInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
+void gfSingleFeatureInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
   connected_output_.reset();
+}
+const std::vector<std::any>& gfSingleFeatureInputTerminal::get() {
+  auto output_term = connected_output_.lock();
+  auto sot = (gfSingleFeatureOutputTerminal*)(output_term.get());
+  return sot->get();
+}
+size_t gfSingleFeatureInputTerminal::size() {
+  auto output_term = connected_output_.lock();
+  auto sot = (gfSingleFeatureOutputTerminal*)(output_term.get());
+  return sot->size(); 
 }
 
 
@@ -156,61 +166,49 @@ void gfOutputTerminal::disconnect(gfInputTerminal& in) {
   in.parent_.notify_children();
 };
 
-void gfBasicMonoOutputTerminal::clear() {
+void gfSingleFeatureOutputTerminal::clear() {
   data_.reset();
 }
-bool gfBasicMonoOutputTerminal::has_data() {
+bool gfSingleFeatureOutputTerminal::has_data() {
   return data_.has_value();
 }
-
-const std::vector<std::any>& gfVectorMonoInputTerminal::get() {
-  auto output_term = connected_output_.lock();
-  auto sot = (gfVectorMonoOutputTerminal*)(output_term.get());
-  return sot->get();
-}
-size_t gfVectorMonoInputTerminal::size() {
-  auto output_term = connected_output_.lock();
-  auto sot = (gfVectorMonoOutputTerminal*)(output_term.get());
-  return sot->size(); 
-}
-
-void gfVectorMonoOutputTerminal::clear() {
+void gfSingleFeatureOutputTerminal::clear() {
   data_.clear();
 }
-bool gfVectorMonoOutputTerminal::has_data() {
+bool gfSingleFeatureOutputTerminal::has_data() {
   return data_.size()!=0;
 }
 
-gfPolyInputTerminal::~gfPolyInputTerminal(){
+gfMultiFeatureInputTerminal::~gfMultiFeatureInputTerminal(){
   for (auto output_term_ : connected_outputs_) {
     if(auto output_term = output_term_.lock())
       output_term->connections_.erase(get_ptr());
   }
 }
-void gfPolyInputTerminal::clear() {
+void gfMultiFeatureInputTerminal::clear() {
   rebuild_terminal_refs();
   gfInputTerminal::clear();
 }
-void gfPolyInputTerminal::connect_output(gfOutputTerminal& output_term) {
+void gfMultiFeatureInputTerminal::connect_output(gfOutputTerminal& output_term) {
   connected_outputs_.insert(output_term.get_ptr());
 }
-void gfPolyInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
+void gfMultiFeatureInputTerminal::disconnect_output(gfOutputTerminal& output_term) {
   connected_outputs_.erase(output_term.get_ptr());
 }
-void gfPolyInputTerminal::push_term_ref(gfOutputTerminal* term_ptr) {
-  if (auto basic_term_ptr = dynamic_cast<gfBasicMonoOutputTerminal*>(term_ptr)) {
+void gfMultiFeatureInputTerminal::push_term_ref(gfOutputTerminal* term_ptr) {
+  if (auto basic_term_ptr = dynamic_cast<gfSingleFeatureOutputTerminal*>(term_ptr)) {
     basic_terminals_.push_back(basic_term_ptr);
-  } else if (auto vector_term_ptr = dynamic_cast<gfVectorMonoOutputTerminal*>(term_ptr)) {
+  } else if (auto vector_term_ptr = dynamic_cast<gfSingleFeatureOutputTerminal*>(term_ptr)) {
     vector_terminals_.push_back(vector_term_ptr);
   }
 }
-void gfPolyInputTerminal::rebuild_terminal_refs() {
+void gfMultiFeatureInputTerminal::rebuild_terminal_refs() {
   basic_terminals_.clear();
   vector_terminals_.clear();
   for (auto& wptr : connected_outputs_) {
     if (auto term = wptr.lock()) {
       auto term_ptr = term.get();
-      if (auto poly_term_ptr = dynamic_cast<gfPolyOutputTerminal*>(term_ptr)) {
+      if (auto poly_term_ptr = dynamic_cast<gfMultiFeatureOutputTerminal*>(term_ptr)) {
         for (auto& [name, sub_term] : poly_term_ptr->get_terminals()) {
           push_term_ref(sub_term.get());
         }
@@ -220,7 +218,7 @@ void gfPolyInputTerminal::rebuild_terminal_refs() {
     }
   }
 }
-void gfPolyInputTerminal::update_on_receive(bool queue) {
+void gfMultiFeatureInputTerminal::update_on_receive(bool queue) {
   rebuild_terminal_refs();
   if (parent_.update_status()) {
     parent_.on_receive(*this);
@@ -228,7 +226,7 @@ void gfPolyInputTerminal::update_on_receive(bool queue) {
       parent_.queue();
   }
 }
-bool gfPolyInputTerminal::has_data() {
+bool gfMultiFeatureInputTerminal::has_data() {
   if (connected_outputs_.size()==0)
     return false;
   for (auto output_term_ : connected_outputs_){
@@ -241,24 +239,24 @@ bool gfPolyInputTerminal::has_data() {
   return true;
 }
 
-void gfPolyOutputTerminal::clear() {
+void gfMultiFeatureOutputTerminal::clear() {
   // for (auto& [name, t] : terminals_) {
   //   t->clear();
   // }
   terminals_.clear();
 }
-bool gfPolyOutputTerminal::has_data() {
+bool gfMultiFeatureOutputTerminal::has_data() {
   for (auto& [name, t] : terminals_) {
     if(!t->has_data())
       return false;
   }
   return true;
 }
-gfBasicMonoOutputTerminal& gfPolyOutputTerminal::add(std::string term_name, std::type_index ttype ) {
-      return add<gfBasicMonoOutputTerminal>(term_name, {ttype});
+gfSingleFeatureOutputTerminal& gfMultiFeatureOutputTerminal::add(std::string term_name, std::type_index ttype ) {
+      return add<gfSingleFeatureOutputTerminal>(term_name, {ttype});
     };
-gfVectorMonoOutputTerminal& gfPolyOutputTerminal::add_vector(std::string term_name, std::type_index ttype ) {
-  return add<gfVectorMonoOutputTerminal>(term_name, {ttype});
+gfSingleFeatureOutputTerminal& gfMultiFeatureOutputTerminal::add_vector(std::string term_name, std::type_index ttype ) {
+  return add<gfSingleFeatureOutputTerminal>(term_name, {ttype});
 };
 
 Node::~Node() {

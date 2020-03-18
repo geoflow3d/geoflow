@@ -75,7 +75,7 @@ namespace geoflow {
   typedef std::weak_ptr<Node> WeakNodeHandle;
   
   class gfOutputTerminal;
-  class gfBasicMonoOutputTerminal;
+  class gfSingleFeatureOutputTerminal;
 
   enum gfIO {GF_IN, GF_OUT};
   enum gfTerminalFamily {GF_UNKNOWN, GF_BASIC, GF_VECTOR, GF_POLY};
@@ -97,6 +97,8 @@ namespace geoflow {
     bool accepts_type(std::type_index type) const;
     const std::vector<std::type_index>& get_types() const { return types_; };
     const virtual gfIO get_side() = 0;
+    const virtual gfTerminalFamily get_family() = 0;
+    const virtual bool is_multi_feature() = 0;
     const virtual gfTerminalFamily get_family() = 0;
     virtual bool has_data() = 0;
     virtual bool has_connection() = 0;
@@ -132,12 +134,11 @@ namespace geoflow {
     bool is_optional() { return is_optional_; };
 
     friend class gfOutputTerminal;
-    friend class gfBasicMonoOutputTerminal;
-    friend class gfMonoOutputTerminal;
+    friend class gfSingleFeatureOutputTerminal;
     friend class Node;
   };
 
-  class gfMonoInputTerminal : public gfInputTerminal {
+  class gfSingleFeatureInputTerminal : public gfInputTerminal {
     protected:
     std::weak_ptr<gfOutputTerminal> connected_output_;
     void update_on_receive(bool queue);
@@ -146,14 +147,36 @@ namespace geoflow {
 
     public:
     using gfInputTerminal::gfInputTerminal;
-    ~gfMonoInputTerminal();
+    ~gfSingleFeatureInputTerminal();
     bool is_connected_type(std::type_index ttype) const;
     std::type_index get_connected_type() const;
     bool has_connection();
     bool has_data();
 
-    friend class gfMonoOutputTerminal;
+    // single element
+    const gfTerminalFamily get_family() { return GF_BASIC; };
+    template<typename T> const T get();
+
+    // multi element (vector)
+    const gfTerminalFamily get_family() { return GF_VECTOR; };
+    template<typename T> const T get(size_t i);
+    const std::vector<std::any>& get();
+    size_t size();
+
+    friend class gfSingleFeatureOutputTerminal;
   };
+  
+  template<typename T> const T gfSingleFeatureInputTerminal::get() {
+    auto output_term = connected_output_.lock();
+    auto sot = (gfSingleFeatureOutputTerminal*)(output_term.get());
+    return std::any_cast<T>(sot->get_data()); 
+  };
+
+  template<typename T>const T gfSingleFeatureInputTerminal::get(size_t i) {
+    auto output_term = connected_output_.lock();
+    auto sot = (gfSingleFeatureOutputTerminal*)(output_term.get());
+    return sot->get<T>(i);
+  }
 
   typedef std::set<std::weak_ptr<gfInputTerminal>, std::owner_less<std::weak_ptr<gfInputTerminal>>> InputConnectionSet;
 
@@ -186,38 +209,30 @@ namespace geoflow {
     friend class Node;
     friend class gfInputTerminal;
     friend class gfGroupOutputTerminal;
-    friend class gfMonoInputTerminal;
+    friend class gfSingleFeatureInputTerminal;
     friend class gfPolyInputTerminal;
   };
 
-  class gfMonoOutputTerminal : public gfOutputTerminal {
-    public:
-    using gfOutputTerminal::gfOutputTerminal;
-    const std::type_index& get_type() const { return types_[0]; };
-  };
-
-
-  class gfBasicMonoInputTerminal : public gfMonoInputTerminal {
-    public:
-    using gfMonoInputTerminal::gfMonoInputTerminal;
-    const gfTerminalFamily get_family() { return GF_BASIC; };
-    template<typename T> const T get();
-  };
-
-  class gfBasicMonoOutputTerminal : public gfMonoOutputTerminal {
+  class gfSingleFeatureOutputTerminal : public gfOutputTerminal {
     private:
     std::any data_;
+    private:
+    std::vector<std::any> data_;
     
     protected:
     void clear();
+    void clear();
 
     public:
-    using gfMonoOutputTerminal::gfMonoOutputTerminal;
+    using gfOutputTerminal::gfOutputTerminal;
+    const std::type_index& get_type() const { return types_[0]; };
+
+    // single element
     const gfTerminalFamily get_family() { return GF_BASIC; };
     bool has_data();
     template<typename T> T& set(T data){
       if(!accepts_type(typeid(T)))
-        throw gfException("illegal type for gfBasicMonoOutputTerminal");
+        throw gfException("illegal type for gfSingleFeatureOutputTerminal");
       data_ = std::move(data);
       return std::any_cast<T&>(data_);
     };
@@ -232,41 +247,14 @@ namespace geoflow {
       return std::any_cast<T>(data_); 
     };
 
-    friend class gfBasicMonoInputTerminal;
-    friend class gfPolyOutputTerminal;
-  };
-
-  template<typename T> const T gfBasicMonoInputTerminal::get() {
-    auto output_term = connected_output_.lock();
-    auto sot = (gfBasicMonoOutputTerminal*)(output_term.get());
-    return std::any_cast<T>(sot->get_data()); 
-  };
-
-
-  class gfVectorMonoInputTerminal : public gfMonoInputTerminal {    
-    public:
-    using gfMonoInputTerminal::gfMonoInputTerminal;
-    const gfTerminalFamily get_family() { return GF_VECTOR; };
-    template<typename T> const T get(size_t i);
-    const std::vector<std::any>& get();
-    size_t size();
-  };
-
-  class gfVectorMonoOutputTerminal : public gfMonoOutputTerminal {
-    private:
-    std::vector<std::any> data_;
-
-    protected:
-    void clear();
-
-    public:
-    using gfMonoOutputTerminal::gfMonoOutputTerminal;
+    // multi element
+    using gfSingleFeatureOutputTerminal::gfSingleFeatureOutputTerminal;
     const gfTerminalFamily get_family() { return GF_VECTOR; };
     bool has_data();
 
     template<typename T> void push_back(T data) {
       if(!accepts_type(typeid(T)))
-        throw gfException("illegal type for gfVectorMonoOutputTerminal");
+        throw gfException("illegal type for gfSingleFeatureOutputTerminal");
       data_.push_back(std::move(data));
     };
     void push_back_any(std::any& data) {
@@ -279,19 +267,15 @@ namespace geoflow {
     std::vector<std::any>& get() { return data_; };
     template<typename T> T get(size_t i) { return std::any_cast<T>(data_[i]); };
 
-    friend class gfVectorMonoInputTerminal;
-  };
 
-  template<typename T>const T gfVectorMonoInputTerminal::get(size_t i) {
-    auto output_term = connected_output_.lock();
-    auto sot = (gfVectorMonoOutputTerminal*)(output_term.get());
-    return sot->get<T>(i);
-  }
+    friend class gfSingleFeatureInputTerminal;
+    friend class gfMultiFeatureOutputTerminal;
+  };
 
   typedef std::set<std::weak_ptr<gfOutputTerminal>, std::owner_less<std::weak_ptr<gfOutputTerminal>>> OutputConnectionSet;
   class gfPolyInputTerminal : public gfInputTerminal {
-    typedef std::vector<const gfBasicMonoOutputTerminal*> BasicRefs;
-    typedef std::vector<const gfVectorMonoOutputTerminal*> VectorRefs;
+    typedef std::vector<const gfSingleFeatureOutputTerminal*> BasicRefs;
+    typedef std::vector<const gfSingleFeatureOutputTerminal*> VectorRefs;
     private:
     BasicRefs basic_terminals_;
     VectorRefs vector_terminals_;
@@ -318,7 +302,7 @@ namespace geoflow {
     const VectorRefs& vector_terminals() { return vector_terminals_; };
   };
 
-  class gfPolyOutputTerminal : public gfOutputTerminal {
+  class gfMultiFeatureOutputTerminal : public gfOutputTerminal {
     private:
     template<typename T> T& add(std::string term_name, std::initializer_list<std::type_index> ttype) {
       // TODO: check if term_name is unique and if type is in types
@@ -329,7 +313,7 @@ namespace geoflow {
     };
 
     protected:
-    typedef std::map<std::string,std::shared_ptr<gfMonoOutputTerminal>> MonoTerminalMap;
+    typedef std::map<std::string,std::shared_ptr<gfSingleFeatureOutputTerminal>> MonoTerminalMap;
     MonoTerminalMap terminals_;
     // bool is_propagated_=false;
     // void propagate(); ?
@@ -339,11 +323,11 @@ namespace geoflow {
     using gfOutputTerminal::gfOutputTerminal;
     const gfTerminalFamily get_family() { return GF_POLY; };
     bool has_data();
-    gfBasicMonoOutputTerminal& add(std::string term_name, std::type_index ttype ) ;
-    gfVectorMonoOutputTerminal& add_vector(std::string term_name, std::type_index ttype );
+    gfSingleFeatureOutputTerminal& add(std::string term_name, std::type_index ttype ) ;
+    gfSingleFeatureOutputTerminal& add_vector(std::string term_name, std::type_index ttype );
     const MonoTerminalMap& get_terminals() { return terminals_; };
     template<typename T> T get_basic(std::string term_name) {
-      auto tptr = (gfBasicMonoOutputTerminal*)(terminals_.at(term_name).get()); 
+      auto tptr = (gfSingleFeatureOutputTerminal*)(terminals_.at(term_name).get()); 
       return std::any_cast<T>(tptr->get_data());
     };
 
@@ -357,22 +341,22 @@ namespace geoflow {
   template <typename T> struct get_family {
     static const gfTerminalFamily value = GF_UNKNOWN;
   };
-  template<> struct get_family<gfBasicMonoInputTerminal> {
+  template<> struct get_family<gfSingleFeatureInputTerminal> {
     static const gfTerminalFamily value = GF_BASIC;
   };
-  template<> struct get_family<gfVectorMonoInputTerminal> {
+  template<> struct get_family<gfSingleFeatureInputTerminal> {
     static const gfTerminalFamily value = GF_VECTOR;
   };
   template<> struct get_family<gfPolyInputTerminal> {
     static const gfTerminalFamily value = GF_POLY;
   };
-  template<> struct get_family<gfBasicMonoOutputTerminal> {
+  template<> struct get_family<gfSingleFeatureOutputTerminal> {
     static const gfTerminalFamily value = GF_BASIC;
   };
-  template<> struct get_family<gfVectorMonoOutputTerminal> {
+  template<> struct get_family<gfSingleFeatureOutputTerminal> {
     static const gfTerminalFamily value = GF_VECTOR;
   };
-  template<> struct get_family<gfPolyOutputTerminal> {
+  template<> struct get_family<gfMultiFeatureOutputTerminal> {
     static const gfTerminalFamily value = GF_POLY;
   };
 
@@ -445,23 +429,23 @@ namespace geoflow {
 
     void remove_from_manager();
 
-    gfBasicMonoInputTerminal& input(std::string term_name) {
-      return input<gfBasicMonoInputTerminal>(term_name);
+    gfSingleFeatureInputTerminal& input(std::string term_name) {
+      return input<gfSingleFeatureInputTerminal>(term_name);
     }
-    gfVectorMonoInputTerminal& vector_input(std::string term_name) {
-      return input<gfVectorMonoInputTerminal>(term_name);
+    gfSingleFeatureInputTerminal& vector_input(std::string term_name) {
+      return input<gfSingleFeatureInputTerminal>(term_name);
     }
     gfPolyInputTerminal& poly_input(std::string term_name) {
       return input<gfPolyInputTerminal>(term_name);
     }
-    gfBasicMonoOutputTerminal& output(std::string term_name) {
-      return output<gfBasicMonoOutputTerminal>(term_name);
+    gfSingleFeatureOutputTerminal& output(std::string term_name) {
+      return output<gfSingleFeatureOutputTerminal>(term_name);
     }
-    gfVectorMonoOutputTerminal& vector_output(std::string term_name) {
-      return output<gfVectorMonoOutputTerminal>(term_name);
+    gfSingleFeatureOutputTerminal& vector_output(std::string term_name) {
+      return output<gfSingleFeatureOutputTerminal>(term_name);
     }
-    gfPolyOutputTerminal& poly_output(std::string term_name) {
-      return output<gfPolyOutputTerminal>(term_name);
+    gfMultiFeatureOutputTerminal& poly_output(std::string term_name) {
+      return output<gfMultiFeatureOutputTerminal>(term_name);
     }
 
     void for_each_input(std::function<void(gfInputTerminal&)> f) {
@@ -478,22 +462,22 @@ namespace geoflow {
     gfNodeStatus status_ = GF_NODE_WAITING;
 
     void add_input(std::string name, std::type_index type, bool is_optional=false) {
-      add_input<gfBasicMonoInputTerminal>(name, {type}, is_optional);
+      add_input<gfSingleFeatureInputTerminal>(name, {type}, is_optional);
     };
     void add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
-      add_input<gfBasicMonoInputTerminal>(name, types, is_optional);
+      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional);
     };
     void add_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
-      add_input<gfBasicMonoInputTerminal>(name, types, is_optional);
+      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional);
     };
     void add_vector_input(std::string name, std::type_index type, bool is_optional=false){
-      add_input<gfVectorMonoInputTerminal>(name, {type}, is_optional);
+      add_input<gfSingleFeatureInputTerminal>(name, {type}, is_optional);
     };
     void add_vector_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
-      add_input<gfVectorMonoInputTerminal>(name, types, is_optional);
+      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional);
     };
     void add_vector_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
-      add_input<gfVectorMonoInputTerminal>(name, types, is_optional);
+      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional);
     };
     void add_poly_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
       add_input<gfPolyInputTerminal>(name, types, is_optional);
@@ -503,19 +487,19 @@ namespace geoflow {
     };
 
     void add_output(std::string name, std::type_index type, bool is_marked=false) {
-      add_output<gfBasicMonoOutputTerminal>(name, {type}, is_marked);
+      add_output<gfSingleFeatureOutputTerminal>(name, {type}, is_marked);
     };
     void add_output(std::string name, const std::vector<std::type_index> types, bool is_marked=false) {
-      add_output<gfBasicMonoOutputTerminal>(name, types, is_marked);
+      add_output<gfSingleFeatureOutputTerminal>(name, types, is_marked);
     };
     void add_vector_output(std::string name, std::type_index type, bool is_marked=false) {
-      add_output<gfVectorMonoOutputTerminal>(name, {type});
+      add_output<gfSingleFeatureOutputTerminal>(name, {type});
     };
     void add_poly_output(std::string name, std::initializer_list<std::type_index> types, bool is_marked=false) {
-      add_output<gfPolyOutputTerminal>(name, types, is_marked);
+      add_output<gfMultiFeatureOutputTerminal>(name, types, is_marked);
     };
     void add_poly_output(std::string name, std::vector<std::type_index> types, bool is_marked=false) {
-      add_output<gfPolyOutputTerminal>(name, types, is_marked);
+      add_output<gfMultiFeatureOutputTerminal>(name, types, is_marked);
     };
 
     std::set<NodeHandle> get_child_nodes();
@@ -561,7 +545,7 @@ namespace geoflow {
     // virtual ParameterMap init_parameters() {};
     virtual void process() = 0;
     virtual void gui() {};
-    virtual void on_receive(gfMonoInputTerminal& it){};
+    virtual void on_receive(gfSingleFeatureInputTerminal& it){};
     virtual void on_receive(gfPolyInputTerminal& it){};
     virtual void on_clear(gfInputTerminal& it){};
     virtual void on_connect_input(gfInputTerminal& ot){};
