@@ -70,7 +70,7 @@ namespace geoflow::nodes::gui {
       }
     }
 
-    void on_receive(gfMonoInputTerminal& t) {
+    void on_receive(gfSingleFeatureInputTerminal& t) {
       if(&input("values") == &t) {
         count_values();
       }
@@ -166,7 +166,7 @@ namespace geoflow::nodes::gui {
       max_bin_count = *std::max_element(histogram.begin(), histogram.end());
     }
 
-    void on_receive(gfMonoInputTerminal& t) {
+    void on_receive(gfSingleFeatureInputTerminal& t) {
       if(&input("values") == &t) {
         auto& d = input("values").get<vec1f&>();
         minval = *std::min_element(d.begin(), d.end());
@@ -260,7 +260,7 @@ namespace geoflow::nodes::gui {
       }
     }
 
-    void on_receive(gfMonoInputTerminal& t) {
+    void on_receive(gfSingleFeatureInputTerminal& t) {
       // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
       if(t.has_data() && painter->is_initialised()) {
         if(input_terminals["geometries"].get() == &t) {
@@ -378,7 +378,7 @@ namespace geoflow::nodes::gui {
     //   }
     // }
 
-    template <typename T> void set_attribute(std::string name,  gfVectorMonoInputTerminal& aterm, size_t stride) {
+    template <typename T> void set_attribute(std::string name, gfSingleFeatureInputTerminal& aterm, size_t stride) {
       size_t ecount{}, offset{};
       for(size_t i=0; i< aterm.size(); ++i) {
         auto& attr = aterm.get<T&>(i);
@@ -392,7 +392,7 @@ namespace geoflow::nodes::gui {
       painter->end_sub_attributes(name);
     }
 
-    template<typename T> void set_geometry(gfVectorMonoInputTerminal& gterm) {
+    template<typename T> void set_geometry(gfSingleFeatureInputTerminal& gterm) {
       size_t vcount{}, offset{};
       for(size_t i=0; i< gterm.size(); ++i) {
         auto& geom = gterm.get<T&>(i);
@@ -405,7 +405,7 @@ namespace geoflow::nodes::gui {
       painter->end_sub_geometries();
     }
 
-    void on_receive(gfMonoInputTerminal& t) {
+    void on_receive(gfSingleFeatureInputTerminal& t) {
       // auto& d = std::any_cast<std::vector<float>&>(t.cdata);
       if(t.has_data() && painter->is_initialised()) {
         if(input_terminals["geometries"].get() == &t) {

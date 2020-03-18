@@ -40,15 +40,17 @@ namespace geoflow::nodes::core {
         // find inputs and outputs to connect to this node's terminals...
         // create vectormonoinputs/outputs on this node
         for (auto& node : nodes) {
-          for (auto [name, input_term_] : node->input_terminals) {
-            if (!input_term_->has_connection() && input_term_->get_family() == GF_BASIC) {
-              auto input_term = (gfBasicMonoInputTerminal*)(input_term_.get());
-              add_vector_input(input_term->get_name(), input_term->get_types());
+          for (auto [name, input_term] : node->input_terminals) {
+            if (!input_term->has_connection()) {
+              if(input_term->get_family() == GF_SINGLE_FEATURE)
+                add_vector_input(input_term->get_name(), input_term->get_types());
+              else
+                add_poly_input(input_term->get_name(), input_term->get_types());
             }
           }
           for (auto [name, output_term_] : node->output_terminals) {
-            if (output_term_->is_marked() && output_term_->get_family() == GF_BASIC) {
-              auto output_term = (gfBasicMonoOutputTerminal*)(output_term_.get());
+            if (output_term_->is_marked() && output_term_->get_family() == GF_SINGLE_FEATURE) {
+              auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
               add_vector_output(output_term->get_name(), output_term->get_type());
             }
           }
@@ -94,13 +96,19 @@ namespace geoflow::nodes::core {
       // create proxy
       auto proxy_node = flowchart->create_node(R, "Proxy");
       flowchart->name_node(proxy_node, proxy_node_name_);
-      // create proxy outputs -- these are not copied with the flowchart
+      // create proxy outputs to nested fc inputs
       for (auto& [node_name, node] : flowchart->get_nodes()) {
           for (auto& [name, input_term] : node->input_terminals) {
-            if (!input_term->has_connection() && input_term->get_family() == GF_BASIC) {
+            if (!input_term->has_connection()) {
               auto& input_name = input_term->get_name();
-              proxy_node->add_output(input_name, input_term->get_types());
-              proxy_node->output(input_name).connect(*input_term);
+              if(input_term->get_family() == GF_SINGLE_FEATURE) {
+                proxy_node->add_output(input_name, input_term->get_types());
+                proxy_node->output(input_name).connect(*input_term);
+              } else { // GF_MULTI_FEATURE
+                proxy_node->add_poly_output(input_name, input_term->get_types());
+                auto mf_oterm = proxy_node->poly_output(input_name);
+                proxy_node->poly_output(input_name).connect(*input_term);
+              }
             }
           }
       }
@@ -112,8 +120,19 @@ namespace geoflow::nodes::core {
       // note that proxy node has no inputs
       
       for(auto& [name, proxy_output] : proxy_node->output_terminals) {
-        auto& data_vec = vector_input(name).get();
-        proxy_node->output(name) = data_vec[i];
+        if (proxy_output->get_family()==GF_SINGLE_FEATURE) {
+          auto& data_vec = vector_input(name).get_data_vec();
+          // we need to set the correct type
+          proxy_node->output(name).set_type(vector_input(name).get_connected_type());
+          proxy_node->output(name) = data_vec[i];
+        } else {
+          for (auto sub_iterm : poly_input(name).sub_terminals()) {
+            auto& sub_name = sub_iterm->get_name();
+            // first add sub terminal
+            auto& sub_oterm = proxy_node->poly_output(name).add(sub_name, sub_iterm->get_types()[0]);
+            sub_oterm = sub_iterm->get_data_vec()[i];
+          }
+        }
       }
     }
 
@@ -124,6 +143,10 @@ namespace geoflow::nodes::core {
       std::vector<std::shared_ptr<NodeManager>> flowcharts;
       for(size_t i=0; i<input_size_; ++i) {
         auto fc = copy_nested_flowchart();
+        for (auto& [key,val] : manager.global_flowchart_params) {
+          fc->global_flowchart_params[key] = val;
+        }
+        fc->global_flowchart_params["GF_I"] = std::to_string(i);
         set_inputs(fc, i);
         flowcharts.push_back(fc);
       }
@@ -147,6 +170,10 @@ namespace geoflow::nodes::core {
       for(size_t i=0; i<input_size_; ++i) {
         proxy_node->notify_children();
         // prep inputs
+        for (auto& [key,val] : manager.global_flowchart_params) {
+          flowchart->global_flowchart_params[key] = val;
+        }
+        flowchart->global_flowchart_params["GF_I"] = std::to_string(i);
         set_inputs(flowchart, i);
         // run
         std::cout << "Processing item " << i+1 << "/" << input_size_ << "\n";
@@ -159,8 +186,8 @@ namespace geoflow::nodes::core {
         // collect outputs and push directly to vector outputs
         for (auto& [node_name, node] : flowchart->get_nodes()) {
           for (auto& [name, output_term_] : node->output_terminals) {
-            if (output_term_->is_marked() && output_term_->get_family() == GF_BASIC) {
-              auto output_term = (gfBasicMonoOutputTerminal*)(output_term_.get());
+            if (output_term_->is_marked() && output_term_->get_family() == GF_SINGLE_FEATURE) {
+              auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
               if (output_term->has_data()) {
                 auto& data = output_term->get_data();
                 vector_output(output_term->get_name()).push_back_any(data);
@@ -173,7 +200,7 @@ namespace geoflow::nodes::core {
 
     void process() {
       if(flowchart_loaded) {
-        auto first_input = (gfVectorMonoInputTerminal*)(input_terminals.begin()->second.get());
+        auto first_input = input_terminals.begin()->second.get();
         input_size_ = first_input->size();
         std::cout << "Begin processing for NestNode " << get_name() << "\n";
         if (use_parallel_processing) {

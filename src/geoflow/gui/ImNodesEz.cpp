@@ -141,21 +141,19 @@ bool Slot(geoflow::gfTerminal* term, int kind)
                 ImGui::Text("Output (%lu connections)", ot->get_connections().size());
             }
             ImGui::Text("Has data: %s", term->has_data() ? "yes" : "no");
-            if (term->get_family()==geoflow::GF_VECTOR ) {
-                ImGui::TextUnformatted("Family: Vector");
+            if (term->get_family()==geoflow::GF_SINGLE_FEATURE ) {
+                ImGui::TextUnformatted("Family: Single Feature");
                 if(term->has_data()) {
                     if (term->get_side()==geoflow::GF_IN) {
-                        auto* it = (geoflow::gfVectorMonoInputTerminal*) term;
+                        auto* it = (geoflow::gfSingleFeatureInputTerminal*) term;
                         ImGui::SameLine(); ImGui::Text("(size: %lu)", it->size());
                     } else{
-                        auto* ot = (geoflow::gfVectorMonoOutputTerminal*) term;
+                        auto* ot = (geoflow::gfSingleFeatureOutputTerminal*) term;
                         ImGui::SameLine(); ImGui::Text("(size: %lu)", ot->size());
                     }
                 }
-            } else if (term->get_family()==geoflow::GF_BASIC )
-                ImGui::TextUnformatted("Family: Basic");
-            else if (term->get_family()==geoflow::GF_POLY )
-                ImGui::TextUnformatted("Family: Poly");
+            } else if (term->get_family()==geoflow::GF_MULTI_FEATURE )
+                ImGui::TextUnformatted("Family: Multi Feature");
             else
                 ImGui::TextUnformatted("Family: Unknown");
             
