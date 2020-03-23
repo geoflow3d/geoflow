@@ -124,12 +124,18 @@ bool Slot(geoflow::gfTerminal* term, int kind)
         circle_rect.Max.y += circle_offset_y;
         auto status_color = gCanvas->colors[term->has_data() ? ImNodes::ColNodeDoneBorder : ImNodes::ColNodeWaitingBorder];
         draw_lists->AddCircleFilled(circle_rect.GetCenter(), CIRCLE_RADIUS, color);
-        draw_lists->AddCircle(circle_rect.GetCenter(), CIRCLE_RADIUS, status_color, 12, 2.0f);
+        draw_lists->AddCircle(circle_rect.GetCenter(), CIRCLE_RADIUS, status_color, 12, term->is_marked()?4.0f:2.0f);
 
         ImGui::ItemSize(circle_rect.GetSize());
         ImGui::ItemAdd(circle_rect, ImGui::GetID(title));
 
         if (ImGui::IsItemHovered()) {
+          if(ImGui::IsMouseDoubleClicked(0) &&
+            !ImGui::IsMouseDragging(1)
+          ) {
+            // ImGui::OpenPopup("TerminalActionsContextMenu");
+            term->set_marked(!term->is_marked());
+          } else {
             ImGui::BeginTooltip();
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f,1.0f,1.0f,1.0f));
             // ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
@@ -141,6 +147,7 @@ bool Slot(geoflow::gfTerminal* term, int kind)
                 ImGui::Text("Output (%lu connections)", ot->get_connections().size());
             }
             ImGui::Text("Has data: %s", term->has_data() ? "yes" : "no");
+            ImGui::Text("Marked: %s", term->is_marked() ? "yes" : "no");
             if (term->get_family()==geoflow::GF_SINGLE_FEATURE ) {
                 ImGui::TextUnformatted("Family: Single Feature");
                 if(term->has_data()) {
@@ -163,7 +170,14 @@ bool Slot(geoflow::gfTerminal* term, int kind)
             // ImGui::PopTextWrapPos();
             ImGui::PopStyleColor();
             ImGui::EndTooltip();
+          }
         }
+
+        // if (ImGui::BeginPopup("TerminalActionsContextMenu"))
+        // {
+        //   ImGui::Checkbox("marked", &term->is_marked());
+        //   ImGui::EndPopup();
+        // }
 
         if (ImNodes::IsInputSlotKind(kind))
         {

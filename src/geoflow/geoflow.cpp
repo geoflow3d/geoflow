@@ -268,11 +268,11 @@ size_t gfMultiFeatureOutputTerminal::size() {
     return terminals_.begin()->second->size();
 }
 
-gfSingleFeatureOutputTerminal& gfMultiFeatureOutputTerminal::add(std::string term_name, std::type_index ttype, bool is_marked ) {
-  return add<gfSingleFeatureOutputTerminal>(term_name, {ttype}, is_marked, false);
+gfSingleFeatureOutputTerminal& gfMultiFeatureOutputTerminal::add(std::string term_name, std::type_index ttype ) {
+  return add<gfSingleFeatureOutputTerminal>(term_name, {ttype}, false);
 };
-gfSingleFeatureOutputTerminal& gfMultiFeatureOutputTerminal::add_vector(std::string term_name, std::type_index ttype, bool is_marked ) {
-  return add<gfSingleFeatureOutputTerminal>(term_name, {ttype}, is_marked, true);
+gfSingleFeatureOutputTerminal& gfMultiFeatureOutputTerminal::add_vector(std::string term_name, std::type_index ttype ) {
+  return add<gfSingleFeatureOutputTerminal>(term_name, {ttype}, true);
 };
 
 Node::~Node() {
@@ -524,6 +524,15 @@ void NodeManager::json_serialise(std::ostream& json_sstream) {
         n["connections"][name] = connection_vec;
       }
     }
+    //note marked terminals
+    std::vector<std::pair<std::string, bool>> marked_inputs_vec;
+    for (const auto& [name, iTerm] : node_handle->input_terminals) {
+      n["marked_inputs"][name] = iTerm->is_marked();
+    }
+    for (const auto& [name, oTerm] : node_handle->output_terminals) {
+      n["marked_outputs"][name] = oTerm->is_marked();
+    }
+    
     j["nodes"][name] = n;
   }
   json_sstream << std::setw(2) << j << std::endl;
@@ -547,11 +556,28 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
   for (auto node_j : nodes_j.items()) {
     auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
     if (registers_.count(tt[0])) {
+      // construct node
       std::array<float,2> pos = node_j.value().at("position");
       auto nhandle = create_node(registers_.at(tt[0]), tt[1], {pos[0], pos[1]});
       new_nodes.push_back(nhandle);
       std::string node_name = node_j.key();
       name_node(nhandle, node_name);
+      // set marked terminals
+      if (node_j.value().count("marked_inputs")) {
+        auto marked_iterms_j = node_j.value().at("marked_inputs");
+        for (auto& it : marked_iterms_j.items()) {
+          nhandle->input(it.key()).set_marked(it.value().get<bool>());
+        }
+      }
+      // set marked terminals
+      if (node_j.value().count("marked_outputs")) {
+        auto marked_oterms_j = node_j.value().at("marked_outputs");
+        for (auto& it : marked_oterms_j.items()) {
+          nhandle->output(it.key()).set_marked(it.value().get<bool>());
+        }
+      }
+
+      // set node parameters
       if (node_j.value().count("parameters")) {
         auto params_j = node_j.value().at("parameters");
         for (auto& pel : params_j.items()) {
@@ -591,6 +617,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
         throw gfException("Unable to load json file");
     }
   }
+  // create connections
   for (auto node_j : nodes_j.items()) {
     auto tt = node_j.value().at("type").get<std::array<std::string,2>>();
     if (registers_.count(tt[0])) {

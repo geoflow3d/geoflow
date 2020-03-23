@@ -85,6 +85,7 @@ namespace geoflow {
   class gfTerminal : public gfObject {
     private:
     const bool supports_multiple_elements_;
+    bool is_marked_=false;
     protected:
     Node& parent_;
     std::vector<std::type_index> types_;
@@ -104,6 +105,9 @@ namespace geoflow {
     const virtual gfTerminalFamily get_family() = 0;
     virtual bool has_data() = 0;
     virtual bool has_connection() = 0;
+
+    void set_marked(bool is_marked) { is_marked_ = is_marked; };
+    bool& is_marked() { return is_marked_; };
 
     friend class Node;
   };
@@ -173,8 +177,6 @@ namespace geoflow {
   typedef std::set<std::weak_ptr<gfInputTerminal>, std::owner_less<std::weak_ptr<gfInputTerminal>>> InputConnectionSet;
 
   class gfOutputTerminal : public gfTerminal, public std::enable_shared_from_this<gfOutputTerminal> {
-    private:
-    bool is_marked_;
     protected:
     InputConnectionSet connections_;
 
@@ -183,10 +185,10 @@ namespace geoflow {
     virtual void clear() = 0;
 
     public:
-    gfOutputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types, bool is_marked, bool supports_multiple_elements) 
-      : gfTerminal(parent_gnode, types, name, supports_multiple_elements), is_marked_(is_marked) {}
-    gfOutputTerminal(Node& parent_gnode, std::string name, std::vector<std::type_index> types, bool is_marked, bool supports_multiple_elements) 
-      : gfTerminal(parent_gnode, types, name, supports_multiple_elements), is_marked_(is_marked) {}
+    gfOutputTerminal(Node& parent_gnode, std::string name, std::initializer_list<std::type_index> types, bool supports_multiple_elements) 
+      : gfTerminal(parent_gnode, types, name, supports_multiple_elements) {}
+    gfOutputTerminal(Node& parent_gnode, std::string name, std::vector<std::type_index> types, bool supports_multiple_elements) 
+      : gfTerminal(parent_gnode, types, name, supports_multiple_elements) {}
     ~gfOutputTerminal();
     std::weak_ptr<gfOutputTerminal>  get_ptr(){ return weak_from_this(); }
     const InputConnectionSet& get_connections();
@@ -196,7 +198,7 @@ namespace geoflow {
     bool is_compatible(gfInputTerminal& input_terminal);
     void connect(gfInputTerminal& in);
     void disconnect(gfInputTerminal& in);
-    bool is_marked() { return is_marked_; };
+
     virtual size_t size()=0;
     void set_type(std::type_index type) {types_ = {type}; }
 
@@ -317,9 +319,9 @@ namespace geoflow {
 
   class gfMultiFeatureOutputTerminal : public gfOutputTerminal {
     private:
-    template<typename T> T& add(std::string term_name, std::initializer_list<std::type_index> ttype, bool is_marked, bool supports_multiple_elements) {
+    template<typename T> T& add(std::string term_name, std::initializer_list<std::type_index> ttype, bool supports_multiple_elements) {
       // TODO: check if term_name is unique and if type is in types
-      auto t = std::make_shared<T>(get_parent(), term_name, ttype, is_marked, supports_multiple_elements);
+      auto t = std::make_shared<T>(get_parent(), term_name, ttype, supports_multiple_elements);
       terminals_[term_name] = t;
       auto term = (T*)(terminals_.at(term_name).get());
       return (*term);
@@ -339,8 +341,8 @@ namespace geoflow {
     size_t size();
 
     // note these 2 are almost the same now:
-    gfSingleFeatureOutputTerminal& add(std::string term_name, std::type_index ttype, bool is_marked=false ) ;
-    gfSingleFeatureOutputTerminal& add_vector(std::string term_name, std::type_index ttype, bool is_marked=false );
+    gfSingleFeatureOutputTerminal& add(std::string term_name, std::type_index ttype ) ;
+    gfSingleFeatureOutputTerminal& add_vector(std::string term_name, std::type_index ttype );
 
     const SFOTerminalMap& sub_terminals() { return terminals_; };
     gfSingleFeatureOutputTerminal& sub_terminal(std::string term_name) {
@@ -378,10 +380,10 @@ namespace geoflow {
         *this, name, types, is_optional, supports_multiple_elements
       );
     }
-    template<typename T> void add_output(std::string name, std::initializer_list<std::type_index> types, bool is_marked, bool supports_multiple_elements) {
+    template<typename T> void add_output(std::string name, std::initializer_list<std::type_index> types, bool supports_multiple_elements) {
       // TODO: check if name is unique key in output_terminals map
       output_terminals[name] = std::make_shared<T>(
-        *this, name, types, is_marked, supports_multiple_elements
+        *this, name, types, supports_multiple_elements
       );
     }
     template<typename T> void add_input(std::string name, const std::vector<std::type_index> types, bool is_optional, bool supports_multiple_elements) {
@@ -390,10 +392,10 @@ namespace geoflow {
         *this, name, types, is_optional, supports_multiple_elements
       );
     }
-    template<typename T> void add_output(std::string name, const std::vector<std::type_index> types, bool is_marked, bool supports_multiple_elements) {
+    template<typename T> void add_output(std::string name, const std::vector<std::type_index> types, bool supports_multiple_elements) {
       // TODO: check if name is unique key in output_terminals map
       output_terminals[name] = std::make_shared<T>(
-        *this, name, types, is_marked, supports_multiple_elements
+        *this, name, types, supports_multiple_elements
       );
     }
 
@@ -496,20 +498,20 @@ namespace geoflow {
       add_input<gfMultiFeatureInputTerminal>(name, types, is_optional, true);
     };
 
-    void add_output(std::string name, std::type_index type, bool is_marked=false) {
-      add_output<gfSingleFeatureOutputTerminal>(name, {type}, is_marked, false);
+    void add_output(std::string name, std::type_index type) {
+      add_output<gfSingleFeatureOutputTerminal>(name, {type}, false);
     };
-    void add_output(std::string name, const std::vector<std::type_index> types, bool is_marked=false) {
-      add_output<gfSingleFeatureOutputTerminal>(name, types, is_marked, false);
+    void add_output(std::string name, const std::vector<std::type_index> types) {
+      add_output<gfSingleFeatureOutputTerminal>(name, types, false);
     };
-    void add_vector_output(std::string name, std::type_index type, bool is_marked=false) {
-      add_output<gfSingleFeatureOutputTerminal>(name, {type}, is_marked, true);
+    void add_vector_output(std::string name, std::type_index type) {
+      add_output<gfSingleFeatureOutputTerminal>(name, {type}, true);
     };
-    void add_poly_output(std::string name, std::initializer_list<std::type_index> types, bool is_marked=false) {
-      add_output<gfMultiFeatureOutputTerminal>(name, types, is_marked, true);
+    void add_poly_output(std::string name, std::initializer_list<std::type_index> types) {
+      add_output<gfMultiFeatureOutputTerminal>(name, types, true);
     };
-    void add_poly_output(std::string name, std::vector<std::type_index> types, bool is_marked=false) {
-      add_output<gfMultiFeatureOutputTerminal>(name, types, is_marked, true);
+    void add_poly_output(std::string name, std::vector<std::type_index> types) {
+      add_output<gfMultiFeatureOutputTerminal>(name, types, true);
     };
 
     std::set<NodeHandle> get_child_nodes();
