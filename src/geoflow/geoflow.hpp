@@ -226,8 +226,8 @@ namespace geoflow {
     // single element
     const gfTerminalFamily get_family() { return GF_SINGLE_FEATURE; };
     bool has_data();
-    void push_back_any(std::any& data) {
-      data_.push_back(std::move(data));
+    void push_back_any(const std::any& data) {
+      data_.push_back(data);
     }
     template<typename T> void push_back(T data) {
       if(!accepts_type(typeid(T)))
@@ -253,6 +253,7 @@ namespace geoflow {
       return data_.resize(n, T());
     };
     std::any& get_data() { return data_[0]; };
+    const std::any& get_data() const { return data_[0]; };
     std::vector<std::any>& get_data_vec() { return data_; };
     const std::vector<std::any>& get_data_vec() const { return data_; };
     template<typename T> T get(size_t i) { 

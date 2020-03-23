@@ -324,7 +324,7 @@ bool Node::update_status() {
   auto status_before = status_;
   bool success = true;
   for (auto& [name,iT] : input_terminals) {
-    if (!iT->has_data() && !iT->is_optional())
+    if (!iT->has_data())
       success &= false;
   }
   if (success)
@@ -598,18 +598,22 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
       }
       nhandle->post_parameter_load();
       // set marked terminals
-      if (node_j.value().count("marked_inputs")) {
-        auto marked_iterms_j = node_j.value().at("marked_inputs");
-        for (auto& it : marked_iterms_j.items()) {
-          nhandle->input_terminals.at(it.key())->set_marked(it.value().get<bool>());
+      try{
+        if (node_j.value().count("marked_inputs")) {
+          auto marked_iterms_j = node_j.value().at("marked_inputs");
+          for (auto& it : marked_iterms_j.items()) {
+            nhandle->input_terminals.at(it.key())->set_marked(it.value().get<bool>());
+          }
         }
-      }
-      // set marked terminals
-      if (node_j.value().count("marked_outputs")) {
-        auto marked_oterms_j = node_j.value().at("marked_outputs");
-        for (auto& it : marked_oterms_j.items()) {
-          nhandle->output_terminals.at(it.key())->set_marked(it.value().get<bool>());
+        // set marked terminals
+        if (node_j.value().count("marked_outputs")) {
+          auto marked_oterms_j = node_j.value().at("marked_outputs");
+          for (auto& it : marked_oterms_j.items()) {
+            nhandle->output_terminals.at(it.key())->set_marked(it.value().get<bool>());
+          }
         }
+      } catch (const std::out_of_range& oor) {
+        std::cout << "could not find one marked terminal\n";
       }
     } else {
       std::cerr << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
