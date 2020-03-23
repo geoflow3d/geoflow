@@ -562,20 +562,6 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
       new_nodes.push_back(nhandle);
       std::string node_name = node_j.key();
       name_node(nhandle, node_name);
-      // set marked terminals
-      if (node_j.value().count("marked_inputs")) {
-        auto marked_iterms_j = node_j.value().at("marked_inputs");
-        for (auto& it : marked_iterms_j.items()) {
-          nhandle->input(it.key()).set_marked(it.value().get<bool>());
-        }
-      }
-      // set marked terminals
-      if (node_j.value().count("marked_outputs")) {
-        auto marked_oterms_j = node_j.value().at("marked_outputs");
-        for (auto& it : marked_oterms_j.items()) {
-          nhandle->output(it.key()).set_marked(it.value().get<bool>());
-        }
-      }
 
       // set node parameters
       if (node_j.value().count("parameters")) {
@@ -609,7 +595,21 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
           else if (auto param_ptr = std::get_if<ParamString>(&nhandle->parameters.at(pel.key())))
             param_ptr->set(pel.value().get<std::string>());
         }
-        nhandle->post_parameter_load();
+      }
+      nhandle->post_parameter_load();
+      // set marked terminals
+      if (node_j.value().count("marked_inputs")) {
+        auto marked_iterms_j = node_j.value().at("marked_inputs");
+        for (auto& it : marked_iterms_j.items()) {
+          nhandle->input_terminals.at(it.key())->set_marked(it.value().get<bool>());
+        }
+      }
+      // set marked terminals
+      if (node_j.value().count("marked_outputs")) {
+        auto marked_oterms_j = node_j.value().at("marked_outputs");
+        for (auto& it : marked_oterms_j.items()) {
+          nhandle->output_terminals.at(it.key())->set_marked(it.value().get<bool>());
+        }
       }
     } else {
       std::cerr << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
