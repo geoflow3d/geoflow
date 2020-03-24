@@ -512,7 +512,7 @@ void NodeManager::json_serialise(std::ostream& json_sstream) {
       else if (auto ptr = std::get_if<ParamString>(&pvalue))
         n["parameters"][pname] = ptr->get();
       else
-        std::cerr << "Parameter '" << pname << "' has an unknown type and is not serialised!\n";
+        std::cout << "Parameter '" << pname << "' has an unknown type and is not serialised!\n";
     }
     for (const auto& [name, oTerm] : node_handle->output_terminals) {
       std::vector<std::pair<std::string, std::string>> connection_vec;
@@ -568,7 +568,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
         auto params_j = node_j.value().at("parameters");
         for (auto& pel : params_j.items()) {
           if(!nhandle->parameters.count(pel.key())) {
-            std::cerr << "key not found in node parameters: " << pel.key() << "\n";
+            std::cout << "key not found in node parameters: " << pel.key() << "\n";
             continue;
           }
 
@@ -616,7 +616,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
         std::cout << "could not find one marked terminal\n";
       }
     } else {
-      std::cerr << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
+      std::cout << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
       if (strict)
         throw gfException("Unable to load json file");
     }
@@ -635,16 +635,16 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
               try {
                 if (!nodes[cval[0]]->input_terminals.count(cval[1]))
                   throw gfException("No input terminal '" + cval[1] + "' on node '" + cval[0] + "', failed to connect.");
-                nhandle->output_terminals[conn_j.key()]->connect(*nodes[cval[0]]->input_terminals[cval[1]]);
-              } catch (const gfException& e) {
+                nhandle->output_terminals.at(conn_j.key())->connect(*nodes.at(cval[0])->input_terminals[cval[1]]);
+              } catch (const std::exception& e) {
                 if(strict) {
                   throw e;
                 } else {
-                  std::cerr << e.what() << "\n";
+                  std::cout << e.what() << "\n";
                 }
               }
             else 
-              std::cerr << "Could not connect output " << conn_j.key() << "\n";
+              std::cout << "Could not connect output " << conn_j.key() << "\n";
           }
         }
       }
