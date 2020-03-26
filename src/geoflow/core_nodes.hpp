@@ -50,9 +50,17 @@ namespace geoflow::nodes::core {
             }
           }
           for (auto [name, output_term_] : node->output_terminals) {
-            if (output_term_->is_marked() && output_term_->get_family() == GF_SINGLE_FEATURE) {
-              auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
-              add_vector_output(node_name+"."+output_term->get_name(), output_term->get_type());
+            if (output_term_->is_marked()) {
+              if (output_term_->get_family() == GF_SINGLE_FEATURE) {
+                auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
+                add_vector_output(node_name+"."+output_term->get_name(), output_term->get_type());
+              } else {
+                auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
+                auto& poly_output = add_poly_output(node_name+"."+output_term->get_name(), output_term->get_types());
+                for (auto& [name, subterm] : output_term->sub_terminals()) {
+                  poly_output.add_vector(name, subterm->get_type());
+                }
+              }
             }
           }
         }
@@ -186,12 +194,21 @@ namespace geoflow::nodes::core {
         std::cout << ".. " << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
         // collect outputs and push directly to vector outputs
         for (auto& [node_name, node] : flowchart->get_nodes()) {
-          for (auto& [name, output_term_] : node->output_terminals) {
-            if (output_term_->is_marked() && output_term_->get_family() == GF_SINGLE_FEATURE) {
-              auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
-              if (output_term->has_data()) {
-                auto& data = output_term->get_data();
-                vector_output(node_name+"."+output_term->get_name()).push_back_any(data);
+          for (auto& [term_name, output_term_] : node->output_terminals) {
+            if (output_term_->is_marked()) {
+              if (output_term_->get_family() == GF_SINGLE_FEATURE) {
+                auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
+                if (output_term->has_data()) {
+                  auto& data = output_term->get_data();
+                  vector_output(node_name+"."+term_name).push_back_any(data);
+                }
+              } else {
+                auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
+                auto& aggregate_poly_out = poly_output(node_name+"."+term_name);
+                for (auto& [name, sub_term]: output_term->sub_terminals()) {
+                  auto& data = sub_term->get_data();
+                  aggregate_poly_out.sub_terminal(name).push_back_any(data);
+                }
               }
             }
           }

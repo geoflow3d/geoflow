@@ -375,29 +375,37 @@ namespace geoflow {
 
   class Node : public std::enable_shared_from_this<Node>, public gfObject {
     private:
-    template<typename T> void add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional, bool supports_multiple_elements) {
+    template<typename T> T& add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional, bool supports_multiple_elements) {
       // TODO: check if name is unique key in input_terminals map
-      input_terminals[name] = std::make_shared<T>(
+      auto term_handle = std::make_shared<T>(
         *this, name, types, is_optional, supports_multiple_elements
       );
+      input_terminals[name] = term_handle;
+      return *term_handle;
     }
-    template<typename T> void add_output(std::string name, std::initializer_list<std::type_index> types, bool supports_multiple_elements) {
+    template<typename T> T& add_output(std::string name, std::initializer_list<std::type_index> types, bool supports_multiple_elements) {
       // TODO: check if name is unique key in output_terminals map
-      output_terminals[name] = std::make_shared<T>(
+      auto term_handle  = std::make_shared<T>(
         *this, name, types, supports_multiple_elements
       );
+      output_terminals[name]= term_handle;
+      return *term_handle;
     }
-    template<typename T> void add_input(std::string name, const std::vector<std::type_index> types, bool is_optional, bool supports_multiple_elements) {
+    template<typename T> T& add_input(std::string name, const std::vector<std::type_index> types, bool is_optional, bool supports_multiple_elements) {
       // TODO: check if name is unique key in input_terminals map
-      input_terminals[name] = std::make_shared<T>(
+      auto term_handle = std::make_shared<T>(
         *this, name, types, is_optional, supports_multiple_elements
       );
+      input_terminals[name] = term_handle;
+      return *term_handle;
     }
-    template<typename T> void add_output(std::string name, const std::vector<std::type_index> types, bool supports_multiple_elements) {
+    template<typename T> T& add_output(std::string name, const std::vector<std::type_index> types, bool supports_multiple_elements) {
       // TODO: check if name is unique key in output_terminals map
-      output_terminals[name] = std::make_shared<T>(
+      auto term_handle  = std::make_shared<T>(
         *this, name, types, supports_multiple_elements
       );
+      output_terminals[name]= term_handle;
+      return *term_handle;
     }
 
     template<typename T> T& input(std::string term_name) {
@@ -474,45 +482,45 @@ namespace geoflow {
 
     gfNodeStatus status_ = GF_NODE_WAITING;
 
-    void add_input(std::string name, std::type_index type, bool is_optional=false) {
-      add_input<gfSingleFeatureInputTerminal>(name, {type}, is_optional, false);
+    gfSingleFeatureInputTerminal& add_input(std::string name, std::type_index type, bool is_optional=false) {
+      return add_input<gfSingleFeatureInputTerminal>(name, {type}, is_optional, false);
     };
-    void add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
-      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, false);
+    gfSingleFeatureInputTerminal& add_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
+      return add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, false);
     };
-    void add_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
-      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, false);
+    gfSingleFeatureInputTerminal& add_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
+      return add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, false);
     };
-    void add_vector_input(std::string name, std::type_index type, bool is_optional=false){
-      add_input<gfSingleFeatureInputTerminal>(name, {type}, is_optional, true);
+    gfSingleFeatureInputTerminal& add_vector_input(std::string name, std::type_index type, bool is_optional=false){
+      return add_input<gfSingleFeatureInputTerminal>(name, {type}, is_optional, true);
     };
-    void add_vector_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
-      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, true);
+    gfSingleFeatureInputTerminal& add_vector_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
+      return add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, true);
     };
-    void add_vector_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
-      add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, true);
+    gfSingleFeatureInputTerminal& add_vector_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
+      return add_input<gfSingleFeatureInputTerminal>(name, types, is_optional, true);
     };
-    void add_poly_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
-      add_input<gfMultiFeatureInputTerminal>(name, types, is_optional, true);
+    gfMultiFeatureInputTerminal& add_poly_input(std::string name, std::initializer_list<std::type_index> types, bool is_optional=false) {
+      return add_input<gfMultiFeatureInputTerminal>(name, types, is_optional, true);
     };
-    void add_poly_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
-      add_input<gfMultiFeatureInputTerminal>(name, types, is_optional, true);
+    gfMultiFeatureInputTerminal& add_poly_input(std::string name, std::vector<std::type_index> types, bool is_optional=false) {
+      return add_input<gfMultiFeatureInputTerminal>(name, types, is_optional, true);
     };
 
-    void add_output(std::string name, std::type_index type) {
-      add_output<gfSingleFeatureOutputTerminal>(name, {type}, false);
+    gfSingleFeatureOutputTerminal& add_output(std::string name, std::type_index type) {
+      return add_output<gfSingleFeatureOutputTerminal>(name, {type}, false);
     };
-    void add_output(std::string name, const std::vector<std::type_index> types) {
-      add_output<gfSingleFeatureOutputTerminal>(name, types, false);
+    gfSingleFeatureOutputTerminal& add_output(std::string name, const std::vector<std::type_index> types) {
+      return add_output<gfSingleFeatureOutputTerminal>(name, types, false);
     };
-    void add_vector_output(std::string name, std::type_index type) {
-      add_output<gfSingleFeatureOutputTerminal>(name, {type}, true);
+    gfSingleFeatureOutputTerminal& add_vector_output(std::string name, std::type_index type) {
+      return add_output<gfSingleFeatureOutputTerminal>(name, {type}, true);
     };
-    void add_poly_output(std::string name, std::initializer_list<std::type_index> types) {
-      add_output<gfMultiFeatureOutputTerminal>(name, types, true);
+    gfMultiFeatureOutputTerminal& add_poly_output(std::string name, std::initializer_list<std::type_index> types) {
+      return add_output<gfMultiFeatureOutputTerminal>(name, types, true);
     };
-    void add_poly_output(std::string name, std::vector<std::type_index> types) {
-      add_output<gfMultiFeatureOutputTerminal>(name, types, true);
+    gfMultiFeatureOutputTerminal& add_poly_output(std::string name, std::vector<std::type_index> types) {
+      return add_output<gfMultiFeatureOutputTerminal>(name, types, true);
     };
 
     std::set<NodeHandle> get_child_nodes();

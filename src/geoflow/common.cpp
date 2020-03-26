@@ -301,4 +301,23 @@ float *LinearRingCollection::get_data_ptr()
   return (*this)[0][0].data();
 }
 
+void Mesh::push_polygon(LinearRing& polygon) {
+  polygons_.push_back(polygon);
+}
+void Mesh::push_attribute(std::string name, std::any value) {
+  attributes_.at(name).values.push_back(value);
+}
+std::vector<LinearRing>& Mesh::get_polygons() {
+  return polygons_;
+};
+const std::vector<LinearRing>& Mesh::get_polygons() const {
+  return polygons_;
+};
+std::unordered_map<std::string, AttributeVec>&  Mesh::get_attributes(){
+  return attributes_;
+};
+const std::unordered_map<std::string, AttributeVec>&  Mesh::get_attributes()const {
+  return attributes_;
+};
+
 } // namespace geoflow

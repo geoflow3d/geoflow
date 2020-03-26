@@ -20,6 +20,10 @@
 #include <vector>
 #include <optional>
 #include <unordered_map>
+#include <any>
+#include <typeinfo>
+#include <typeindex>
+#include <string>
 
 namespace geoflow
 {
@@ -163,6 +167,34 @@ public:
   size_t vertex_count() const;
   void compute_box();
   float *get_data_ptr();
+};
+
+
+struct AttributeVec {
+  AttributeVec(std::type_index ttype) : value_type(ttype) {};
+  std::vector<std::any> values;
+  std::type_index value_type;
+};
+
+// class Mesh : public Geometry {
+// use indexed vertices?
+class Mesh {
+  std::vector<LinearRing> polygons_;
+  std::unordered_map<std::string, AttributeVec>  attributes_;
+
+  public:
+  // Mesh() {};
+
+  void push_polygon(LinearRing& polygon);
+  template <typename T> void create_attribute_field(std::string name) {
+    attributes_.emplace(name, typeid(T));
+  }
+  void push_attribute(std::string name, std::any value);
+
+  std::vector<LinearRing>& get_polygons();
+  const std::vector<LinearRing>& get_polygons() const;
+  std::unordered_map<std::string, AttributeVec>&  get_attributes();
+  const std::unordered_map<std::string, AttributeVec>&  get_attributes() const;
 };
 
 } // namespace geoflow
