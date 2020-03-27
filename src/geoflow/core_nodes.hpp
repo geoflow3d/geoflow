@@ -56,10 +56,7 @@ namespace geoflow::nodes::core {
                 add_vector_output(node_name+"."+output_term->get_name(), output_term->get_type());
               } else {
                 auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
-                auto& poly_output = add_poly_output(node_name+"."+output_term->get_name(), output_term->get_types());
-                for (auto& [name, subterm] : output_term->sub_terminals()) {
-                  poly_output.add_vector(name, subterm->get_type());
-                }
+                add_poly_output(node_name+"."+output_term->get_name(), output_term->get_types());
               }
             }
           }
@@ -199,15 +196,20 @@ namespace geoflow::nodes::core {
               if (output_term_->get_family() == GF_SINGLE_FEATURE) {
                 auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
                 if (output_term->has_data()) {
-                  auto& data = output_term->get_data();
-                  vector_output(node_name+"."+term_name).push_back_any(data);
+                  for (auto& data : output_term->get_data_vec()) {
+                    vector_output(node_name+"."+term_name).push_back_any(data);
+                  }
                 }
               } else {
                 auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
                 auto& aggregate_poly_out = poly_output(node_name+"."+term_name);
                 for (auto& [name, sub_term]: output_term->sub_terminals()) {
-                  auto& data = sub_term->get_data();
-                  aggregate_poly_out.sub_terminal(name).push_back_any(data);
+                  if(i==0) {
+                    aggregate_poly_out.add_vector(name, sub_term->get_type());
+                  }
+                  for (auto& data : sub_term->get_data_vec()) {
+                    aggregate_poly_out.sub_terminal(name).push_back_any(data);
+                  }
                 }
               }
             }
