@@ -17,6 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <utility>
 
 #if defined(__cplusplus) && __cplusplus >= 201703L && defined(__has_include)
   #if __has_include(<filesystem>)
@@ -44,95 +45,122 @@
 
 using namespace geoflow;
 
+// load node registers from libraries
+void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers, std::string& plugin_dir) {
+  auto R_core = NodeRegister::create("Core");
+  R_core->register_node<nodes::core::NestNode>("NestedFlowchart");
+  node_registers.emplace(R_core);
+
+  #ifdef GF_BUILD_WITH_GUI
+    auto R_gui = NodeRegister::create("Visualisation");
+    R_gui->register_node<nodes::gui::ColorMapperNode>("ColorMapper");
+    R_gui->register_node<nodes::gui::GradientMapperNode>("GradientMapper");
+    R_gui->register_node<nodes::gui::PainterNode>("Painter");
+    R_gui->register_node<nodes::gui::VectorPainterNode>("VectorPainter");
+    R_gui->register_node<nodes::gui::CubeNode>("Cube");
+    R_gui->register_node<nodes::gui::TriangleNode>("Triangle");
+    node_registers.emplace(R_gui);
+
+    ImGui::CreateContext();
+  #endif
+
+  if(fs::exists(plugin_dir)) {
+    plugin_manager.load(plugin_dir, node_registers);
+  } else {
+    std::cout << "Notice that this plugin folder does not exist: " << plugin_dir << "\n";
+  }
+}
+
 int main(int argc, const char * argv[]) {
 
   std::string flowchart_path = "flowchart.json";
   std::string plugin_folder = GF_PLUGIN_FOLDER;
   std::string log_filename = "";
-  std::vector<std::string> globals;
   
   if(const char* env_p = std::getenv("GF_PLUGIN_FOLDER")) {
     plugin_folder = env_p;
     std::cout << "Detected environment variable GF_PLUGIN_FOLDER = " << plugin_folder << "\n";
   }
 
-  CLI::App cli{"Geoflow"};
-
-  CLI::Option* opt_flowchart_path = cli.add_option("-f,--flowchart", flowchart_path, "Flowchart file");
-  CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
-  CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
-  CLI::Option* opt_globals = cli.add_option("-G,--global", globals, "Pass globals to flowchart");
-  
-  try {
-    cli.parse(argc, argv);
-  } catch (const CLI::ParseError &e) {
-    return cli.exit(e);
-  }
-
-  std::ofstream logfile; 
+  PluginManager plugin_manager;
   auto cout_rdbuf = std::cout.rdbuf();
   auto cerr_rdbuf = std::cerr.rdbuf(); 
-  if(*opt_log) {
-    logfile.open(log_filename);
-    std::cout.rdbuf(logfile.rdbuf());
-    std::cerr.rdbuf(logfile.rdbuf());
-  }
-
-  // load node registers from libraries
-  PluginManager plugin_manager;
   {
     NodeRegisterMap node_registers;
-    auto R_core = NodeRegister::create("Core");
-    R_core->register_node<nodes::core::NestNode>("NestedFlowchart");
-    node_registers.emplace(R_core);
+    NodeManager flowchart(node_registers);
 
-    #ifdef GF_BUILD_WITH_GUI
-      auto R_gui = NodeRegister::create("Visualisation");
-      R_gui->register_node<nodes::gui::ColorMapperNode>("ColorMapper");
-      R_gui->register_node<nodes::gui::GradientMapperNode>("GradientMapper");
-      R_gui->register_node<nodes::gui::PainterNode>("Painter");
-      R_gui->register_node<nodes::gui::VectorPainterNode>("VectorPainter");
-      R_gui->register_node<nodes::gui::CubeNode>("Cube");
-      R_gui->register_node<nodes::gui::TriangleNode>("Triangle");
-      node_registers.emplace(R_gui);
+    CLI::App cli{"Geoflow"};
 
-      ImGui::CreateContext();
-    #endif
+    CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
+    CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
 
-    if(fs::exists(plugin_folder)) {
-      plugin_manager.load(plugin_folder, node_registers);
-    } else {
-      std::cout << "Notice that this plugin folder does not exist: " << plugin_folder << "\n";
-    }
-    // load flowchart from file
-    NodeManager node_manager(node_registers);
-    if(*opt_flowchart_path) {
-      // set current work directory to folder containing flowchart file
-      auto abs_path = fs::absolute(fs::path(flowchart_path));
-      fs::current_path(abs_path.parent_path());
-      flowchart_path = abs_path.string();
-      if(fs::exists(abs_path)) {
-        node_manager.load_json(flowchart_path);
-      }
-    }
-    if(*opt_globals) {
-      for (auto& glob :  globals) {
-        auto pos = glob.find("=");
-        if(pos!=std::string::npos) {
-          auto key = glob.substr(0,pos);
-          auto val = glob.substr(pos+1, glob.size()-(pos+1));
-          node_manager.global_flowchart_params[key]=val;
+    auto sc_flowchart = cli.add_subcommand("", "Load flowchart");
+    CLI::Option* opt_flowchart_path = sc_flowchart->add_option("flowchart", flowchart_path, "Flowchart file")->required();
+    auto sc_info = cli.add_subcommand("info", "Print info")->excludes(sc_flowchart);
+
+    sc_info->parse_complete_callback([&plugin_manager, &node_registers, &plugin_folder](){
+      load_plugins(plugin_manager, node_registers, plugin_folder);
+    });
+    
+    std::map<std::string, std::vector<std::string>> globals_from_cli;
+    sc_flowchart->parse_complete_callback([&](){
+      load_plugins(plugin_manager, node_registers, plugin_folder);
+
+      // load flowchart from file
+      if(*opt_flowchart_path) {
+        // set current work directory to folder containing flowchart file
+        auto abs_path = fs::absolute(fs::path(flowchart_path));
+        fs::current_path(abs_path.parent_path());
+        flowchart_path = abs_path.string();
+        if(fs::exists(abs_path)) {
+          flowchart.load_json(flowchart_path);
         }
+      }      
+    });
+
+    // handle cli globals
+    CLI::App sc_globals{"globals", "Set flowchart globals"};
+    cli.allow_extras();
+    cli.callback([&](){
+      for (auto&[key,val] : flowchart.global_flowchart_params) {
+        auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{val}));
+        sc_globals.add_option("--"+key, (it->second), "");
+        std::cout << "add global option " << key << "\n";
+      }
+      sc_globals.parse(cli.remaining_for_passthrough());
+    });
+
+    try {
+      cli.parse(argc, argv);
+    } catch (const CLI::ParseError &e) {
+      return cli.exit(e);
+    }
+
+    // read global values from cli
+    if(sc_globals.count()) {
+      for (auto& [key, values] : globals_from_cli) {
+        std::string concat_values{};
+        for (auto& value : values) {
+          concat_values += value + " ";
+        }
+        concat_values.pop_back();
+        std::cout << "global " << key << " = " << concat_values << "\n";
+        flowchart.global_flowchart_params[key]=concat_values;
       }
     }
-    for (auto&[key,val] : node_manager.global_flowchart_params) {
-      std::cout << "global " << key << " = " << val <<"\n";
+
+    std::ofstream logfile;
+    if(*opt_log) {
+      logfile.open(log_filename);
+      std::cout.rdbuf(logfile.rdbuf());
+      std::cerr.rdbuf(logfile.rdbuf());
     }
+
     // launch gui or just run the flowchart in cli mode
     #ifdef GF_BUILD_WITH_GUI
-      launch_flowchart(node_manager, flowchart_path);
+      launch_flowchart(flowchart, flowchart_path);
     #else
-      node_manager.run_all();
+      flowchart.run_all();
     #endif
   }
   // NOTICE that we first must destroy any related node_registers before we can unload the plugin_manager!
