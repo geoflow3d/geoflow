@@ -95,7 +95,10 @@ int main(int argc, const char * argv[]) {
     CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
 
     auto sc_flowchart = cli.add_subcommand("", "Load flowchart");
-    CLI::Option* opt_flowchart_path = sc_flowchart->add_option("flowchart", flowchart_path, "Flowchart file")->required();
+    CLI::Option* opt_flowchart_path = sc_flowchart->add_option("flowchart", flowchart_path, "Flowchart file");
+    #ifndef GF_BUILD_WITH_GUI
+      opt_flowchart_path->required();
+    #endif
     auto sc_info = cli.add_subcommand("info", "Print info")->excludes(sc_flowchart);
 
     sc_info->parse_complete_callback([&plugin_manager, &node_registers, &plugin_folder](){
@@ -115,7 +118,7 @@ int main(int argc, const char * argv[]) {
         if(fs::exists(abs_path)) {
           flowchart.load_json(flowchart_path);
         }
-      }      
+      }
     });
 
     // handle cli globals
@@ -158,6 +161,16 @@ int main(int argc, const char * argv[]) {
 
     // launch gui or just run the flowchart in cli mode
     #ifdef GF_BUILD_WITH_GUI
+      if(!*opt_flowchart_path) {
+        load_plugins(plugin_manager, node_registers, plugin_folder);
+        // set current work directory to folder containing flowchart file
+        auto abs_path = fs::absolute(fs::path(flowchart_path));
+        fs::current_path(abs_path.parent_path());
+        flowchart_path = abs_path.string();
+        if(fs::exists(abs_path)) {
+          flowchart.load_json(flowchart_path);
+        }
+      }
       launch_flowchart(flowchart, flowchart_path);
     #else
       flowchart.run_all();
