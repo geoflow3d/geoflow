@@ -35,7 +35,15 @@ Requires additional dependencies `glm` and `glfw` that need to be installed by t
 Have a look at the [workflow files](https://github.com/tudelft3d/geoflow/tree/master/.github/workflows).
 
 # Usage
-## GUI
+## Command line interface (`geof`)
+`geof <flowchart file> [--config <TOML config file with globals>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]`
+
+You can also simply print just information on the plugins that are loaded with:
+`geof info`
+
+## GUI (`geoflow`)
+Takes the same parameters as `geof` on the command line.
+
 - Right click to open the menu to create new nodes
 - Drag from input/output terminals to make connections
 - Right click on a node to access its context menu
