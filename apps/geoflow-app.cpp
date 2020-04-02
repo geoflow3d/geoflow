@@ -91,7 +91,7 @@ int main(int argc, const char * argv[]) {
 
     CLI::App cli{"Geoflow"};
 
-    CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
+    // CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
     CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
 
     auto sc_flowchart = cli.add_subcommand("", "Load flowchart");
@@ -125,6 +125,8 @@ int main(int argc, const char * argv[]) {
     CLI::App sc_globals{"globals", "Set flowchart globals"};
     cli.allow_extras();
     cli.callback([&](){
+      // allow user to pass globals in a toml file. 
+      sc_globals.set_config("--config", fs::path(flowchart_path).stem().string()+".toml", "Read flowchart globals from a config file");
       for (auto&[key,val] : flowchart.global_flowchart_params) {
         auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{val}));
         sc_globals.add_option("--"+key, (it->second), "");
@@ -138,7 +140,9 @@ int main(int argc, const char * argv[]) {
     } catch (const CLI::ParseError &e) {
       return cli.exit(e);
     }
-
+    // if(*opt_plugin_folder) {
+    //   std::cout << "Setting plugin folder to " << plugin_folder << "\n";
+    // }
     // read global values from cli
     if(sc_globals.count()) {
       for (auto& [key, values] : globals_from_cli) {
