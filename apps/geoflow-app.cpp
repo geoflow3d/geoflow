@@ -126,7 +126,7 @@ int main(int argc, const char * argv[]) {
     cli.allow_extras();
     cli.callback([&](){
       // allow user to pass globals through a toml file. 
-      sc_globals.set_config("--config,-c", fs::path(flowchart_path).stem().string()+".toml", "Read flowchart globals from a config file");
+      sc_globals.set_config("--config,-c", "", "Read flowchart globals from a config file");
       for (auto&[key,val] : flowchart.global_flowchart_params) {
         auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{val}));
         sc_globals.add_option("--"+key, (it->second), "");
