@@ -224,10 +224,10 @@ void gfMultiFeatureInputTerminal::rebuild_terminal_refs() {
 void gfMultiFeatureInputTerminal::update_on_receive(bool queue) {
   rebuild_terminal_refs();
   if (parent_.update_status()) {
-    parent_.on_receive(*this);
     if (queue && parent_.autorun)
       parent_.queue();
   }
+  parent_.on_receive(*this);
 }
 bool gfMultiFeatureInputTerminal::has_data() {
   if (connected_outputs_.size()==0)
@@ -511,6 +511,10 @@ void NodeManager::json_serialise(std::ostream& json_sstream) {
         n["parameters"][pname] = ptr->get();
       else if (auto ptr = std::get_if<ParamString>(&pvalue))
         n["parameters"][pname] = ptr->get();
+      else if (auto ptr = std::get_if<ParamString>(&pvalue))
+        n["parameters"][pname] = ptr->get();
+      else if (auto ptr = std::get_if<ParamStrMap>(&pvalue))
+        n["parameters"][pname] = ptr->get();
       else
         std::cout << "Parameter '" << pname << "' has an unknown type and is not serialised!\n";
     }
@@ -594,6 +598,8 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
             param_ptr->set(pel.value().get<std::string>());
           else if (auto param_ptr = std::get_if<ParamString>(&nhandle->parameters.at(pel.key())))
             param_ptr->set(pel.value().get<std::string>());
+          else if (auto param_ptr = std::get_if<ParamStrMap>(&nhandle->parameters.at(pel.key())))
+            param_ptr->set(pel.value().get<StrMap>());
         }
       }
       nhandle->post_parameter_load();

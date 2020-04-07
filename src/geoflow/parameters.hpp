@@ -59,6 +59,14 @@ namespace geoflow {
   class ParamPath : public ParameterBase<std::string> {
     using ParameterBase::ParameterBase;
   };
+
+  typedef std::unordered_map<std::string,std::string> StrMap;
+  class ParamStrMap : public ParameterBase<StrMap> {
+    public:
+    vec1s& key_options_;
+    ParamStrMap(StrMap& val, vec1s& key_options, std::string label, bool visible=true) : key_options_(key_options), ParameterBase(val, label, visible) {};
+  };
+
   class ParamSelector : public ParameterBase<size_t> {
     std::vector<std::string> options;
 
@@ -97,7 +105,8 @@ namespace geoflow {
     ParamIntRange,
     ParamString,
     ParamPath,
-    ParamSelector
+    ParamSelector,
+    ParamStrMap
     > ParameterVariant;
   typedef std::map<std::string, ParameterVariant> ParameterMap;
   // class ParameterSet : public ParameterMap {

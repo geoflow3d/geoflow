@@ -67,6 +67,35 @@ namespace geoflow {
 				if (valptr->visible()) {
 					changed = ImGui::Checkbox(name.c_str(), &valptr->get());
 				}
+			} else if( auto valptr = std::get_if<ParamStrMap>(&param) ) {
+				if (valptr->visible()) {
+          if (ImGui::TreeNode(name.c_str())) {
+            auto& mapvalues = valptr->get();
+            for (auto it=mapvalues.begin(); it!=mapvalues.end(); ) {
+              ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
+              ImGui::SameLine();
+              ImGui::PushID(it->first.c_str());
+              if(ImGui::Button("Remove")) {
+                mapvalues.erase(it++);
+              } else {
+                ++it;
+              }
+              ImGui::PopID();
+            }
+            static ImGuiComboFlags flags = 0;
+            if (ImGui::BeginCombo("Create item", "select..", flags)) // The second parameter is the label previewed before opening the combo.
+            {
+              for (auto& key_option : valptr->key_options_)
+              {
+                if (ImGui::Selectable(key_option.c_str(), false)) {
+                  mapvalues.insert({key_option, ""});
+                }
+              }
+              ImGui::EndCombo();
+            }
+            ImGui::TreePop();
+          }
+				}
 			} else {
 				ImGui::Text("%s", name.c_str());
 			}
