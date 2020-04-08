@@ -65,7 +65,7 @@ namespace geoflow {
 				}
 			} else if( auto valptr = std::get_if<ParamBool>(&param) ) {
 				if (valptr->visible()) {
-					changed = ImGui::Checkbox(name.c_str(), &valptr->get());
+					changed = ImGui::Checkbox(valptr->get_label().c_str(), &valptr->get());
 				}
 			} else if( auto valptr = std::get_if<ParamStrMap>(&param) ) {
 				if (valptr->visible()) {
