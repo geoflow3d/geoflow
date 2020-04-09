@@ -10,7 +10,7 @@ namespace geoflow {
     ~PluginManager() {
       // unload();
     };
-    void load(std::string& plugin_directory, NodeRegisterMap& node_registers) {
+    void load(std::string& plugin_directory, NodeRegisterMap& node_registers, bool verbose=false) {
       for(auto& p: fs::directory_iterator(plugin_directory)) {
         if (p.path().extension() == GF_PLUGIN_EXTENSION) {
           const std::string path = p.path().string();
@@ -22,10 +22,12 @@ namespace geoflow {
           
           if (dloaders_[path]->DLOpenLib()) {
             auto [reg, success] = node_registers.emplace( dloaders_[path]->DLGetInstance() );
-             for (auto& [key, val] : reg->second->node_types) {
-               std::cout << "loaded type: " << key << "\n";
-             }
+            if (verbose) {
+              for (auto& [key, val] : reg->second->node_types) {
+                std::cout << "loaded type: " << key << "\n";
+              }
             std::cout << "... success :)\n";
+            }
           } else {
             dloaders_.erase(path);
             std::cerr << "... failed :(\n";

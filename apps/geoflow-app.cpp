@@ -46,7 +46,7 @@
 using namespace geoflow;
 
 // load node registers from libraries
-void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers, std::string& plugin_dir) {
+void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers, std::string& plugin_dir, bool verbose=false) {
   auto R_core = NodeRegister::create("Core");
   R_core->register_node<nodes::core::NestNode>("NestedFlowchart");
   node_registers.emplace(R_core);
@@ -65,9 +65,9 @@ void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers
   #endif
 
   if(fs::exists(plugin_dir)) {
-    plugin_manager.load(plugin_dir, node_registers);
+    plugin_manager.load(plugin_dir, node_registers, verbose);
   } else {
-    std::cout << "Notice that this plugin folder does not exist: " << plugin_dir << "\n";
+    std::cout << "Plugin folder does not exist: " << plugin_dir << "\n";
   }
 }
 
@@ -76,6 +76,8 @@ int main(int argc, const char * argv[]) {
   std::string flowchart_path = "flowchart.json";
   std::string plugin_folder = GF_PLUGIN_FOLDER;
   std::string log_filename = "";
+  fs::path launch_path{fs::current_path()};
+  fs::path flowchart_folder = launch_path;
   
   if(const char* env_p = std::getenv("GF_PLUGIN_FOLDER")) {
     plugin_folder = env_p;
@@ -93,16 +95,22 @@ int main(int argc, const char * argv[]) {
 
     // CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
     CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
+    opt_log->check([](const std::string& s)->std::string {
+      if(!fs::exists(fs::absolute(fs::path(s)).parent_path())) {
+        return std::string("Path to log file does not exist");
+      } else return std::string();
+    });
 
     auto sc_flowchart = cli.add_subcommand("", "Load flowchart");
     CLI::Option* opt_flowchart_path = sc_flowchart->add_option("flowchart", flowchart_path, "Flowchart file");
+    opt_flowchart_path->check(CLI::ExistingFile);
     #ifndef GF_BUILD_WITH_GUI
       opt_flowchart_path->required();
     #endif
     auto sc_info = cli.add_subcommand("info", "Print info")->excludes(sc_flowchart);
 
     sc_info->parse_complete_callback([&plugin_manager, &node_registers, &plugin_folder](){
-      load_plugins(plugin_manager, node_registers, plugin_folder);
+      load_plugins(plugin_manager, node_registers, plugin_folder, true);
     });
     
     std::map<std::string, std::vector<std::string>> globals_from_cli;
@@ -113,11 +121,11 @@ int main(int argc, const char * argv[]) {
       if(*opt_flowchart_path) {
         // set current work directory to folder containing flowchart file
         auto abs_path = fs::absolute(fs::path(flowchart_path));
-        fs::current_path(abs_path.parent_path());
+        flowchart_folder = abs_path.parent_path();
         flowchart_path = abs_path.string();
-        if(fs::exists(abs_path)) {
-          flowchart.load_json(flowchart_path);
-        }
+        fs::current_path(flowchart_folder);
+        flowchart.load_json(flowchart_path);
+        fs::current_path(launch_path);
       }
     });
 
@@ -164,18 +172,9 @@ int main(int argc, const char * argv[]) {
     }
 
     // launch gui or just run the flowchart in cli mode
+    fs::current_path(flowchart_folder);
     #ifdef GF_BUILD_WITH_GUI
-      if(!*opt_flowchart_path) {
-        load_plugins(plugin_manager, node_registers, plugin_folder);
-        // set current work directory to folder containing flowchart file
-        auto abs_path = fs::absolute(fs::path(flowchart_path));
-        fs::current_path(abs_path.parent_path());
-        flowchart_path = abs_path.string();
-        if(fs::exists(abs_path)) {
-          flowchart.load_json(flowchart_path);
-        }
-      }
-      launch_flowchart(flowchart, flowchart_path);
+      launch_gui(flowchart, flowchart_path);
     #else
       flowchart.run_all();
     #endif
