@@ -174,6 +174,8 @@ int main(int argc, const char * argv[]) {
     // launch gui or just run the flowchart in cli mode
     fs::current_path(flowchart_folder);
     #ifdef GF_BUILD_WITH_GUI
+      if(node_registers.size()==0)
+        load_plugins(plugin_manager, node_registers, plugin_folder);
       launch_gui(flowchart, flowchart_path);
     #else
       flowchart.run_all();
