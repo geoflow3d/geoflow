@@ -33,6 +33,7 @@ namespace geoflow::nodes::core {
         input_terminals.clear();
         output_terminals.clear();
         nested_node_manager_->clear();
+        nested_node_manager_->set_globals(get_manager());
         // nested_outputs_.clear();
         // nested_inputs_.clear();
         // load nodes from json file
@@ -71,8 +72,8 @@ namespace geoflow::nodes::core {
 
     void init() {
       nested_node_manager_ = std::make_unique<NodeManager>(manager.get_node_registers()); // this will only transfer the node registers
-      add_param("filepath", ParamPath(filepath_, "Flowchart file"));
-      add_param("use_parallel_processing", ParamBool(use_parallel_processing, "Use parallel processing"));
+      add_param(ParamPath(filepath_, "filepath", "Flowchart file"));
+      add_param(ParamBool(use_parallel_processing, "use_parallel_processing", "Use parallel processing"));
 
     };
     void post_parameter_load() {
@@ -91,6 +92,11 @@ namespace geoflow::nodes::core {
         ImGui::Separator();
         if(ImGui::Button("Load Nodes"))
           flowchart_loaded = load_nodes();
+        ImGui::SameLine();
+        if(ImGui::Button("Sync globals"))
+          for (auto& [key,val] : manager.global_flowchart_params) {
+            nested_node_manager_->global_flowchart_params[key] = val;
+          }
       };
     #endif
 
@@ -152,7 +158,7 @@ namespace geoflow::nodes::core {
         for (auto& [key,val] : manager.global_flowchart_params) {
           fc->global_flowchart_params[key] = val;
         }
-        fc->global_flowchart_params["GF_I"] = std::to_string(i);
+        fc->global_flowchart_params["GF_I"] = std::make_shared<ParameterByValue<std::string>>(std::to_string(i), "GF_I", "");
         set_inputs(fc, i);
         flowcharts.push_back(fc);
       }
@@ -179,7 +185,7 @@ namespace geoflow::nodes::core {
         for (auto& [key,val] : manager.global_flowchart_params) {
           flowchart->global_flowchart_params[key] = val;
         }
-        flowchart->global_flowchart_params["GF_I"] = std::to_string(i);
+        flowchart->global_flowchart_params["GF_I"] = std::make_shared<ParameterByValue<std::string>>(std::to_string(i), "GF_I", "");
         set_inputs(flowchart, i);
         // run
         std::cout << "Processing item " << i+1 << "/" << input_size_ << "\n";

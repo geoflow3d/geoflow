@@ -23,9 +23,6 @@
 
 #include "geoflow.hpp"
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
-
 using namespace geoflow;
 
 std::string random_string(size_t length) {
@@ -285,22 +282,22 @@ void Node::remove_from_manager() {
 void Node::set_name(std::string new_name) { 
   name_ = new_name;
 };
-void Node::set_param(std::string name, ParameterVariant param, bool quiet) {
-  if (parameters.find(name) != parameters.end()) {
-    if(parameters.at(name).index() == param.index()) {
-      parameters.emplace(name, param);
-    } else {
-      std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
-    }
-  } else if(!quiet) {
-    std::cout << "No such parameter in this node: '" << name <<"', node type: " << type_name << "\n";
-  }
-}
-void Node::set_params(ParameterMap new_map, bool quiet) {
-  for (auto& kv : new_map) {
-    set_param(kv.first, kv.second, quiet);
-  }
-}
+// void Node::set_param(std::string name, Parameter param, bool quiet) {
+//   if (parameters.find(name) != parameters.end()) {
+//     if(parameters.at(name).index() == param.index()) {
+//       parameters.emplace(name, param);
+//     } else {
+//       std::cout << "Incorrect datatype for parameter: '" << name <<"', node type: " << type_name << "\n";
+//     }
+//   } else if(!quiet) {
+//     std::cout << "No such parameter in this node: '" << name <<"', node type: " << type_name << "\n";
+//   }
+// }
+// void Node::set_params(ParameterMap new_map, bool quiet) {
+//   for (auto& kv : new_map) {
+//     set_param(kv.first, kv.second, quiet);
+//   }
+// }
 std::set<NodeHandle> Node::get_child_nodes() {
   std::set<NodeHandle> child_nodes;
   for (auto& [name, oT] : output_terminals) {
@@ -424,6 +421,10 @@ bool NodeManager::run(Node &node, bool notify_children) {
       // n->preprocess();
       std::cerr << "P " << n->get_name() << "...";
       std::clock_t c_start = std::clock(); // CPU time
+      // copy parameter values from master if a master is set
+      for (auto& [name, param] : n->parameters) {
+        param->copy_value_from_master();
+      }
       n->process();
       std::clock_t c_end = std::clock(); // CPU time
       std::cerr << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
@@ -456,6 +457,7 @@ void NodeManager::remove_node(NodeHandle node) {
 void NodeManager::clear() {
   nodes.clear();
   data_offset.reset();
+  global_flowchart_params.clear();
 }
 bool NodeManager::name_node(NodeHandle node, std::string new_name) {
   // rename a node, ensure uniqueness of name, return true if it wasn't already used
@@ -475,13 +477,27 @@ std::vector<NodeHandle> NodeManager::dump_nodes() {
     node_dump.push_back(kv.second);
   }
   return node_dump;
-}    
+}
+
+void NodeManager::set_globals(const NodeManager& other_manager) {
+  for (auto& [name, param] : other_manager.global_flowchart_params) {
+    global_flowchart_params[name] = param;
+  }
+}
 
 void NodeManager::json_serialise(std::ostream& json_sstream) {
   json j;
   j["globals"] = json::object();
-  for (auto& [name, value] : global_flowchart_params) {
-    j["globals"][name] = value;
+  for (auto& [name, param] : global_flowchart_params) {
+    if(param->is_type(typeid(int))) {
+      j["globals"][name] = {std::string("int"), param->as_json()};
+    } else if(param->is_type(typeid(float))) {
+      j["globals"][name] = {std::string("float"), param->as_json()};
+    } else if(param->is_type(typeid(bool))) {
+      j["globals"][name] = {std::string("bool"), param->as_json()};
+    } else if(param->is_type(typeid(std::string))) {
+      j["globals"][name] = {std::string("str"), param->as_json()};
+    }
   }
   j["nodes"] = json::object();
   for (auto& [name, node_handle] : nodes) {
@@ -489,34 +505,10 @@ void NodeManager::json_serialise(std::ostream& json_sstream) {
     n["type"] = {node_handle->node_register->get_name(), node_handle->get_type_name()};
     n["position"] = {node_handle->position[0], node_handle->position[1]};
     for ( auto& [pname, pvalue] : node_handle->parameters ) {
-      if (auto ptr = std::get_if<ParamBool>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamInt>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamFloat>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamDouble>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamBoundedDouble>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamBoundedInt>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamBoundedFloat>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamIntRange>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamFloatRange>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamPath>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamString>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamString>(&pvalue))
-        n["parameters"][pname] = ptr->get();
-      else if (auto ptr = std::get_if<ParamStrMap>(&pvalue))
-        n["parameters"][pname] = ptr->get();
+      if (pvalue->has_master())
+        n["parameters"][pname] = std::string("{{" + pvalue->get_master().lock()->get_label() + "}}");
       else
-        std::cout << "Parameter '" << pname << "' has an unknown type and is not serialised!\n";
+        n["parameters"][pname] = pvalue->as_json();
     }
     for (const auto& [name, oTerm] : node_handle->output_terminals) {
       std::vector<std::pair<std::string, std::string>> connection_vec;
@@ -553,8 +545,25 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
     return new_nodes;
   }
   json_sstream >> j;
-  for (auto global_param : j["globals"].items()) {
-    global_flowchart_params[global_param.key()] = global_param.value().get<std::string>();
+  for (auto& [gname, val] : j["globals"].items()) {
+    // do not create globals that already exist
+    if(global_flowchart_params.find(gname)!=global_flowchart_params.end())
+      continue;
+    try {
+      auto global_type = val[0].get<std::string>(); 
+      auto& global_val = val[1]; 
+      if(global_type=="str") {
+        global_flowchart_params[gname] = std::make_shared<ParameterByValue<std::string>>(global_val.get<std::string>(), gname, "");
+      } else if(global_type=="bool") {
+        global_flowchart_params[gname] = std::make_shared<ParameterByValue<bool>>(global_val.get<bool>(), gname, "");
+      } else if(global_type=="int") {
+        global_flowchart_params[gname] = std::make_shared<ParameterByValue<int>>(global_val.get<int>(), gname, "");
+      } else if(global_type=="float") {
+        global_flowchart_params[gname] = std::make_shared<ParameterByValue<float>>(global_val.get<float>(), gname, "");
+      }
+    } catch (const std::exception& e) {
+      std::cout << "Unable to read global " << gname <<"\n";
+    }
   }
   json nodes_j = j["nodes"];
   for (auto node_j : nodes_j.items()) {
@@ -575,31 +584,16 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
             std::cout << "key not found in node parameters: " << pel.key() << "\n";
             continue;
           }
-
-          if (auto param_ptr = std::get_if<ParamBool>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<bool>());
-          else if (auto param_ptr = std::get_if<ParamInt>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<int>());
-          else if (auto param_ptr = std::get_if<ParamFloat>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<float>());
-          else if (auto param_ptr = std::get_if<ParamDouble>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<double>());
-          else if (auto param_ptr = std::get_if<ParamBoundedInt>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<int>());
-          else if (auto param_ptr = std::get_if<ParamBoundedFloat>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<float>());
-          else if (auto param_ptr = std::get_if<ParamBoundedDouble>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<double>());
-          else if (auto param_ptr = std::get_if<ParamIntRange>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<std::pair<int,int>>());
-          else if (auto param_ptr = std::get_if<ParamFloatRange>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<std::pair<float,float>>());
-          else if (auto param_ptr = std::get_if<ParamPath>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<std::string>());
-          else if (auto param_ptr = std::get_if<ParamString>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<std::string>());
-          else if (auto param_ptr = std::get_if<ParamStrMap>(&nhandle->parameters.at(pel.key())))
-            param_ptr->set(pel.value().get<StrMap>());
+          auto phandle = nhandle->parameters[pel.key()];
+          // check and set master parameter 
+          if (pel.value().is_string() && !phandle->is_type(typeid(std::string)) ) {
+            try{
+              auto mgname = get_global_name( pel.value().get<std::string>() );
+              phandle->set_master(global_flowchart_params[mgname]);
+            } catch (const std::exception& e) {
+              std::cout << e.what();
+            }
+          } else phandle->from_json(pel.value());
         }
       }
       nhandle->post_parameter_load();
@@ -677,10 +671,24 @@ std::string NodeManager::substitute_globals(const std::string& textt) const {
     auto len = close-open;
     std::string global_name = text.substr(open, len);
     if (global_flowchart_params.find(global_name) != global_flowchart_params.end())
-      text.replace(open-2, len+4, global_flowchart_params.at(global_name));
+      if(global_flowchart_params.at(global_name)->is_type(typeid(std::string))) {
+        auto* global_val = static_cast<ParameterByValue<std::string>*>(global_flowchart_params.at(global_name).get());
+        text.replace(open-2, len+4, global_val->get());
+      }
     start_pos = close;
   }
   return text;
+}
+
+std::string geoflow::get_global_name(const std::string& text) {
+  auto open = text.find("{{", 0);
+  if (open==std::string::npos) throw gfException("Can not retrive global name");
+
+  auto close = text.find("}}", 0);
+  if (close==std::string::npos) throw gfException("Can not retrive global name");
+  open+=2;
+  auto len = close-open;
+  return text.substr(open, len);
 }
 
 bool geoflow::connect(gfOutputTerminal& oT, gfInputTerminal& iT) {

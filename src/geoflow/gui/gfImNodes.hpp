@@ -111,7 +111,7 @@ class gfImNodes : public RenderObject {
     if (ImGui::BeginMenu("Globals")) {
       // std::string to_remove;
       for (auto it=node_manager_.global_flowchart_params.begin(); it!=node_manager_.global_flowchart_params.end(); ) {
-        ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
+        draw_global_parameter(it->second.get());
         ImGui::SameLine();
         ImGui::PushID(it->first.c_str());
         if(ImGui::Button("Remove")) {
@@ -123,10 +123,32 @@ class gfImNodes : public RenderObject {
       }
       ImGui::InputTextWithHint("##key", "Global name", &global_new_key);
       ImGui::SameLine();
-      if(ImGui::Button("Create") && !global_new_key.empty()) {
-        node_manager_.global_flowchart_params[global_new_key]="";
-        global_new_key="";
+      static ImGuiComboFlags flags = 0;
+      if (!global_new_key.empty())
+      if (ImGui::BeginCombo("##createglobal", "create", flags)) // The second parameter is the label previewed before opening the combo.
+      {
+        if (ImGui::Selectable("as string", false)) {
+          node_manager_.global_flowchart_params[global_new_key]=std::make_shared<ParameterByValue<std::string>>("", global_new_key, "");
+          global_new_key="";
+        }
+        if (ImGui::Selectable("as bool", false)) {
+          node_manager_.global_flowchart_params[global_new_key]=std::make_shared<ParameterByValue<bool>>(bool(), global_new_key, "");
+          global_new_key="";
+        }
+        if (ImGui::Selectable("as float", false)) {
+          node_manager_.global_flowchart_params[global_new_key]=std::make_shared<ParameterByValue<float>>(float(), global_new_key, "");
+          global_new_key="";
+        }
+        if (ImGui::Selectable("as int", false)) {
+          node_manager_.global_flowchart_params[global_new_key]=std::make_shared<ParameterByValue<int>>(int(), global_new_key, "");
+          global_new_key="";
+        }
+        ImGui::EndCombo();
       }
+      // if(ImGui::Button("Create") && !global_new_key.empty()) {
+      //   node_manager_.global_flowchart_params[global_new_key]="";
+      //   global_new_key="";
+      // }
       ImGui::EndMenu();
     }
 	}

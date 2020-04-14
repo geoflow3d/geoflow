@@ -71,6 +71,10 @@ void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers
   }
 }
 
+template<typename T> bool set_from_str(ParameterByValue<T>& param, std::string str) {
+
+}
+
 int main(int argc, const char * argv[]) {
 
   std::string flowchart_path = "flowchart.json";
@@ -136,7 +140,7 @@ int main(int argc, const char * argv[]) {
       // allow user to pass globals through a toml file. 
       sc_globals.set_config("--config,-c", "", "Read flowchart globals from a config file");
       for (auto&[key,val] : flowchart.global_flowchart_params) {
-        auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{val}));
+        auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{}));
         sc_globals.add_option("--"+key, (it->second), "");
         std::cout << "add global option " << key << "\n";
       }
@@ -154,13 +158,39 @@ int main(int argc, const char * argv[]) {
     // read global values from cli
     if(sc_globals.count()) {
       for (auto& [key, values] : globals_from_cli) {
-        std::string concat_values{};
-        for (auto& value : values) {
-          concat_values += value + " ";
+        if (values.size()) {
+          std::string concat_values{};
+          for (auto& value : values) {
+            concat_values += value + " ";
+          }
+          concat_values.pop_back();
+          std::cout << "global " << key << " = " << concat_values << "\n";
+          
+          auto& g = flowchart.global_flowchart_params[key];
+          try{
+            if (g->is_type(typeid(std::string))) {
+              auto* gptr = static_cast<ParameterByValue<std::string>*>(g.get());
+              gptr->set(concat_values);
+            } else if (g->is_type(typeid(float))) {
+              auto* gptr = static_cast<ParameterByValue<float>*>(g.get());
+              gptr->set(std::stof(concat_values));
+            } else if(g->is_type(typeid(int))) {
+              auto* gptr = static_cast<ParameterByValue<int>*>(g.get());
+              gptr->set(std::stoi(concat_values));
+            } else if(g->is_type(typeid(bool))) {
+              auto* gptr = static_cast<ParameterByValue<bool>*>(g.get());
+              if(concat_values == "true")
+                gptr->set(true);
+              else if(concat_values == "false")
+                gptr->set(false);
+              else throw gfException("failed to get boolean from string\n");
+            }
+          } catch (const std::exception& e) {
+            std::cout << "Error in parsing global parameters\n";
+            std::cout << e.what();
+            return 1;
+          }
         }
-        concat_values.pop_back();
-        std::cout << "global " << key << " = " << concat_values << "\n";
-        flowchart.global_flowchart_params[key]=concat_values;
       }
     }
 

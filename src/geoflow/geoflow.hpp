@@ -525,11 +525,11 @@ namespace geoflow {
 
     std::set<NodeHandle> get_child_nodes();
 
-    template<typename T> void add_param(std::string name, T value) {
-      parameters.emplace(name, value);
+    template<typename T> void add_param(T parameter) {
+      parameters.emplace(parameter.get_label(), std::make_shared<T>(parameter));
     }
-    void set_param(std::string name, ParameterVariant param, bool quiet=false);
-    void set_params(ParameterMap param_map, bool quiet=false);
+    // void set_param(std::string name, Parameter param, bool quiet=false);
+    // void set_params(ParameterMap param_map, bool quiet=false);
     const ParameterMap&  dump_params();
 
     void set_position(float x, float y) {
@@ -571,7 +571,7 @@ namespace geoflow {
     virtual void on_clear(gfInputTerminal& it){};
     virtual void on_connect_input(gfInputTerminal& ot){};
     virtual void on_connect_output(gfOutputTerminal& ot){};
-    virtual void on_change_parameter(std::string name, ParameterVariant& param){};
+    virtual void on_change_parameter(std::string name, Parameter& param){};
     virtual void before_gui(){};
     virtual std::string info() {return std::string();};
 
@@ -648,7 +648,7 @@ namespace geoflow {
     // global flowchart parameters
 
     public:
-    std::unordered_map<std::string, std::string> global_flowchart_params;
+    std::unordered_map<std::string, std::shared_ptr<Parameter>> global_flowchart_params;
     std::optional<std::array<double,3>> data_offset;
     NodeManager(NodeRegisterMap&  node_registers)
       : registers_(node_registers) {};
@@ -656,6 +656,7 @@ namespace geoflow {
       : registers_(other_node_manager.registers_) {
         std::stringstream ss;
         other_node_manager.json_serialise(ss);
+        set_globals(other_node_manager);
         json_unserialise(ss);
       };
     
@@ -682,6 +683,7 @@ namespace geoflow {
     std::vector<NodeHandle> json_unserialise(std::istream& json_sstream, bool strict=false);
     void json_serialise(std::ostream& json_sstream);
 
+    void set_globals(const NodeManager& other_manager);
 
     std::string substitute_globals(const std::string& text) const;
     
@@ -697,6 +699,8 @@ namespace geoflow {
     
     friend class Node;
   };
+
+  std::string get_global_name(const std::string& text);
 
   typedef std::vector<std::tuple<std::string, std::string, std::string, std::string>> ConnectionList;
   ConnectionList dump_connections(std::vector<NodeHandle>);
