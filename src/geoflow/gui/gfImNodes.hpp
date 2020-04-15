@@ -3,6 +3,11 @@
 #include "povi_nodes.hpp"
 #include "parameter_widgets.hpp"
 #include <thread>
+#include "misc/cpp/imgui_stdlib.h"
+
+#ifdef GF_BUILD_GUI_FILE_DIALOGS
+  #include "osdialog.hpp"
+#endif
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #   define IMGUI_DEFINE_MATH_OPERATORS

@@ -20,6 +20,9 @@
 #include <map>
 #include <variant>
 #include <vector>
+// #include <typeinfo>
+// #include <typeindex>
+// #include <iostream>
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
@@ -136,8 +139,8 @@ namespace geoflow {
   typedef std::unordered_map<std::string,std::string> StrMap;
   class ParamStrMap : public ParameterByReference<StrMap> {
     public:
-    vec1s& key_options_;
-    ParamStrMap(StrMap& val, vec1s& key_options, std::string label, std::string help="") : key_options_(key_options), ParameterByReference(val, label, help) {};
+    std::vector<std::string>& key_options_;
+    ParamStrMap(StrMap& val, std::vector<std::string>& key_options, std::string label, std::string help="") : key_options_(key_options), ParameterByReference(val, label, help) {};
   };
 
   class ParamSelector : public ParameterByReference<size_t> {

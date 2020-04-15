@@ -110,6 +110,7 @@ if(${GF_BUILD_GUI})
     src/geoflow/gui/ImNodes.cpp 
     src/geoflow/gui/ImNodesEz.cpp 
     src/geoflow/gui/imgui_color_gradient.cpp
+    src/geoflow/gui/parameter_widgets.cpp
   )
   
   SET(GF_FILEDIALOG_LIBS "")
