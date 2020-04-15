@@ -21,7 +21,7 @@
 #include <variant>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
 namespace geoflow {

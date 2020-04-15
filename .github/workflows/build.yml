@@ -22,7 +22,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_PREFIX_PATH=D:\software -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+        cmake .. -DCMAKE_PREFIX_PATH=D:\software -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
         cmake --build . --parallel 4 --config Release
     - name: Install NSIS
       run: |
@@ -63,7 +63,7 @@ jobs:
     - name: Build
       run: |
         mkdir build && cd build
-        ../cmake-3.15.2-Linux-x86_64/bin/cmake .. -DGF_USE_EXTERNAL_JSON=OFF -DCMAKE_INSTALL_PREFIX=~/usr
+        ../cmake-3.15.2-Linux-x86_64/bin/cmake .. -DCMAKE_INSTALL_PREFIX=~/usr
         ../cmake-3.15.2-Linux-x86_64/bin/cmake --build . --parallel 4 --target install --config Release
 
   macOS:
@@ -72,9 +72,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install dependencies
-      run: brew install glfw glm nlohmann-json
+      run: brew install glfw glm
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DGF_USE_EXTERNAL_JSON=ON
+        cmake ..
         cmake --build . --parallel 4 --target install --config Release

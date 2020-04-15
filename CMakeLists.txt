@@ -4,7 +4,7 @@ project (Geoflow VERSION 0.0.1)
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
-option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
+# option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
 
 # dependencies
 if(GF_BUILD_GUI)
@@ -12,9 +12,9 @@ if(GF_BUILD_GUI)
   #message(STATUS "GLFW libs: ${GLFW_LIBRARIES}")
   find_package(glm)
 endif()
-if(GF_USE_EXTERNAL_JSON)
-  find_package(nlohmann_json 3.2.0 REQUIRED)
-endif()
+# if(GF_USE_EXTERNAL_JSON)
+#   find_package(nlohmann_json 3.2.0 REQUIRED)
+# endif()
 
 add_subdirectory(thirdparty)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -202,6 +202,8 @@ install(TARGETS geoflow-core EXPORT geoflow-targets
   LIBRARY DESTINATION lib
   PUBLIC_HEADER DESTINATION include/geoflow)
 install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
+
+install(FILES thirdparty/json/single_include/nlohmann/json.hpp DESTINATION include/geoflow/nlohmann)
 
 include ( CMakePackageConfigHelpers )
 configure_package_config_file(cmake/geoflow-config.cmake.in
