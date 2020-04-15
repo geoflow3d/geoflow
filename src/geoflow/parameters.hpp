@@ -18,11 +18,7 @@
 
 #include <string>
 #include <map>
-#include <variant>
 #include <vector>
-// #include <typeinfo>
-// #include <typeindex>
-// #include <iostream>
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
@@ -34,103 +30,53 @@ namespace geoflow {
     std::type_index type_;
     std::weak_ptr<Parameter> master_parameter_;
     public:
-    Parameter(std::string label, std::string help, std::type_index ttype=typeid(void)) : label_(label), help_(help), type_(ttype) {};
-    std::string get_label() {
-      return label_;
-    }
+    Parameter(std::string label, std::string help, std::type_index ttype=typeid(void));
+    std::string get_label();
     virtual json as_json() const = 0;
     virtual void from_json(const json& json_object) = 0;
     // virtual void to_string(std::string& str) const = 0;
     // virtual void from_string(const std::string& str) = 0;
-    bool is_type(std::type_index type) {
-      return type_ == type;
-    }
-    bool is_type_compatible(const Parameter& other_parameter) {
-      return type_ == other_parameter.type_;
-    }
-    void set_master(std::weak_ptr<Parameter> master_parameter) {
-      if (!is_type_compatible(*master_parameter.lock()))
-        std::cout << "Attempting to set incompatible master parameter\n";
-      else
-        master_parameter_ = master_parameter;
-    };
-    void copy_value_from_master() {
-      if(!master_parameter_.expired()) {
-        from_json(master_parameter_.lock()->as_json());
-      }
-    };
-    bool has_master() const {
-      return !master_parameter_.expired();
-    }
-    void clear_master() {
-      master_parameter_.reset();
-    }
-    std::weak_ptr<Parameter> get_master() const {
-      return master_parameter_;
-    }
-    // void set(T val) {
-    //   value = val;
-    // }
-    // bool visible() {
-    //   return is_visible;
-    // }
-    // void set_visible(bool vis) {
-    //   is_visible=vis;
-    // }
+    bool is_type(std::type_index type);
+    bool is_type_compatible(const Parameter& other_parameter);
+    void set_master(std::weak_ptr<Parameter> master_parameter);
+    void copy_value_from_master();
+    bool has_master() const;
+    void clear_master();
+    std::weak_ptr<Parameter> get_master() const;
   };
+
   template<typename T> class ParameterByReference : public Parameter {
     protected:
     T& value_;
     
     public:
-    ParameterByReference(T& value, std::string label, std::string help) 
-    : value_(value), Parameter(label, help, typeid(T)) {};
+    ParameterByReference(T& value, std::string label, std::string help);
 
-    virtual json as_json() const override {
-      return json(value_);
-    };
-    virtual void from_json(const json& json_object) override {
-      value_ = json_object.get<T>();
-    };
-    T& get() {
-      return value_;
-    }
-    void set(T val) {
-      value_ = val;
-    }
+    virtual json as_json() const override;
+    virtual void from_json(const json& json_object) override;
+    T& get();
+    void set(T val);
   };
   template<typename T> class ParameterByValue : public Parameter {
     protected:
     T value_;
 
     public:
-    ParameterByValue(T value, std::string label, std::string help) 
-    : value_(value), Parameter(label, help, typeid(T)) {};
+    ParameterByValue(T value, std::string label, std::string help);
 
-    virtual json as_json() const override {
-      return json(value_);
-    };
-    virtual void from_json(const json& json_object) override {
-      value_ = json_object.get<T>();
-    };
-    T& get() {
-      return value_;
-    }
-    void set(T val) {
-      value_ = val;
-    }
+    virtual json as_json() const override;
+    virtual void from_json(const json& json_object) override;
+    T& get();
+    void set(T val);
   };
 
   template<typename T> class ParameterBounded : public ParameterByReference<T> {
     T min_, max_;
     public:
-    ParameterBounded(T& val, T min, T max, std::string label, std::string help="") : ParameterByReference<T>(val, label, help), min_(min), max_(max) {};
-    T min() { return min_;}
-    T max() { return max_;}
-    void set_bounds(T min, T max) {
-      min_ = min;
-      max_ = max;
-    }
+    ParameterBounded(T& val, T min, T max, std::string label, std::string help="");
+    T min();
+    T max();
+    void set_bounds(T min, T max);
   };
   class ParamPath : public ParameterByReference<std::string> {
     using ParameterByReference::ParameterByReference;
@@ -140,22 +86,37 @@ namespace geoflow {
   class ParamStrMap : public ParameterByReference<StrMap> {
     public:
     std::vector<std::string>& key_options_;
-    ParamStrMap(StrMap& val, std::vector<std::string>& key_options, std::string label, std::string help="") : key_options_(key_options), ParameterByReference(val, label, help) {};
+    ParamStrMap(StrMap& val, std::vector<std::string>& key_options, std::string label, std::string help="");
   };
 
   class ParamSelector : public ParameterByReference<size_t> {
     std::vector<std::string> options;
 
     public:
-    ParamSelector(std::vector<std::string> options, size_t& index, std::string label, std::string help="") : ParameterByReference(index, label, help) {};
+    ParamSelector(std::vector<std::string> options, size_t& index, std::string label, std::string help="");
 
-    std::vector<std::string> get_options() {
-      return options;
-    }
-    std::string get_selected_option() {
-      return options.at(value_);
-    }
+    std::vector<std::string> get_options();
+    std::string get_selected_option();
   };
+
+  extern template class ParameterByValue<float>;
+  extern template class ParameterByValue<double>;
+  extern template class ParameterByValue<int>;
+  extern template class ParameterByValue<bool>;
+  extern template class ParameterByValue<std::string>;
+  extern template class ParameterByReference<float>;
+  extern template class ParameterByReference<double>;
+  extern template class ParameterByReference<int>;
+  extern template class ParameterByReference<bool>;
+  extern template class ParameterByReference<std::string>;
+  extern template class ParameterByReference<std::pair<float,float>>;
+  extern template class ParameterByReference<std::pair<int,int>>;
+  extern template class ParameterByReference<std::pair<double,double>>;
+  extern template class ParameterByReference<std::unordered_map<std::string,std::string>>;
+  extern template class ParameterBounded<float>;
+  extern template class ParameterBounded<double>;
+  extern template class ParameterBounded<int>;
+  
   typedef ParameterByReference<float> ParamFloat;
   typedef ParameterByReference<double> ParamDouble;
   typedef ParameterByReference<std::pair<float,float>> ParamFloatRange;
