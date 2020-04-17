@@ -23,10 +23,8 @@ namespace geoflow {
     bool changed=false;
     if( auto* valptr = dynamic_cast<ParamInt*>(param)) {
         changed = ImGui::DragInt(valptr->get_label().c_str(), &valptr->get());
-    } else if( auto* valptr = dynamic_cast<ParamFloat*>(param)) {
-        changed = ImGui::DragFloat(valptr->get_label().c_str(), &valptr->get(), 0.1);
-    } else if( auto* valptr = dynamic_cast<ParamDouble*>(param)) {
-        changed = ImGui::DragScalar(valptr->get_label().c_str(), ImGuiDataType_Double, &valptr->get(), 0.1);
+    } else if( auto* valptr = dynamic_cast<ParamBool*>(param)) {
+        changed = ImGui::Checkbox(valptr->get_label().c_str(), &valptr->get());
     } else if( auto* valptr = dynamic_cast<ParamBoundedFloat*>(param)) {
         changed = ImGui::SliderFloat(valptr->get_label().c_str(), &valptr->get(), valptr->min(), valptr->max());
     } else if( auto* valptr = dynamic_cast<ParamBoundedDouble*>(param)) {
@@ -40,8 +38,10 @@ namespace geoflow {
         changed = ImGui::DragIntRange2(valptr->get_label().c_str(), &valptr->get().first, &valptr->get().second);
     } else if( auto* valptr = dynamic_cast<ParamBoundedInt*>(param)) {
         changed = ImGui::SliderInt(valptr->get_label().c_str(), &valptr->get(), valptr->min(), valptr->max());
-    } else if( auto* valptr = dynamic_cast<ParamString*>(param)) {
-        changed = ImGui::InputText(valptr->get_label().c_str(), &valptr->get());
+    } else if( auto* valptr = dynamic_cast<ParamFloat*>(param)) {
+        changed = ImGui::DragFloat(valptr->get_label().c_str(), &valptr->get(), 0.1);
+    } else if( auto* valptr = dynamic_cast<ParamDouble*>(param)) {
+        changed = ImGui::DragScalar(valptr->get_label().c_str(), ImGuiDataType_Double, &valptr->get(), 0.1);
     } else if( auto* valptr = dynamic_cast<ParamPath*>(param)) {
         #ifdef GF_BUILD_GUI_FILE_DIALOGS
           changed = ImGui::FilePicker(OSDIALOG_OPEN, valptr->get());
@@ -50,9 +50,10 @@ namespace geoflow {
         #else
           changed = ImGui::InputText(valptr->get_label().c_str(), &valptr->get());
         #endif
-    } else if( auto* valptr = dynamic_cast<ParamBool*>(param)) {
-        changed = ImGui::Checkbox(valptr->get_label().c_str(), &valptr->get());
-    } else if( auto* valptr = dynamic_cast<ParamStrMap*>(param)) {
+    } else if( auto* valptr = dynamic_cast<ParamString*>(param)) {
+        changed = ImGui::InputText(valptr->get_label().c_str(), &valptr->get());
+    } else if( param->is_type(typeid(StrMap))) {
+        auto* valptr = static_cast<ParamStrMap*>(param);
         if (ImGui::TreeNode(valptr->get_label().c_str())) {
           auto& mapvalues = valptr->get();
           for (auto it=mapvalues.begin(); it!=mapvalues.end(); ) {
@@ -80,7 +81,7 @@ namespace geoflow {
           ImGui::TreePop();
         }
     } else {
-      ImGui::Text("%s", valptr->get_label().c_str());
+      ImGui::Text("%s", param->get_label().c_str());
     }
     return changed;
   };
