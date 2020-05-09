@@ -19,5 +19,5 @@ add_subdirectory(json)
 
 if(${GF_BUILD_GUI})
   set(GLM_TEST_ENABLE OFF CACHE INTERNAL "")
-  add_subdirectory(glm)
+  include_directories(glm)
 endif()

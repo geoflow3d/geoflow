@@ -145,7 +145,7 @@ if(${GF_BUILD_GUI})
 
   add_library(geoflow-gui STATIC ${GF_GUI_SOURCES})
   # target_include_directories(geoflow-gui nlohmann_json::nlohmann_json)
-  target_link_libraries(geoflow-gui PRIVATE geoflow-core glm glfw ${GF_FILEDIALOG_LIBS})
+  target_link_libraries(geoflow-gui PRIVATE geoflow-core glfw ${GF_FILEDIALOG_LIBS})
   set_target_properties(geoflow-gui PROPERTIES CXX_STANDARD 17)
   if (WIN32)
     get_target_property(GLFW_DLL_LOCATION glfw IMPORTED_LOCATION_RELEASE)

@@ -12,11 +12,11 @@ jobs:
     name: Build Windows
     runs-on: windows-latest
     steps:
-    - name: Install glm, glfw3
+    - name: Install glfw3
       run: |
         echo $env:VCPKG_INSTALLATION_ROOT
         $env:VCPKG_DEFAULT_TRIPLET="x64-windows"
-        vcpkg install glm glfw3
+        vcpkg install glfw3
     - uses: actions/checkout@v1
     - name: Build
       run: |
@@ -26,7 +26,7 @@ jobs:
         cmake --build . --parallel 4 --config Release
     - name: Install NSIS
       run: |
-        Invoke-WebRequest https://netcologne.dl.sourceforge.net/project/nsis/NSIS%203/3.04/nsis-3.04-setup.exe -OutFile nsis-setup.exe
+        Invoke-WebRequest https://netix.dl.sourceforge.net/project/nsis/NSIS%203/3.05/nsis-3.05-setup.exe -OutFile nsis-setup.exe
         .\nsis-setup.exe /S
     - name: Create installer
       run: |
@@ -51,7 +51,7 @@ jobs:
     - name: Install dependencies with apt
       run: |
         sudo apt-get update
-        sudo apt-get install libglm-dev libgtk2.0-dev libxrandr-dev
+        sudo apt-get install libgtk2.0-dev libxrandr-dev
     - name: Install gflw 3.3
       run: |
         git clone https://github.com/glfw/glfw.git
@@ -72,7 +72,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install dependencies
-      run: brew install glfw glm
+      run: brew install glfw
     - name: Build
       run: |
         mkdir build && cd build

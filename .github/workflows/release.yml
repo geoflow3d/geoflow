@@ -11,11 +11,11 @@ jobs:
     name: Build Windows
     runs-on: windows-latest
     steps:
-    - name: Install glm, glfw3
+    - name: Install glfw3
       run: |
         echo $env:VCPKG_INSTALLATION_ROOT
         $env:VCPKG_DEFAULT_TRIPLET="x64-windows"
-        vcpkg install glm glfw3
+        vcpkg install glfw3
     - uses: actions/checkout@v1
     - name: Build
       run: |
@@ -25,7 +25,7 @@ jobs:
         cmake --build . --parallel 4 --config Release
     - name: Install NSIS
       run: |
-        Invoke-WebRequest https://netcologne.dl.sourceforge.net/project/nsis/NSIS%203/3.04/nsis-3.04-setup.exe -OutFile nsis-setup.exe
+        Invoke-WebRequest https://netix.dl.sourceforge.net/project/nsis/NSIS%203/3.05/nsis-3.05-setup.exe -OutFile nsis-setup.exe
         .\nsis-setup.exe /S
     - name: Create installer
       run: |
