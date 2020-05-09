@@ -7,16 +7,13 @@ option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
 # option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
 
 # dependencies
-if(GF_BUILD_GUI)
-  find_package(glfw3 3.3 REQUIRED)
-  #message(STATUS "GLFW libs: ${GLFW_LIBRARIES}")
-  find_package(glm)
-endif()
-# if(GF_USE_EXTERNAL_JSON)
-#   find_package(nlohmann_json 3.2.0 REQUIRED)
-# endif()
-
 add_subdirectory(thirdparty)
+
+if(GF_BUILD_GUI)
+find_package(glfw3 3.3 REQUIRED)
+#message(STATUS "GLFW libs: ${GLFW_LIBRARIES}")
+endif()
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 
