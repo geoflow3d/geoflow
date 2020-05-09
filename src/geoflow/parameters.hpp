@@ -24,6 +24,22 @@
 using json = nlohmann::json;
 
 namespace geoflow {
+  enum ParamType {
+    Undefined,
+    ParamTypeFloat,
+    ParamTypeDouble,
+    ParamTypeFloatRange,
+    ParamTypeIntRange,
+    ParamTypeDoubleRange,
+    ParamTypeBoundedFloat,
+    ParamTypeBoundedDouble,
+    ParamTypeInt,
+    ParamTypeBoundedInt,
+    ParamTypeBool,
+    ParamTypePath,
+    ParamTypeString
+  };
+
   class Parameter {
     protected:
     std::string label_, help_;
@@ -43,6 +59,7 @@ namespace geoflow {
     bool has_master() const;
     void clear_master();
     std::weak_ptr<Parameter> get_master() const;
+    virtual ParamType get_ptype() { return Undefined; };
   };
 
   template<typename T> class ParameterByReference : public Parameter {
@@ -78,8 +95,66 @@ namespace geoflow {
     T max();
     void set_bounds(T min, T max);
   };
+
+  class ParamFloat: public ParameterByReference<float> {
+    using ParameterByReference::ParameterByReference;
+    public: 
+    ParamType get_ptype() { return ParamTypeFloat; };
+  };
+  class ParamDouble: public ParameterByReference<double> {
+    using ParameterByReference::ParameterByReference;
+    public: 
+    ParamType get_ptype() { return ParamTypeDouble; };
+  };
+  class ParamFloatRange: public ParameterByReference<std::pair<float,float>> {
+    using ParameterByReference::ParameterByReference;
+    public: 
+    ParamType get_ptype() { return ParamTypeFloatRange; };
+  };
+  class ParamIntRange: public ParameterByReference<std::pair<int,int>> {
+    using ParameterByReference::ParameterByReference;
+    public: 
+    ParamType get_ptype() { return ParamTypeIntRange; };
+  };
+  class ParamDoubleRange: public ParameterByReference<std::pair<double,double>> {
+    using ParameterByReference::ParameterByReference;
+    public: 
+    ParamType get_ptype() { return ParamTypeDoubleRange; };
+  };
+  class ParamBoundedFloat: public ParameterBounded<float> {
+    using ParameterBounded::ParameterBounded;
+    public: 
+    ParamType get_ptype() { return ParamTypeBoundedFloat; };
+  };
+  class ParamBoundedDouble: public ParameterBounded<double> {
+    using ParameterBounded::ParameterBounded;
+    public: 
+    ParamType get_ptype() { return ParamTypeBoundedDouble; };
+  };
+  class ParamInt: public ParameterByReference<int> {
+    using ParameterByReference::ParameterByReference;
+    public: 
+    ParamType get_ptype() { return ParamTypeInt; };
+  };
+  class ParamBoundedInt: public ParameterBounded<int> {
+    using ParameterBounded::ParameterBounded;
+    public: 
+    ParamType get_ptype() { return ParamTypeBoundedInt; };
+  };
+  class ParamBool: public ParameterByReference<bool> {
+    using ParameterByReference::ParameterByReference;
+    public: 
+    ParamType get_ptype() { return ParamTypeBool; };
+  };
   class ParamPath : public ParameterByReference<std::string> {
     using ParameterByReference::ParameterByReference;
+    public:
+    ParamType get_ptype() { return ParamTypePath; };
+  };
+  class ParamString : public ParameterByReference<std::string> {
+    using ParameterByReference::ParameterByReference;
+    public:
+    ParamType get_ptype() { return ParamTypeString; };
   };
 
   typedef std::unordered_map<std::string,std::string> StrMap;
@@ -116,18 +191,6 @@ namespace geoflow {
   extern template class ParameterBounded<float>;
   extern template class ParameterBounded<double>;
   extern template class ParameterBounded<int>;
-  
-  typedef ParameterByReference<float> ParamFloat;
-  typedef ParameterByReference<double> ParamDouble;
-  typedef ParameterByReference<std::pair<float,float>> ParamFloatRange;
-  typedef ParameterByReference<std::pair<int,int>> ParamIntRange;
-  typedef ParameterByReference<std::pair<double,double>> ParamDoubleRange;
-  typedef ParameterBounded<float> ParamBoundedFloat;
-  typedef ParameterBounded<double> ParamBoundedDouble;
-  typedef ParameterByReference<int> ParamInt;
-  typedef ParameterBounded<int> ParamBoundedInt;
-  typedef ParameterByReference<bool> ParamBool;
-  typedef ParameterByReference<std::string> ParamString;
 
   typedef std::map<std::string, std::shared_ptr<Parameter>> ParameterMap;
 }
