@@ -18,6 +18,5 @@ set(JSON_Install OFF CACHE INTERNAL "")
 add_subdirectory(json)
 
 if(${GF_BUILD_GUI})
-  set(GLM_TEST_ENABLE OFF CACHE INTERNAL "")
-  include_directories(glm)
+  set(GLM_INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/thirdparty/glm PARENT_SCOPE)
 endif()
