@@ -18,6 +18,18 @@ namespace geoflow {
         ImGui::Checkbox(valptr->get_label().c_str(), &valptr->get());
     }
   };
+  static void HelpMarker(const char* desc)
+  {
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+  }
 
   bool draw_parameter(Parameter* param) {
     bool changed=false;
@@ -95,6 +107,8 @@ namespace geoflow {
     } else {
       ImGui::Text("%s", param->get_label().c_str());
     }
+    ImGui::SameLine();
+    HelpMarker(param->get_help().c_str());
     return changed;
   };
 

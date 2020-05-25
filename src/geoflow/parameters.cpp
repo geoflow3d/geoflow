@@ -29,6 +29,9 @@ namespace geoflow {
   std::string Parameter::get_label() {
     return label_;
   }
+  const std::string& Parameter::get_help() const {
+    return help_;
+  }
   bool Parameter::is_type(std::type_index type) {
     return type_ == type;
   }

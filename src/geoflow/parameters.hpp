@@ -48,6 +48,7 @@ namespace geoflow {
     public:
     Parameter(std::string label, std::string help, std::type_index ttype=typeid(void));
     std::string get_label();
+    const std::string& get_help() const;
     virtual json as_json() const = 0;
     virtual void from_json(const json& json_object) = 0;
     // virtual void to_string(std::string& str) const = 0;
