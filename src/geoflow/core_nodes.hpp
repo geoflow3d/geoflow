@@ -6,7 +6,7 @@
 
 #include <chrono>
 #include <ctime>
-#include <taskflow/taskflow.hpp>
+// #include <taskflow/taskflow.hpp>
 
 namespace geoflow::nodes::core {
 
@@ -152,26 +152,26 @@ namespace geoflow::nodes::core {
       // repack input data
       // assume all vector inputs have the same size
 
-      std::vector<std::shared_ptr<NodeManager>> flowcharts;
-      for(size_t i=0; i<input_size_; ++i) {
-        auto fc = copy_nested_flowchart();
-        for (auto& [key,val] : manager.global_flowchart_params) {
-          fc->global_flowchart_params[key] = val;
-        }
-        fc->global_flowchart_params["GF_I"] = std::make_shared<ParameterByValue<std::string>>(std::to_string(i), "GF_I", "");
-        set_inputs(fc, i);
-        flowcharts.push_back(fc);
-      }
+      // std::vector<std::shared_ptr<NodeManager>> flowcharts;
+      // for(size_t i=0; i<input_size_; ++i) {
+      //   auto fc = copy_nested_flowchart();
+      //   for (auto& [key,val] : manager.global_flowchart_params) {
+      //     fc->global_flowchart_params[key] = val;
+      //   }
+      //   fc->global_flowchart_params["GF_I"] = std::make_shared<ParameterByValue<std::string>>(std::to_string(i), "GF_I", "");
+      //   set_inputs(fc, i);
+      //   flowcharts.push_back(fc);
+      // }
 
-      tf::Executor executor;
-      tf::Taskflow taskflow;
-      for(auto& fc : flowcharts) {
-        tf::Task task = taskflow.emplace([&](){ 
-          auto& proxy_node = fc->get_node(proxy_node_name_);
-          fc->run(proxy_node, false);
-         });
-      }
-      executor.run(taskflow).wait();
+      // tf::Executor executor;
+      // tf::Taskflow taskflow;
+      // for(auto& fc : flowcharts) {
+      //   tf::Task task = taskflow.emplace([&](){ 
+      //     auto& proxy_node = fc->get_node(proxy_node_name_);
+      //     fc->run(proxy_node, false);
+      //    });
+      // }
+      // executor.run(taskflow).wait();
     };
 
     void process_sequential() {
