@@ -68,7 +68,7 @@ std::type_index gfSingleFeatureInputTerminal::get_connected_type() const {
   return typeid(void);
 }
 void gfSingleFeatureInputTerminal::update_on_receive(bool queue) {
-  if(has_data()) {
+  if(has_data() || is_touched()) {
     if (queue && parent_.update_status() && parent_.autorun) 
       parent_.queue();
     parent_.on_receive(*this);
@@ -80,6 +80,12 @@ bool gfSingleFeatureInputTerminal::has_connection() {
 bool gfSingleFeatureInputTerminal::has_data() {
   if (auto output_term = connected_output_.lock()) {
     return output_term->has_data();
+  }
+  return false;
+}
+bool gfSingleFeatureInputTerminal::is_touched() {
+  if (auto output_term = connected_output_.lock()) {
+    return output_term->is_touched();
   }
   return false;
 }
@@ -127,7 +133,7 @@ const InputConnectionSet& gfOutputTerminal::get_connections(){
 }
 void gfOutputTerminal::propagate() {
   for (auto& conn : get_connections()) {
-    if (has_data())
+    if (has_data() || is_touched())
       conn.lock()->update_on_receive(true); // conn is the inputTerminal on the other end of the connection
   }
 }
@@ -152,7 +158,7 @@ void gfOutputTerminal::connect(gfInputTerminal& in) {
   connections_.insert(in.get_ptr());
   parent_.on_connect_output(*this);
   in.get_parent().on_connect_input(in);
-  if (has_data()) {
+  if (has_data() || is_touched()) {
     in.update_on_receive(false);
   }
 };
@@ -171,6 +177,7 @@ void gfOutputTerminal::disconnect(gfInputTerminal& in) {
 // }
 void gfSingleFeatureOutputTerminal::clear() {
   data_.clear();
+  is_touched_ = false;
 }
 bool gfSingleFeatureOutputTerminal::has_data() {
   return data_.size()!=0;
@@ -238,6 +245,16 @@ bool gfMultiFeatureInputTerminal::has_data() {
   }
   return true;
 }
+bool gfMultiFeatureInputTerminal::is_touched() {
+  for (auto output_term_ : connected_outputs_){
+    if (auto output_term = output_term_.lock()) {
+      if (!output_term->is_touched()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 size_t gfMultiFeatureInputTerminal::size() {
   if (connected_outputs_.size()==0)
     return 0;
@@ -250,6 +267,7 @@ void gfMultiFeatureOutputTerminal::clear() {
   //   t->clear();
   // }
   terminals_.clear();
+  is_touched_ = false;
 }
 bool gfMultiFeatureOutputTerminal::has_data() {
   for (auto& [name, t] : terminals_) {
@@ -317,14 +335,16 @@ const ParameterMap& Node::dump_params() {
 //     oG->is_propagated = false;
 //   }
 // }
-bool Node::update_status() {
-  auto status_before = status_;
-  bool success = true;
+bool Node::inputs_valid() {
   for (auto& [name,iT] : input_terminals) {
     if (!iT->has_data())
-      success &= false;
+      return false;
   }
-  if (success)
+  return true;
+}
+bool Node::update_status() {
+  auto status_before = status_;
+  if (inputs_valid())
     status_ = GF_NODE_READY;
   else
     status_ = GF_NODE_WAITING;

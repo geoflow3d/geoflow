@@ -105,6 +105,7 @@ namespace geoflow {
     const virtual gfTerminalFamily get_family() = 0;
     virtual bool has_data() = 0;
     virtual bool has_connection() = 0;
+    virtual bool is_touched() = 0;
 
     void set_marked(bool is_marked) { is_marked_ = is_marked; };
     bool& is_marked() { return is_marked_; };
@@ -159,6 +160,7 @@ namespace geoflow {
     std::type_index get_connected_type() const;
     bool has_connection();
     bool has_data();
+    bool is_touched();
 
     // single element
     // const gfTerminalFamily get_family() { return GF_BASIC; };
@@ -179,6 +181,7 @@ namespace geoflow {
   class gfOutputTerminal : public gfTerminal, public std::enable_shared_from_this<gfOutputTerminal> {
     protected:
     InputConnectionSet connections_;
+    bool is_touched_=false;
 
     std::set<NodeHandle> get_child_nodes();
     virtual void propagate();
@@ -201,6 +204,9 @@ namespace geoflow {
 
     virtual size_t size()=0;
     void set_type(std::type_index type) {types_ = {type}; }
+
+    void touch() { is_touched_=true; };
+    bool is_touched() { return is_touched_; };
 
     friend class Node;
     friend class gfInputTerminal;
@@ -233,6 +239,7 @@ namespace geoflow {
       if(!accepts_type(typeid(T)))
         throw gfException("illegal type for gfSingleFeatureOutputTerminal");
       data_.push_back(std::move(data));
+      touch();
     };
     template<typename T> T& set(T data){
       if(!accepts_type(typeid(T)))
@@ -245,6 +252,7 @@ namespace geoflow {
       data_.clear();
       data_.resize(1);
       data_[0] = data;
+      touch();
     }
 
     // multi element
@@ -310,6 +318,7 @@ namespace geoflow {
     ~gfMultiFeatureInputTerminal();
     const gfTerminalFamily get_family() { return GF_MULTI_FEATURE; };
     bool has_data();
+    bool is_touched();
     bool has_connection() {return connected_outputs_.size() > 0; };
     size_t size();
 
@@ -564,6 +573,7 @@ namespace geoflow {
     // virtual std::map<std::string,std::shared_ptr<InputTerminal>> init_inputs() {};
     // virtual std::map<std::string,std::shared_ptr<OutputTerminal>> init_outputs() {};
     // virtual ParameterMap init_parameters() {};
+    virtual bool inputs_valid();
     virtual void process() = 0;
     virtual void gui() {};
     virtual void on_receive(gfSingleFeatureInputTerminal& it){};

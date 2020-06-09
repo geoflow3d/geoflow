@@ -71,10 +71,6 @@ void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers
   }
 }
 
-template<typename T> bool set_from_str(ParameterByValue<T>& param, std::string str) {
-
-}
-
 int main(int argc, const char * argv[]) {
 
   std::string flowchart_path = "flowchart.json";
