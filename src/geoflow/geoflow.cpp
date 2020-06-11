@@ -270,6 +270,9 @@ void gfMultiFeatureOutputTerminal::clear() {
   is_touched_ = false;
 }
 bool gfMultiFeatureOutputTerminal::has_data() {
+  if(terminals_.size()==0) {
+    return false;
+  }
   for (auto& [name, t] : terminals_) {
     if(!t->has_data())
       return false;

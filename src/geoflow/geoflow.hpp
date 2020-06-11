@@ -248,10 +248,15 @@ namespace geoflow {
       push_back(data);
       return std::any_cast<T&>(data_[0]);
     };
-    void operator=(const std::any& data) {
+    void set_from_any(const std::any& data) {
       data_.clear();
       data_.resize(1);
       data_[0] = data;
+      touch();
+    }
+    void operator=(const std::vector<std::any>& data_vec) {
+      data_.clear();
+      data_ = data_vec;
       touch();
     }
 

@@ -136,13 +136,13 @@ namespace geoflow::nodes::core {
           auto& data_vec = vector_input(name).get_data_vec();
           // we need to set the correct type
           proxy_node->output(name).set_type(vector_input(name).get_connected_type());
-          proxy_node->output(name) = data_vec[i];
+          proxy_node->output(name).set_from_any(data_vec[i]);
         } else {
           for (auto sub_iterm : poly_input(name).sub_terminals()) {
             auto& sub_name = sub_iterm->get_name();
             // first add sub terminal
             auto& sub_oterm = proxy_node->poly_output(name).add(sub_name, sub_iterm->get_types()[0]);
-            sub_oterm = sub_iterm->get_data_vec()[i];
+            sub_oterm.set_from_any(sub_iterm->get_data_vec()[i]);
           }
         }
       }
