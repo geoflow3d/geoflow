@@ -260,6 +260,10 @@ namespace geoflow {
       touch();
     }
 
+    bool has_value(size_t i=0) {
+      return !data_[i].has_value();
+    }
+
     // multi element
     size_t size() { return data_.size(); };
     template<typename T>void resize(size_t n) {
@@ -363,6 +367,15 @@ namespace geoflow {
     gfSingleFeatureOutputTerminal& sub_terminal(std::string term_name) {
       return *terminals_.at(term_name).get();
     };
+
+    void operator=(gfMultiFeatureInputTerminal& gfMFInput) {
+      clear();
+      for(const auto& iterm : gfMFInput.sub_terminals()) {
+        auto& oterm = add_vector(iterm->get_name(), iterm->get_type());
+        oterm = iterm->get_data_vec();
+      }
+      touch();
+    }
 
     // void connect(gfInputTerminal& in);
     // void disconnect(gfInputTerminal& in);
@@ -702,9 +715,9 @@ namespace geoflow {
 
     std::string substitute_globals(const std::string& text) const;
     
-    bool run_all();
-    bool run(Node &node, bool notify_children=true);
-    bool run(NodeHandle node, bool notify_children=true) {
+    size_t run_all();
+    size_t run(Node &node, bool notify_children=true);
+    size_t run(NodeHandle node, bool notify_children=true) {
       return run(*node, notify_children);
     };
     

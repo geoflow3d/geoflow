@@ -415,7 +415,7 @@ std::string Node::debug_info() {
 void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
 }
-bool NodeManager::run_all() {
+size_t NodeManager::run_all() {
   // find all root nodes with autorun enabled
   std::vector<NodeHandle> to_run;
   for (auto& [name, node] : nodes) {
@@ -426,15 +426,16 @@ bool NodeManager::run_all() {
   for (auto& node : to_run){
     node->notify_children();
   }
-  bool ran_something = false;
+  size_t run_count = 0;
   for (auto& node : to_run){
-    ran_something |= run(node);
+    run_count += run(node);
   }
-  return ran_something;
+  return run_count;
 }
-bool NodeManager::run(Node &node, bool notify_children) {
+size_t NodeManager::run(Node &node, bool notify_children) {
   std::queue<std::shared_ptr<Node>>().swap(node_queue); // clear to prevent double processing of nodes ()
   node.update_status();
+  size_t run_count = 0;
   if (node.queue()) {
     if (notify_children) node.notify_children();
     while (!node_queue.empty()) {
@@ -452,11 +453,11 @@ bool NodeManager::run(Node &node, bool notify_children) {
       std::clock_t c_end = std::clock(); // CPU time
       std::cerr << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
       n->status_ = GF_NODE_DONE;
+      ++run_count;
       n->propagate_outputs();
     }
-    return true;
-  } 
-  return false;
+  }
+  return run_count;
 }
 NodeHandle NodeManager::create_node(NodeRegisterHandle node_register, std::string type_name) {
   // add node through a node register

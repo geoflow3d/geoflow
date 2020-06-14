@@ -205,6 +205,8 @@ namespace geoflow::nodes::core {
                   for (auto& data : output_term->get_data_vec()) {
                     vector_output(node_name+"."+term_name).push_back_any(data);
                   }
+                } else {
+                  vector_output(node_name+"."+term_name).push_back_any(std::any());
                 }
               } else {
                 auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
