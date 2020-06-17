@@ -62,6 +62,8 @@ namespace geoflow::nodes::core {
             }
           }
         }
+        // output terminal for outputting the execution time for each run inside this nestnode
+        add_vector_output(get_name()+".timings", typeid(float));
         return true;
       }
       return false;
@@ -179,6 +181,7 @@ namespace geoflow::nodes::core {
       // assume all vector inputs have the same size
       auto flowchart = copy_nested_flowchart();
       auto& proxy_node = flowchart->get_node(proxy_node_name_);
+      float runtime;
       for(size_t i=0; i<input_size_; ++i) {
         proxy_node->notify_children();
         // prep inputs
@@ -194,7 +197,8 @@ namespace geoflow::nodes::core {
         flowchart->run(proxy_node, false);
         std::clock_t c_end = std::clock(); // CPU time
         // auto t_end = std::chrono::high_resolution_clock::now(); // Wall time
-        std::cout << ".. " << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
+        runtime = 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC;
+        std::cout << ".. " << runtime << "ms\n";
         // collect outputs and push directly to vector outputs
         for (auto& [node_name, node] : flowchart->get_nodes()) {
           for (auto& [term_name, output_term_] : node->output_terminals) {
@@ -223,6 +227,7 @@ namespace geoflow::nodes::core {
             }
           }
         }
+        vector_output(get_name()+".timings").push_back(runtime);
       }
     };
 
