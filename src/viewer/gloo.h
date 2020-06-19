@@ -45,7 +45,7 @@ public:
 
     // Implement Custom Constructor and Destructor
      Shader() { }
-    ~Shader() { glDeleteProgram(mProgram); }
+    ~Shader() { if(initialised) glDeleteProgram(mProgram); }
 
     void init();
     bool is_initialised(){ return initialised;};
@@ -283,7 +283,7 @@ class BasePainter
     public:
 
     BasePainter(){};
-    ~BasePainter() { glDeleteVertexArrays(1, &mVertexArray); }
+    ~BasePainter() { if(initialised) glDeleteVertexArrays(1, &mVertexArray); }
 
     bool is_initialised() { return initialised; };
     // GLuint get() { return mVertexArray; }
