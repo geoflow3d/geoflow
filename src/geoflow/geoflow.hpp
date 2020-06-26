@@ -103,7 +103,7 @@ namespace geoflow {
     const std::vector<std::type_index>& get_types() const { return types_; };
     const virtual gfIO get_side() = 0;
     const virtual gfTerminalFamily get_family() = 0;
-    virtual bool has_data() = 0;
+    virtual bool has_data() const = 0;
     virtual bool has_connection() = 0;
     virtual bool is_touched() = 0;
 
@@ -159,7 +159,7 @@ namespace geoflow {
     bool is_connected_type(std::type_index ttype) const;
     std::type_index get_connected_type() const;
     bool has_connection();
-    bool has_data();
+    bool has_data() const;
     bool is_touched();
 
     // single element
@@ -231,7 +231,7 @@ namespace geoflow {
 
     // single element
     const gfTerminalFamily get_family() { return GF_SINGLE_FEATURE; };
-    bool has_data();
+    bool has_data() const;
     void push_back_any(const std::any& data) {
       data_.push_back(data);
     }
@@ -326,7 +326,7 @@ namespace geoflow {
     using gfInputTerminal::gfInputTerminal;
     ~gfMultiFeatureInputTerminal();
     const gfTerminalFamily get_family() { return GF_MULTI_FEATURE; };
-    bool has_data();
+    bool has_data() const;
     bool is_touched();
     bool has_connection() {return connected_outputs_.size() > 0; };
     size_t size();
@@ -356,7 +356,7 @@ namespace geoflow {
     public:
     using gfOutputTerminal::gfOutputTerminal;
     const gfTerminalFamily get_family() { return GF_MULTI_FEATURE; };
-    bool has_data();
+    bool has_data() const;
     size_t size();
 
     // note these 2 are almost the same now:

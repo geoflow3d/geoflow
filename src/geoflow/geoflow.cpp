@@ -77,7 +77,7 @@ void gfSingleFeatureInputTerminal::update_on_receive(bool queue) {
 bool gfSingleFeatureInputTerminal::has_connection() {
   return !connected_output_.expired();
 }
-bool gfSingleFeatureInputTerminal::has_data() {
+bool gfSingleFeatureInputTerminal::has_data() const {
   if (auto output_term = connected_output_.lock()) {
     return output_term->has_data();
   }
@@ -179,7 +179,7 @@ void gfSingleFeatureOutputTerminal::clear() {
   data_.clear();
   is_touched_ = false;
 }
-bool gfSingleFeatureOutputTerminal::has_data() {
+bool gfSingleFeatureOutputTerminal::has_data() const {
   return data_.size()!=0;
 }
 
@@ -233,7 +233,7 @@ void gfMultiFeatureInputTerminal::update_on_receive(bool queue) {
   }
   parent_.on_receive(*this);
 }
-bool gfMultiFeatureInputTerminal::has_data() {
+bool gfMultiFeatureInputTerminal::has_data() const {
   if (connected_outputs_.size()==0)
     return false;
   for (auto output_term_ : connected_outputs_){
@@ -269,7 +269,7 @@ void gfMultiFeatureOutputTerminal::clear() {
   terminals_.clear();
   is_touched_ = false;
 }
-bool gfMultiFeatureOutputTerminal::has_data() {
+bool gfMultiFeatureOutputTerminal::has_data() const {
   if(terminals_.size()==0) {
     return false;
   }
