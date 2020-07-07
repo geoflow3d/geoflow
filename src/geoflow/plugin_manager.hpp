@@ -30,7 +30,7 @@ namespace geoflow {
             }
           } else {
             dloaders_.erase(path);
-            std::cerr << "... failed :(\n";
+            std::cout << "... failed :(\n";
           }
         }
       }

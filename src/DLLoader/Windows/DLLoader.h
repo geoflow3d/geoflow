@@ -53,8 +53,8 @@ namespace dlloader
 		bool DLOpenLib() override
 		{
 			if (!(_handle = LoadLibrary(_pathToLib.c_str()))) {
-				std::cerr << "Can't open and load " << _pathToLib << std::endl;
-				std::cerr << "ERROR: " << GetLastErrorAsString() << std::endl;
+				std::cout << "Can't open and load " << _pathToLib << std::endl;
+				std::cout << "ERROR: " << GetLastErrorAsString() << std::endl;
 				return false;
 			}
 
@@ -63,15 +63,15 @@ namespace dlloader
 			auto headerHashFunc = reinterpret_cast<getHeaderHash>(
 					GetProcAddress(_handle, _getHeaderHashSymbol.c_str()));
 			if(!headerHashFunc) {
-				std::cerr << "Can't find _getHeaderHashSymbol symbol in " << _pathToLib << std::endl;
+				std::cout << "Can't find _getHeaderHashSymbol symbol in " << _pathToLib << std::endl;
 				DLCloseLib();
 				return false;
 			} else {
 				char plugin_hash[33];
 				headerHashFunc(plugin_hash);
 				if(strcmp(plugin_hash, GF_SHARED_HEADERS_HASH)!=0) {
-					std::cerr << plugin_hash << ", geof: " << GF_SHARED_HEADERS_HASH << "\n";
-					std::cerr << "Plugin header hash incompatible!\n";
+					std::cout << plugin_hash << ", geof: " << GF_SHARED_HEADERS_HASH << "\n";
+					std::cout << "Plugin header hash incompatible!\n";
 					DLCloseLib();
 					return false;
 				}
@@ -91,7 +91,7 @@ namespace dlloader
 
 			if (!allocFunc || !deleteFunc) {
 				DLCloseLib();
-				std::cerr << "Can't find allocator or deleter symbol in " << _pathToLib << std::endl;
+				std::cout << "Can't find allocator or deleter symbol in " << _pathToLib << std::endl;
 			}
 
 			return std::shared_ptr<T>(
@@ -102,7 +102,7 @@ namespace dlloader
 		void DLCloseLib() override
 		{
 			if (FreeLibrary(_handle) == 0) {
-				std::cerr << "Can't close " << _pathToLib << std::endl;
+				std::cout << "Can't close " << _pathToLib << std::endl;
 			}
 		}
 

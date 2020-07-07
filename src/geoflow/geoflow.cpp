@@ -443,7 +443,7 @@ size_t NodeManager::run(Node &node, bool notify_children) {
       node_queue.pop();
       n->status_ = GF_NODE_PROCESSING;
       // n->preprocess();
-      std::cerr << "P " << n->get_name() << "...";
+      std::cout << "P " << n->get_name() << "..." << std::flush;
       std::clock_t c_start = std::clock(); // CPU time
       // copy parameter values from master if a master is set
       for (auto& [name, param] : n->parameters) {
@@ -455,11 +455,11 @@ size_t NodeManager::run(Node &node, bool notify_children) {
         ++run_count;
         n->propagate_outputs();
       } catch (const gfException& e) {
-        std::cerr << "ERROR: gfException -- " << e.what() << "\n";
+        std::cout << "ERROR: gfException -- " << e.what() << "\n" << std::flush;
         n->status_ = GF_NODE_READY;
       }
       std::clock_t c_end = std::clock(); // CPU time
-      std::cerr << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
+      std::cout << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
     }
   }
   return run_count;

@@ -32,6 +32,10 @@ class gfImNodes : public RenderObject {
   void init_node_draw_list() {
     node_draw_list_.clear();
     for (auto& [name, node] : node_manager_.get_nodes()) {
+        if(node.get() == nullptr) {
+            std::cout << "Failed to load node " << name << "\n";
+            continue;
+        }
       node_draw_list_.push_back(std::make_tuple(
         node, 
         ImVec2(node->position[0], node->position[1]),

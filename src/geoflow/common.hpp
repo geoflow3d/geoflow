@@ -123,7 +123,6 @@ public:
   size_t vertex_count() const;
   float *get_data_ptr();
 };
-
 template <typename geom_def>
 class GeometryCollection : public Geometry, public std::vector<geom_def>
 {

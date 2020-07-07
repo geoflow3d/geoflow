@@ -36,7 +36,7 @@ namespace dlloader
 		bool DLOpenLib() override
 		{
 			if (!(_handle = dlopen(_pathToLib.c_str(), RTLD_LAZY | RTLD_GLOBAL))) {
-				std::cerr << dlerror() << std::endl;
+				std::cout << dlerror() << std::endl;
 				return false;
 			}
 
@@ -45,14 +45,14 @@ namespace dlloader
 			auto headerHashFunc = reinterpret_cast<getHeaderHash>(
 					dlsym(_handle, _getHeaderHashSymbol.c_str()));
 			if(!headerHashFunc) {
-				std::cerr << dlerror() << std::endl;
+				std::cout << dlerror() << std::endl;
 				DLCloseLib();
 				return false;
 			} else {
 				char plugin_hash[33];
 				headerHashFunc(plugin_hash);
 				if(strcmp(plugin_hash, GF_SHARED_HEADERS_HASH)!=0) {
-					std::cerr << "Plugin header hash incompatible!\n";
+					std::cout << "Plugin header hash incompatible!\n";
 					DLCloseLib();
 					return false;
 				}
@@ -69,11 +69,11 @@ namespace dlloader
 			auto allocFunc = reinterpret_cast<allocClass>(
 				dlsym(_handle, _allocClassSymbol.c_str()));
 			if(!allocFunc)
-				std::cerr << dlerror() << std::endl;
+				std::cout << dlerror() << std::endl;
 			auto deleteFunc = reinterpret_cast<deleteClass>(
 				dlsym(_handle, _deleteClassSymbol.c_str()));
 			if(!deleteFunc)
-				std::cerr << dlerror() << std::endl;
+				std::cout << dlerror() << std::endl;
 
 			if (!allocFunc || !deleteFunc) {
 				DLCloseLib();
@@ -87,7 +87,7 @@ namespace dlloader
 		void DLCloseLib() override
 		{
 			if (dlclose(_handle) != 0) {
-				std::cerr << dlerror() << std::endl;
+				std::cout << dlerror() << std::endl;
 			}
 		}
 
