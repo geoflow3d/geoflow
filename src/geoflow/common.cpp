@@ -301,8 +301,9 @@ float *LinearRingCollection::get_data_ptr()
   return (*this)[0][0].data();
 }
 
-void Mesh::push_polygon(LinearRing& polygon) {
+void Mesh::push_polygon(LinearRing& polygon, int label) {
   polygons_.push_back(polygon);
+  labels_.push_back(label);
 }
 // void Mesh::push_attribute(std::string name, std::any value) {
 //   attributes_.at(name).values.push_back(value);
@@ -312,6 +313,13 @@ std::vector<LinearRing>& Mesh::get_polygons() {
 };
 const std::vector<LinearRing>& Mesh::get_polygons() const {
   return polygons_;
+};
+
+std::vector<int>& Mesh::get_labels() {
+  return labels_;
+};
+const std::vector<int>& Mesh::get_labels() const {
+  return labels_;
 };
 // std::unordered_map<std::string, AttributeVec>&  Mesh::get_attributes(){
 //   return attributes_;

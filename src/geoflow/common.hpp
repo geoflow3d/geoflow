@@ -179,12 +179,13 @@ public:
 // use indexed vertices?
 class Mesh {
   std::vector<LinearRing> polygons_;
+  std::vector<int> labels_;
   // std::unordered_map<std::string, AttributeVec>  attributes_;
 
   public:
   // Mesh() {};
 
-  void push_polygon(LinearRing& polygon);
+  void push_polygon(LinearRing& polygon, int label);
   // template <typename T> void create_attribute_field(std::string name) {
   //   attributes_.emplace(name, typeid(T));
   // }
@@ -192,6 +193,8 @@ class Mesh {
 
   std::vector<LinearRing>& get_polygons();
   const std::vector<LinearRing>& get_polygons() const;
+  std::vector<int>& get_labels();
+  const std::vector<int>& get_labels() const;
   // std::unordered_map<std::string, AttributeVec>&  get_attributes();
   // const std::unordered_map<std::string, AttributeVec>&  get_attributes() const;
 };
