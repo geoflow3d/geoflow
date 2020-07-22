@@ -104,6 +104,7 @@ namespace geoflow::nodes::core {
 
     std::shared_ptr<NodeManager> copy_nested_flowchart() {
       auto flowchart = std::make_shared<NodeManager>(*nested_node_manager_);
+      flowchart->data_offset = *manager.data_offset;
       // set up proxy node
       auto R = std::make_shared<NodeRegister>("ProxyRegister");
       R->register_node<ProxyNode>("Proxy");

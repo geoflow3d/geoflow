@@ -686,6 +686,7 @@ namespace geoflow {
         other_node_manager.json_serialise(ss);
         set_globals(other_node_manager);
         json_unserialise(ss);
+        data_offset = *other_node_manager.data_offset;
       };
     
     NodeRegisterMap& get_node_registers() const { return registers_; };
