@@ -160,9 +160,23 @@ bool Slot(geoflow::gfTerminal* term, int kind)
                         ImGui::SameLine(); ImGui::Text("(size: %lu)", ot->size());
                     }
                 }
-            } else if (term->get_family()==geoflow::GF_MULTI_FEATURE )
-                ImGui::TextUnformatted("Family: Multi Feature");
-            else
+            } else if (term->get_family()==geoflow::GF_MULTI_FEATURE ) {
+                if(term->get_side()==geoflow::GF_IN) {
+                    ImGui::TextUnformatted("Family: Multi Feature");
+                    auto* it = (geoflow::gfMultiFeatureInputTerminal*) term;
+                    for (auto& subterm : it->sub_terminals()) {
+                        ImGui::Text(" %lu %s, ", subterm->size(), subterm->get_name().c_str());
+                        // ImGui::Text("  %s)", subterm->get_type().name());
+                    }
+                } else {
+                    ImGui::TextUnformatted("Family: Multi Feature");
+                    auto* it = (geoflow::gfMultiFeatureOutputTerminal*) term;
+                    for (auto& [name, subterm] : it->sub_terminals()) {
+                        ImGui::Text(" %lu %s, ", subterm->size(), subterm->get_name().c_str());
+                        // ImGui::Text("  %s)", subterm->get_type().name());
+                    }
+                }
+            } else
                 ImGui::TextUnformatted("Family: Unknown");
             
             ImGui::Text("Compatible types:");

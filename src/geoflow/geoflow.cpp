@@ -104,7 +104,7 @@ const std::vector<std::any>& gfSingleFeatureInputTerminal::get_data_vec() const 
   auto sot = (gfSingleFeatureOutputTerminal*)(output_term.get());
   return sot->get_data_vec();
 }
-size_t gfSingleFeatureInputTerminal::size() {
+size_t gfSingleFeatureInputTerminal::size() const {
   auto output_term = connected_output_.lock();
   auto sot = (gfSingleFeatureOutputTerminal*)(output_term.get());
   return sot->size(); 
@@ -255,7 +255,7 @@ bool gfMultiFeatureInputTerminal::is_touched() {
   }
   return false;
 }
-size_t gfMultiFeatureInputTerminal::size() {
+size_t gfMultiFeatureInputTerminal::size() const{
   if (connected_outputs_.size()==0)
     return 0;
   else
@@ -279,7 +279,7 @@ bool gfMultiFeatureOutputTerminal::has_data() const {
   }
   return true;
 }
-size_t gfMultiFeatureOutputTerminal::size() {
+size_t gfMultiFeatureOutputTerminal::size() const {
   if (terminals_.size()==0)
     return 0;
   else

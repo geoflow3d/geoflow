@@ -139,7 +139,7 @@ namespace geoflow {
     }
     const gfIO get_side() { return GF_IN; };
     bool is_optional() { return is_optional_; };
-    virtual size_t size() = 0;
+    virtual size_t size() const = 0;
 
     friend class gfOutputTerminal;
     friend class gfSingleFeatureOutputTerminal;
@@ -170,7 +170,7 @@ namespace geoflow {
     const gfTerminalFamily get_family() { return GF_SINGLE_FEATURE; };
     template<typename T> const T get(size_t i);
     const std::vector<std::any>& get_data_vec() const;
-    size_t size();
+    size_t size() const;
 
     friend class gfSingleFeatureOutputTerminal;
   };
@@ -202,7 +202,7 @@ namespace geoflow {
     void connect(gfInputTerminal& in);
     void disconnect(gfInputTerminal& in);
 
-    virtual size_t size()=0;
+    virtual size_t size() const=0;
     void set_type(std::type_index type) {types_ = {type}; }
 
     void touch() { is_touched_=true; };
@@ -265,7 +265,7 @@ namespace geoflow {
     }
 
     // multi element
-    size_t size() { return data_.size(); };
+    size_t size() const { return data_.size(); };
     template<typename T>void resize(size_t n) {
       return data_.resize(n, T());
     };
@@ -329,7 +329,7 @@ namespace geoflow {
     bool has_data() const;
     bool is_touched();
     bool has_connection() {return connected_outputs_.size() > 0; };
-    size_t size();
+    size_t size() const;
 
     const SubTermRefs& sub_terminals() { return sub_terminals_; };
     // const BasicRefs& basic_terminals() { return basic_terminals_; };
@@ -357,7 +357,7 @@ namespace geoflow {
     using gfOutputTerminal::gfOutputTerminal;
     const gfTerminalFamily get_family() { return GF_MULTI_FEATURE; };
     bool has_data() const;
-    size_t size();
+    size_t size() const;
 
     // note these 2 are almost the same now:
     gfSingleFeatureOutputTerminal& add(std::string term_name, std::type_index ttype ) ;

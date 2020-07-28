@@ -211,6 +211,7 @@ namespace geoflow::nodes::core {
                     vector_output(node_name+"."+term_name).push_back_any(data);
                   }
                 } else {
+                  std::cout << "pushing empty any for " << node_name+"."+term_name << "at i=" << i << std::endl;
                   vector_output(node_name+"."+term_name).push_back_any(std::any());
                 }
               } else {
