@@ -449,15 +449,15 @@ size_t NodeManager::run(Node &node, bool notify_children) {
       for (auto& [name, param] : n->parameters) {
         param->copy_value_from_master();
       }
-      try {
+//      try {
         n->process();
         n->status_ = GF_NODE_DONE;
         ++run_count;
         n->propagate_outputs();
-      } catch (const gfException& e) {
-        std::cout << "ERROR: gfException -- " << e.what() << "\n" << std::flush;
-        n->status_ = GF_NODE_READY;
-      }
+//      } catch (const gfException& e) {
+//        std::cout << "ERROR: gfException -- " << e.what() << "\n" << std::flush;
+//        n->status_ = GF_NODE_READY;
+//      }
       std::clock_t c_end = std::clock(); // CPU time
       std::cout << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC << "ms\n";
     }
