@@ -716,7 +716,7 @@ namespace geoflow {
 
     std::string substitute_globals(const std::string& text) const;
     
-    size_t run_all();
+    size_t run_all(bool notify_children=true);
     size_t run(Node &node, bool notify_children=true);
     size_t run(NodeHandle node, bool notify_children=true) {
       return run(*node, notify_children);

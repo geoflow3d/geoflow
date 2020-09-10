@@ -415,7 +415,7 @@ std::string Node::debug_info() {
 void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
 }
-size_t NodeManager::run_all() {
+size_t NodeManager::run_all(bool notify_children) {
   // find all root nodes with autorun enabled
   std::vector<NodeHandle> to_run;
   for (auto& [name, node] : nodes) {
@@ -423,12 +423,14 @@ size_t NodeManager::run_all() {
       to_run.push_back(node);
     }
   }
-  for (auto& node : to_run){
-    node->notify_children();
+  if(notify_children) {
+    for (auto& node : to_run){
+      node->notify_children();
+    }
   }
   size_t run_count = 0;
   for (auto& node : to_run){
-    run_count += run(node);
+    run_count += run(node, notify_children);
   }
   return run_count;
 }

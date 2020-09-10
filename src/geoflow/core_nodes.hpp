@@ -195,7 +195,7 @@ namespace geoflow::nodes::core {
         std::cout << "Processing item " << i+1 << "/" << input_size_ << "\n";
         std::clock_t c_start = std::clock(); // CPU time
         // auto t_start = std::chrono::high_resolution_clock::now(); // Wall time
-        flowchart->run(proxy_node, false);
+        flowchart->run_all(false);
         std::clock_t c_end = std::clock(); // CPU time
         // auto t_end = std::chrono::high_resolution_clock::now(); // Wall time
         runtime = 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC;
