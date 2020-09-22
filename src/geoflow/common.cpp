@@ -352,6 +352,10 @@ bool MultiTriangleCollection::has_attributes()
 {
   return !attributes_.empty();
 }
+bool MultiTriangleCollection::has_attributes() const
+{
+  return !attributes_.empty();
+}
 
 std::vector<TriangleCollection>& MultiTriangleCollection::get_tricollections()
 {

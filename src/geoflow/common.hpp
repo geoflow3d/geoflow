@@ -163,6 +163,7 @@ public:
   size_t tri_size() const;
   size_t attr_size() const;
   bool has_attributes();
+  bool has_attributes() const;
 };
 
 class SegmentCollection : public GeometryCollection<std::array<arr3f, 2>>
