@@ -24,6 +24,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <string>
+#include <variant>
 
 namespace geoflow
 {
