@@ -40,8 +40,8 @@ typedef std::vector<size_t> vec1ui;
 typedef std::vector<std::string> vec1s;
 
 // Attribute types
-typedef std::variant<bool, int, std:: string, float> variant;
-typedef std::unordered_map<std::string, std::vector<variant>> AttributeMap;
+typedef std::variant<bool, int, std:: string, float> attribute_value;
+typedef std::unordered_map<std::string, std::vector<attribute_value>> AttributeMap;
 
 class Box
 {
