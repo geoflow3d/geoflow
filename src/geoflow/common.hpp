@@ -24,6 +24,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <string>
+#include <variant>
 
 namespace geoflow
 {
@@ -38,7 +39,9 @@ typedef std::vector<float> vec1f;
 typedef std::vector<size_t> vec1ui;
 typedef std::vector<std::string> vec1s;
 
-typedef std::unordered_map<std::string, std::vector<float>> AttributeMap;
+// Attribute types
+typedef std::variant<bool, int, std:: string, float> attribute_value;
+typedef std::unordered_map<std::string, std::vector<attribute_value>> AttributeMap;
 
 class Box
 {
@@ -134,6 +137,33 @@ public:
   size_t vertex_count() const;
   virtual void compute_box();
   float *get_data_ptr();
+};
+
+// MultiTriangleCollection stores a collection of TriangleCollections along with
+// attributes for each TriangleCollection. The vector of TriangleCollections
+// `trianglecollections_` and the vector of AttributeMaps `attributes_`
+// supposed to have the same length when attributes are present, however this is
+// not enforced. The `attributes_` can be empty.
+class MultiTriangleCollection
+{
+  std::vector<TriangleCollection> trianglecollections_;
+  std::vector<AttributeMap>       attributes_;
+
+public:
+  void push_back(TriangleCollection & trianglecollection);
+  void push_back(AttributeMap & attributemap);
+  std::vector<TriangleCollection>& get_tricollections();
+  const std::vector<TriangleCollection>& get_tricollections() const;
+  std::vector<AttributeMap>& get_attributes();
+  const std::vector<AttributeMap>& get_attributes() const;
+  TriangleCollection& tri_at(size_t i);
+  const TriangleCollection& tri_at(size_t i) const;
+  AttributeMap& attr_at(size_t i);
+  const AttributeMap& attr_at(size_t i) const;
+  size_t tri_size() const;
+  size_t attr_size() const;
+  bool has_attributes();
+  bool has_attributes() const;
 };
 
 class SegmentCollection : public GeometryCollection<std::array<arr3f, 2>>

@@ -328,4 +328,69 @@ const std::vector<int>& Mesh::get_labels() const {
 //   return attributes_;
 // };
 
+void MultiTriangleCollection::push_back(
+  TriangleCollection& trianglecollection)
+{
+  trianglecollections_.push_back(trianglecollection);
+}
+void MultiTriangleCollection::push_back(
+  AttributeMap& attributemap)
+{
+  attributes_.push_back(attributemap);
+}
+
+size_t MultiTriangleCollection::tri_size() const
+{
+  return trianglecollections_.size();
+}
+size_t MultiTriangleCollection::attr_size() const
+{
+  return attributes_.size();
+}
+
+bool MultiTriangleCollection::has_attributes()
+{
+  return !attributes_.empty();
+}
+bool MultiTriangleCollection::has_attributes() const
+{
+  return !attributes_.empty();
+}
+
+std::vector<TriangleCollection>& MultiTriangleCollection::get_tricollections()
+{
+  return trianglecollections_;
+}
+const std::vector<TriangleCollection>& MultiTriangleCollection::get_tricollections() const
+{
+  return trianglecollections_;
+}
+
+std::vector<AttributeMap>& MultiTriangleCollection::get_attributes()
+{
+  return attributes_;
+}
+const std::vector<AttributeMap>& MultiTriangleCollection::get_attributes() const
+{
+  return attributes_;
+}
+
+TriangleCollection& MultiTriangleCollection::tri_at(size_t i)
+{
+  return trianglecollections_.at(i);
+}
+const TriangleCollection& MultiTriangleCollection::tri_at(size_t i) const
+{
+  return trianglecollections_.at(i);
+}
+
+AttributeMap& MultiTriangleCollection::attr_at(size_t i)
+{
+  return attributes_.at(i);
+}
+const AttributeMap& MultiTriangleCollection::attr_at(size_t i) const
+{
+  return attributes_.at(i);
+}
+
 } // namespace geoflow
