@@ -2,6 +2,13 @@ cmake_minimum_required (VERSION 3.13)
 
 project (Geoflow VERSION 0.0.1)
 
+set(GF_PLUGIN_FOLDER_DEFAULT "$ENV{HOME}/.geoflow/plugins")
+if (WIN32)
+  set(GF_PLUGIN_FOLDER_DEFAULT "$ENV{USERPROFILE}\\.geoflow\\plugins")
+  string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER_DEFAULT ${GF_PLUGIN_FOLDER_DEFAULT})
+endif()
+
+option(GF_PLUGIN_FOLDER "Geoflow plugin folder" ${GF_PLUGIN_FOLDER_DEFAULT})
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
 # option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
@@ -170,16 +177,16 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins")
+# get absolute path to plugin folder. If it is a relative path we assume it is relative to the CMAKE_BINARY_DIR
+get_filename_component(GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER} ABSOLUTE ${CMAKE_BINARY_DIR})
+add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
+message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER}")
+
 set(GF_PLUGIN_EXTENSION ".so")
 if (WIN32)
-  set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
-  string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
   set(GF_PLUGIN_EXTENSION ".dll")
 endif()
-message(STATUS "Setting Geoflow plugin folder to ${GF_PLUGIN_FOLDER}")
 message(STATUS "Setting Geoflow plugin extension to ${GF_PLUGIN_EXTENSION}")
-add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
 add_definitions(-DGF_PLUGIN_EXTENSION=\"${GF_PLUGIN_EXTENSION}\")
 
 # write the hash of the concatenated shared header files to a new header file, so that we can check compatibility between main geof executable and the plugins
