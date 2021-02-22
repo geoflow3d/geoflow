@@ -2,13 +2,12 @@ cmake_minimum_required (VERSION 3.13)
 
 project (Geoflow VERSION 0.0.1)
 
-set(GF_PLUGIN_FOLDER_DEFAULT "$ENV{HOME}/.geoflow/plugins")
+set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins" CACHE STRING "Geoflow plugin folder")
 if (WIN32)
-  set(GF_PLUGIN_FOLDER_DEFAULT "$ENV{USERPROFILE}\\.geoflow\\plugins")
-  string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER_DEFAULT ${GF_PLUGIN_FOLDER_DEFAULT})
+  set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
+  string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
 endif()
 
-option(GF_PLUGIN_FOLDER "Geoflow plugin folder" ${GF_PLUGIN_FOLDER_DEFAULT})
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
 # option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
