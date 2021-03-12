@@ -706,7 +706,6 @@ std::string NodeManager::substitute_globals(const std::string& textt) const {
         auto* global_val = static_cast<ParameterByValue<std::string>*>(global_flowchart_params.at(global_name).get());
         text.replace(open-2, len+4, global_val->get());
       }
-    start_pos = close;
   }
   return text;
 }
