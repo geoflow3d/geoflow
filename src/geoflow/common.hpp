@@ -150,6 +150,8 @@ class MultiTriangleCollection
   std::vector<AttributeMap>       attributes_;
 
 public:
+  std::vector<int> building_part_ids_;
+
   void push_back(TriangleCollection & trianglecollection);
   void push_back(AttributeMap & attributemap);
   std::vector<TriangleCollection>& get_tricollections();
