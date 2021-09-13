@@ -231,4 +231,21 @@ class Mesh {
   // const std::unordered_map<std::string, AttributeVec>&  get_attributes() const;
 };
 
+// modelled after https://gdal.org/api/ogrfeature_cpp.html#_CPPv4NK10OGRFeature18GetFieldAsDateTimeEiPiPiPiPiPiPiPi
+struct Date {
+  int year;
+  int month;
+  int day;
+};
+struct Time {
+  int hour;
+  int minute;
+  float second;
+  int timeZone;
+};
+struct DateTime {
+  Date date;
+  Time time;
+};
+
 } // namespace geoflow
