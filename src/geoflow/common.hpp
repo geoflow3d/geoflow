@@ -248,4 +248,14 @@ struct DateTime {
   Time time;
 };
 
+struct Image {
+  std::vector<float> array;
+  size_t dim_x;
+  size_t dim_y;
+  float min_x;
+  float min_y;
+  float cellsize;
+  float nodataval;
+};
+
 } // namespace geoflow
