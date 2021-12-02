@@ -17,6 +17,55 @@ namespace geoflow::nodes::core {
     void process(){};
   };
 
+  class IntNode : public Node {
+    int value_=0;
+    public:
+    using Node::Node;
+    void init(){
+      add_output("value", typeid(int));
+      add_param(ParamInt(value_, "value", "Integer value"));
+    };
+    void process(){
+      output("value").set(value_);
+    };
+  };
+  class FloatNode : public Node {
+    float value_=0;
+    public:
+    using Node::Node;
+    void init(){
+      add_output("value", typeid(float));
+      add_param(ParamFloat(value_, "value", "Floating point value"));
+    };
+    void process(){
+      output("value").set(value_);
+    };
+  };
+  class BoolNode : public Node {
+    bool value_=true;
+    public:
+    using Node::Node;
+    void init(){
+      add_output("value", typeid(bool));
+      add_param(ParamBool(value_, "value", "Boolean value"));
+    };
+    void process(){
+      output("value").set(value_);
+    };
+  };
+  class StrNode : public Node {
+    std::string value_="";
+    public:
+    using Node::Node;
+    void init(){
+      add_output("value", typeid(std::string));
+      add_param(ParamString(value_, "value", "String value"));
+    };
+    void process(){
+      output("value").set(value_);
+    };
+  };
+
   class NestNode : public Node {
     private:
     bool flowchart_loaded=false;

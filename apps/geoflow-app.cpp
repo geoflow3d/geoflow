@@ -49,6 +49,10 @@ using namespace geoflow;
 void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers, std::string& plugin_dir, bool verbose=false) {
   auto R_core = NodeRegister::create("Core");
   R_core->register_node<nodes::core::NestNode>("NestedFlowchart");
+  R_core->register_node<nodes::core::IntNode>("Int");
+  R_core->register_node<nodes::core::FloatNode>("Float");
+  R_core->register_node<nodes::core::StrNode>("Str");
+  R_core->register_node<nodes::core::BoolNode>("Bool");
   node_registers.emplace(R_core);
 
   #ifdef GF_BUILD_WITH_GUI
