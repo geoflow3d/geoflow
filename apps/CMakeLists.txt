@@ -14,9 +14,9 @@ if(${GF_BUILD_GUI})
     add_executable(geoflow geoflow-gui.cpp)
   endif()
 
-#  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR LINUX)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR LINUX)
     target_link_libraries(geoflow PRIVATE -ldl)
-#  endif()
+  endif()
   target_link_libraries(geoflow PRIVATE geoflow-gui nlohmann_json::nlohmann_json glfw)
   target_include_directories(geoflow PRIVATE ${GLM_INCLUDE_DIRECTORIES})
   target_link_directories(geoflow PRIVATE ${CMAKE_SOURCE_DIR}/src)
@@ -32,15 +32,15 @@ endif()
 
 # cli application
 add_executable(geof geoflow-app.cpp)
-#if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR LINUX)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR LINUX)
   target_link_libraries(geof PRIVATE -ldl)
-#endif()
+endif()
 target_link_libraries(geof PRIVATE geoflow-core nlohmann_json::nlohmann_json Threads::Threads)
 target_link_directories(geof PRIVATE ${CMAKE_SOURCE_DIR}/src)
 set_target_properties( geof PROPERTIES CXX_STANDARD 17 )
-#if (LINUX)
+if (LINUX)
   target_compile_options( geof PRIVATE -Wl,-E ) # https://gcc.gnu.org/faq.html#dso
-#endif()
+endif()
 
 install(TARGETS geof
   RUNTIME DESTINATION bin)
