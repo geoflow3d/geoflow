@@ -1,19 +1,29 @@
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.21)
 
 project (Geoflow VERSION 0.0.1)
 
-set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins" CACHE STRING "Geoflow plugin folder")
-if (WIN32)
-  set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
-  string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
+if(PROJECT_IS_TOP_LEVEL)
+  set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins" CACHE STRING "Geoflow plugin folder")
+  if (WIN32)
+    set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
+    string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
+  endif()
+else()
+  set(GF_PLUGIN_FOLDER "share/geoflow/plugins" CACHE STRING "Geoflow plugin folder")
+  if (WIN32)
+    set(GF_PLUGIN_FOLDER "bin\\plugins")
+    string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
+  endif()
 endif()
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
-# option(GF_USE_EXTERNAL_JSON "Use an external JSON library" OFF)
+# option(GF_USE_EXTERNAL_JSON "Use an external JSON library" ON)
 
 # dependencies
 add_subdirectory(thirdparty)
+
+find_package(nlohmann_json CONFIG REQUIRED)
 
 if(GF_BUILD_GUI)
 find_package(glfw3 3.3 REQUIRED)
@@ -94,10 +104,10 @@ if(${GF_BUILD_GUI})
     thirdparty/imgui/examples
   )
   set(GF_SHADER_FILES 
-  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.frag 
-  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/crosshair.vert 
-  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.frag 
-  ${CMAKE_SOURCE_DIR}/src/viewer/shaders/basic.vert)
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/viewer/shaders/crosshair.frag 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/viewer/shaders/crosshair.vert 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/viewer/shaders/basic.frag 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/viewer/shaders/basic.vert)
   SET(GF_GUI_SOURCES
     src/viewer/app.cpp 
     src/viewer/app_povi.cpp 
@@ -177,9 +187,9 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # get absolute path to plugin folder. If it is a relative path we assume it is relative to the CMAKE_BINARY_DIR
-get_filename_component(GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER} ABSOLUTE ${CMAKE_BINARY_DIR})
-add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
-message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER}")
+get_filename_component(GF_PLUGIN_FOLDER_ABSOLUTE ${GF_PLUGIN_FOLDER} ABSOLUTE ${CMAKE_BINARY_DIR})
+add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER_ABSOLUTE}\")
+message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER_ABSOLUTE}")
 
 set(GF_PLUGIN_EXTENSION ".so")
 if (WIN32)
@@ -189,11 +199,22 @@ message(STATUS "Setting Geoflow plugin extension to ${GF_PLUGIN_EXTENSION}")
 add_definitions(-DGF_PLUGIN_EXTENSION=\"${GF_PLUGIN_EXTENSION}\")
 
 # write the hash of the concatenated shared header files to a new header file, so that we can check compatibility between main geof executable and the plugins
-set(GF_SHH_FILE ${CMAKE_BINARY_DIR}/gfSharedHeadersHash.h)
-add_custom_command(
-  TARGET geoflow-core
-  COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${GF_SHH_FILE} -DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_LIST_DIR} -P "${CMAKE_CURRENT_LIST_DIR}/cmake/ComputeSharedHeadersHash.cmake"
-)
+set(GF_SHH_FILE ${CMAKE_BINARY_DIR}/include/geoflow/gfSharedHeadersHash.h)
+if(PROJECT_IS_TOP_LEVEL)
+  add_custom_command(
+    TARGET geoflow-core
+    COMMAND ${CMAKE_COMMAND} -DOUTPUT_FILE=${GF_SHH_FILE} -DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_LIST_DIR} -P "${CMAKE_CURRENT_LIST_DIR}/cmake/ComputeSharedHeadersHash.cmake"
+  )
+else()
+  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/src/geoflow/common.hpp s1)
+  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/src/geoflow/parameters.hpp s2)
+  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/src/geoflow/geoflow.hpp s3)
+  string(CONCAT GF_SHARED_HEADERS ${s1} ${s2} ${s3})
+  string(MD5 GF_SHARED_HEADERS_HASH ${GF_SHARED_HEADERS})
+  message(STATUS "Setting Geoflow shared header hash to ${GF_SHARED_HEADERS_HASH}")
+  file(WRITE ${GF_SHH_FILE} "#define GF_SHARED_HEADERS_HASH \"${GF_SHARED_HEADERS_HASH}\"\n")
+endif()
+
   
 set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
   src/geoflow/common.hpp
@@ -201,6 +222,21 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
   src/geoflow/geoflow.hpp
   ${GF_SHH_FILE}
 )
+
+# target_include_directories(geoflow-core PUBLIC
+#   ${CMAKE_BINARY_DIR}/include
+# )
+
+# target_sources(geoflow-core PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/geoflow/common.hpp>
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/geoflow/parameters.hpp>
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/geoflow/geoflow.hpp>
+#   $<BUILD_INTERFACE:${GF_SHH_FILE}>
+#   $<INSTALL_INTERFACE:include/geoflow/common.hpp>
+#   $<INSTALL_INTERFACE:include/geoflow/parameters.hpp>
+#   $<INSTALL_INTERFACE:include/geoflow/geoflow.hpp>
+#   $<INSTALL_INTERFACE:include/geoflow/gfSharedHeadersHash.h>
+# )
 
 install(TARGETS geoflow-core EXPORT geoflow-targets 
   RUNTIME DESTINATION bin
@@ -241,3 +277,20 @@ set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Geoflow")
 
 INCLUDE(CPack)
+
+function(geoflow_create_plugin)
+  configure_file(${GF_PLUGIN_FILE} ${PROJECT_BINARY_DIR}/gf_plugin.cpp)
+
+  add_library(${GF_PLUGIN_TARGET_NAME} MODULE
+    ${PROJECT_BINARY_DIR}/gf_plugin.cpp
+    ${ARGN}
+  )
+  set_target_properties(
+    ${GF_PLUGIN_TARGET_NAME} PROPERTIES 
+    CXX_STANDARD 17
+    CXX_VISIBILITY_PRESET hidden
+    PREFIX ""
+  )
+
+  install(TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION "share/geoflow/plugins")
+endfunction()
