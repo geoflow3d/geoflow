@@ -20,7 +20,9 @@ function(geoflow_create_plugin)
     PREFIX ""
   )
 
-  install(TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION ${geoflow_PLUGIN_FOLDER})
+  install(
+    TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION ${geoflow_PLUGIN_FOLDER}
+    RUNTIME DESTINATION ${geoflow_PLUGIN_FOLDER})
 endfunction()
 
 @PACKAGE_INIT@

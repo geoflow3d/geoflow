@@ -2,16 +2,15 @@ cmake_minimum_required (VERSION 3.21)
 
 project (Geoflow VERSION 0.0.1)
 
+set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins" CACHE STRING "Geoflow plugin folder")
 if(PROJECT_IS_TOP_LEVEL)
-  set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins" CACHE STRING "Geoflow plugin folder")
   if (WIN32)
     set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
   endif()
 else()
-  set(GF_PLUGIN_FOLDER "share/geoflow/plugins" CACHE STRING "Geoflow plugin folder")
   if (WIN32)
-    set(GF_PLUGIN_FOLDER "bin\\plugins")
+    set(GF_PLUGIN_FOLDER "..\\plugins")
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
   endif()
 endif()
@@ -186,10 +185,17 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-# get absolute path to plugin folder. If it is a relative path we assume it is relative to the CMAKE_BINARY_DIR
-get_filename_component(GF_PLUGIN_FOLDER_ABSOLUTE ${GF_PLUGIN_FOLDER} ABSOLUTE ${CMAKE_BINARY_DIR})
-add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER_ABSOLUTE}\")
-message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER_ABSOLUTE}")
+if(PROJECT_IS_TOP_LEVEL)
+  # get absolute path to plugin folder. If it is a relative path we assume it is relative to the CMAKE_BINARY_DIR
+  get_filename_component(GF_PLUGIN_FOLDER_ABSOLUTE ${GF_PLUGIN_FOLDER} ABSOLUTE ${CMAKE_BINARY_DIR})
+  add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER_ABSOLUTE}\")
+  message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER_ABSOLUTE}")
+else()
+  if (WIN32) # when building NSIS installer package from geoflow-bundle
+    add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
+    message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER}")
+  endif()
+endif()
 
 set(GF_PLUGIN_EXTENSION ".so")
 if (WIN32)
@@ -292,5 +298,5 @@ function(geoflow_create_plugin)
     PREFIX ""
   )
 
-  install(TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION "share/geoflow/plugins")
+  install(TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION "plugins")
 endfunction()

@@ -2,14 +2,19 @@
 if(${GF_BUILD_GUI})
   if(APPLE)
     set(RESOURCE_FILES
-      ${CMAKE_SOURCE_DIR}/resources/AppIcon.icns
+      ${CMAKE_CURRENT_SOURCE_DIR}/resources/AppIcon.icns
     )
     add_executable(geoflow geoflow-gui.cpp ${RESOURCE_FILES})
     set_target_properties(geoflow PROPERTIES
-    MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/resources/Info.plist
-    RESOURCE ${RESOURCE_FILES}
+      MACOSX_BUNDLE TRUE
+      MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/resources/Info.plist
+      RESOURCE ${RESOURCE_FILES}
     )
+  elseif(WIN32)
+    set(RESOURCE_FILES
+      ${CMAKE_CURRENT_SOURCE_DIR}/resources/appicon.rc
+    )
+    add_executable(geoflow geoflow-gui.cpp ${RESOURCE_FILES}) # add WIN32 as second parameter to make it a GUI app and suppress console window on execution
   else()
     add_executable(geoflow geoflow-gui.cpp)
   endif()
