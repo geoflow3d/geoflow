@@ -191,10 +191,10 @@ if(PROJECT_IS_TOP_LEVEL)
   add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER_ABSOLUTE}\")
   message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER_ABSOLUTE}")
 else()
-  if (WIN32) # when building NSIS installer package from geoflow-bundle
+  # if (WIN32) # when building NSIS installer package from geoflow-bundle
     add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
     message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER}")
-  endif()
+  # endif()
 endif()
 
 set(GF_PLUGIN_EXTENSION ".so")
