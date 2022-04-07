@@ -4,8 +4,8 @@ Flowchart tool for geo-spatial data processing. Highly experimental with many ro
 ![Build](https://github.com/geoflow3d/geoflow/workflows/Build/badge.svg)
 
 # Installation
-## Using the precompiled binaries for Windows
-This is the easiest way to get Geoflow running on Windows. Simply download and run the Geoflow installer from the [latest release](https://github.com/geoflow3d/geoflow/releases/latest). Launch `geoflow.exe` to start Geoflow.
+## Windows
+Simply download and run the Geoflow-bundle installer from the [latest release](https://github.com/geoflow3d/geoflow-bundle/releases/latest). This will also install the most important plugins.
 
 ### Installing and using plugins
 Geoflow plugins provide the nodes for Geoflow. Nodes are the functional parts of the flowchart that implement a specific function. You can find the plugins on the [geoflow3d organisation page](https://github.com/geoflow3d). The plugin repositories have the `gfp-` prefix, that is an acronym for geoflow plugin.
