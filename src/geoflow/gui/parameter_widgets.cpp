@@ -76,6 +76,9 @@ namespace geoflow {
     } else if( ParamTypeString == param->get_ptype() ) {
         auto* valptr = static_cast<ParamString*>(param);
         changed = ImGui::InputText(valptr->get_label().c_str(), &valptr->get());
+    } else if( ParamTypeText == param->get_ptype() ) {
+        auto* valptr = static_cast<ParamString*>(param);
+        changed = ImGui::InputTextMultiline(valptr->get_label().c_str(), &valptr->get(), ImVec2(ImGui::GetTextLineHeight() * 32, ImGui::GetTextLineHeight() * 16), ImGuiInputTextFlags_AllowTabInput);
     } else if( param->is_type(typeid(StrMap))) {
         auto* valptr = static_cast<ParamStrMap*>(param);;
         if (ImGui::TreeNode(valptr->get_label().c_str())) {

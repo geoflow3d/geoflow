@@ -147,6 +147,7 @@ bool Slot(geoflow::gfTerminal* term, int kind)
                 ImGui::Text("Output (%lu connections)", ot->get_connections().size());
             }
             ImGui::Text("Is touched %s", term->is_touched() ? "yes" : "no");
+            ImGui::Text("Has connection %s", term->has_connection() ? "yes" : "no");
             ImGui::Text("Has data: %s", term->has_data() ? "yes" : "no");
             ImGui::Text("Marked: %s", term->is_marked() ? "yes" : "no");
             if (term->get_family()==geoflow::GF_SINGLE_FEATURE ) {

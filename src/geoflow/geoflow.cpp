@@ -701,11 +701,30 @@ std::string NodeManager::substitute_globals(const std::string& textt) const {
     open+=2;
     auto len = close-open;
     std::string global_name = text.substr(open, len);
-    if (global_flowchart_params.find(global_name) != global_flowchart_params.end())
+    if (global_flowchart_params.find(global_name) != global_flowchart_params.end()) {
       if(global_flowchart_params.at(global_name)->is_type(typeid(std::string))) {
         auto* global_val = static_cast<ParameterByValue<std::string>*>(global_flowchart_params.at(global_name).get());
         text.replace(open-2, len+4, global_val->get());
+      } else if(global_flowchart_params.at(global_name)->is_type(typeid(int))) {
+        auto* global_val = static_cast<ParameterByValue<int>*>(global_flowchart_params.at(global_name).get());
+        text.replace(open-2, len+4, std::to_string(global_val->get()));
+      } else if(global_flowchart_params.at(global_name)->is_type(typeid(float))) {
+        auto* global_val = static_cast<ParameterByValue<float>*>(global_flowchart_params.at(global_name).get());
+        text.replace(open-2, len+4, std::to_string(global_val->get()));
+      } else if(global_flowchart_params.at(global_name)->is_type(typeid(bool))) {
+        auto* global_val = static_cast<ParameterByValue<bool>*>(global_flowchart_params.at(global_name).get());
+        if (global_val->get())
+          text.replace(open-2, len+4, "true");
+        else
+          text.replace(open-2, len+4, "false");
+      } else {
+        // throw warning that subtitute param is not found
+        start_pos = close;
       }
+    }  else {
+      // throw warning that subtitute param is not subtituted
+      start_pos = close;
+    }
   }
   return text;
 }

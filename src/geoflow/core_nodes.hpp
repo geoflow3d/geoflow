@@ -66,6 +66,42 @@ namespace geoflow::nodes::core {
     };
   };
 
+  class TextNode : public Node {
+    std::string value_="";
+    public:
+    using Node::Node;
+    void init(){
+      add_output("value", typeid(std::string));
+      add_param(ParamText(value_, "value", "Text value"));
+    };
+    void process(){
+      output("value").set( manager.substitute_globals(value_) );
+    };
+  };
+
+
+  class TextWriterNode : public Node {
+    std::string filepath_="";
+    public:
+    using Node::Node;
+    void init(){
+      add_input("value", typeid(std::string));
+      add_param(ParamPath(filepath_, "filepath", "File path"));
+    };
+    void process(){
+      auto value = input("value").get<std::string>();
+
+      auto fname = manager.substitute_globals(filepath_);
+      
+      fs::create_directories(fs::path(fname).parent_path());
+      
+      std::ofstream ofs;
+      ofs.open(fname.c_str());
+      ofs << value;
+      ofs.close();
+    };
+  };
+
   class NestNode : public Node {
     private:
     bool flowchart_loaded=false;

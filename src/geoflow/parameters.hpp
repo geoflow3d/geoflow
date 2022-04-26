@@ -37,7 +37,8 @@ namespace geoflow {
     ParamTypeBoundedInt,
     ParamTypeBool,
     ParamTypePath,
-    ParamTypeString
+    ParamTypeString,
+    ParamTypeText
   };
 
   class Parameter {
@@ -156,6 +157,11 @@ namespace geoflow {
     using ParameterByReference::ParameterByReference;
     public:
     ParamType get_ptype() { return ParamTypeString; };
+  };
+  class ParamText : public ParameterByReference<std::string> {
+    using ParameterByReference::ParameterByReference;
+    public:
+    ParamType get_ptype() { return ParamTypeText; };
   };
 
   typedef std::unordered_map<std::string,std::string> StrMap;
