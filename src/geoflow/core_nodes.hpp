@@ -53,19 +53,6 @@ namespace geoflow::nodes::core {
       output("value").set(value_);
     };
   };
-  class StrNode : public Node {
-    std::string value_="";
-    public:
-    using Node::Node;
-    void init(){
-      add_output("value", typeid(std::string));
-      add_param(ParamString(value_, "value", "String value"));
-    };
-    void process(){
-      output("value").set(value_);
-    };
-  };
-
   class TextNode : public Node {
     std::string value_="";
     public:
