@@ -340,7 +340,7 @@ class gfImNodes : public RenderObject {
 
 namespace geoflow {
 	void launch_gui(NodeManager& manager, std::string flowchart_file) {
-		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow");
+		auto a = std::make_shared<poviApp>(1280, 800, "Geoflow - Technology Preview");
 		gfImNodes nodes(manager, *a, flowchart_file);
 		a->draw_that(&nodes);
 		a->run();

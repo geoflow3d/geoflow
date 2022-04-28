@@ -41,7 +41,13 @@ Shader & Shader::activate()
 Shader & Shader::attach(std::string const & filename)
 {
     // Load GLSL Shader Source from File
-    std::string path = GF_SHADER_PATH "/";
+    std::string path = GF_SHADER_PATH;
+    if(const char* env_p = std::getenv("GF_INSTALL_ROOT")) {
+        path = env_p;
+        path += "/bin/share";
+        std::cout << "Detected environment variable GF_INSTALL_ROOT = " << path << "\n";
+    }
+    path += "/";
     path += filename;
     std::cout << path << "\n";
     sources.push_back(path);
