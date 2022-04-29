@@ -43,6 +43,30 @@ typedef std::vector<std::string> vec1s;
 typedef std::variant<bool, int, std:: string, float> attribute_value;
 typedef std::unordered_map<std::string, std::vector<attribute_value>> AttributeMap;
 
+typedef std::variant<vec1b, vec1i, vec1s, vec1f, vec3f> attribute_vec;
+typedef std::unordered_map<std::string, attribute_vec> attribute_vec_map;
+class AttributeVecMap
+{
+  attribute_vec_map attribs_;
+  template<typename T> const T* get_attribute(const std::string& name) const;
+
+  public:
+  attribute_vec_map& get_attributes();
+  bool has_attributes() const;
+
+  const vec1b* get_attribute_vec1b(const std::string& name) const;
+  const vec1i* get_attribute_vec1i(const std::string& name) const;
+  const vec1s* get_attribute_vec1s(const std::string& name) const;
+  const vec1f* get_attribute_vec1f(const std::string& name) const;
+  const vec3f* get_attribute_vec3f(const std::string& name) const;
+
+  vec1b& add_attribute_vec1b(const std::string& name);
+  vec1i& add_attribute_vec1i(const std::string& name);
+  vec1s& add_attribute_vec1s(const std::string& name);
+  vec1f& add_attribute_vec1f(const std::string& name);
+  vec3f& add_attribute_vec3f(const std::string& name);
+};
+
 class Box
 {
 private:
@@ -176,7 +200,7 @@ public:
   float *get_data_ptr();
 };
 
-class PointCollection : public GeometryCollection<arr3f>
+class PointCollection : public GeometryCollection<arr3f>, public AttributeVecMap
 {
 public:
   size_t vertex_count() const;

@@ -208,6 +208,57 @@ float *PointCollection::get_data_ptr()
   return (*this)[0].data();
 }
 
+attribute_vec_map& AttributeVecMap::get_attributes()
+{
+  return attribs_;
+}
+bool AttributeVecMap::has_attributes() const
+{
+  return attribs_.size() != 0;
+}
+template<typename T> const T* AttributeVecMap::get_attribute(const std::string& name) const{
+  if (attribs_.find(name) != attribs_.end()) {
+    return std::get_if<T>(&attribs_.at(name));
+  }
+  return nullptr;
+}
+const vec1b* AttributeVecMap::get_attribute_vec1b(const std::string& name) const {
+  return get_attribute<vec1b>(name);
+}
+const vec1i* AttributeVecMap::get_attribute_vec1i(const std::string& name) const {
+  return get_attribute<vec1i>(name);
+}
+const vec1s* AttributeVecMap::get_attribute_vec1s(const std::string& name) const {
+  return get_attribute<vec1s>(name);
+}
+const vec1f* AttributeVecMap::get_attribute_vec1f(const std::string& name) const {
+  return get_attribute<vec1f>(name);
+}
+const vec3f* AttributeVecMap::get_attribute_vec3f(const std::string& name) const {
+  return get_attribute<vec3f>(name);
+}
+
+vec1b& AttributeVecMap::add_attribute_vec1b(const std::string& name) {
+  attribs_[name] = vec1b{};
+  return std::get<vec1b>(attribs_.at(name));
+}
+vec1i& AttributeVecMap::add_attribute_vec1i(const std::string& name) {
+  attribs_[name] = vec1i{};
+  return std::get<vec1i>(attribs_.at(name));
+}
+vec1s& AttributeVecMap::add_attribute_vec1s(const std::string& name) {
+  attribs_[name] = vec1s{};
+  return std::get<vec1s>(attribs_.at(name));
+}
+vec1f& AttributeVecMap::add_attribute_vec1f(const std::string& name) {
+  attribs_[name] = vec1f{};
+  return std::get<vec1f>(attribs_.at(name));
+}
+vec3f& AttributeVecMap::add_attribute_vec3f(const std::string& name) {
+  attribs_[name] = vec3f{};
+  return std::get<vec3f>(attribs_.at(name));
+}
+
 size_t TriangleCollection::vertex_count() const
 {
   return size() * 3;
