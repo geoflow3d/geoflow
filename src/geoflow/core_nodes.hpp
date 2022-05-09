@@ -105,6 +105,8 @@ namespace geoflow::nodes::core {
         input_terminals.clear();
         output_terminals.clear();
         nested_node_manager_->clear();
+
+        add_poly_input(get_name()+".globals", {typeid(int), typeid(float), typeid(bool), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
         nested_node_manager_->set_globals(get_manager());
         // nested_outputs_.clear();
         // nested_inputs_.clear();
@@ -150,6 +152,15 @@ namespace geoflow::nodes::core {
       // add_param(ParamBool(use_parallel_processing, "use_parallel_processing", "Use parallel processing"));
 
     };
+    bool inputs_valid() {
+      for (auto& [name,iT] : input_terminals) {
+        if (iT->get_name() == get_name()+".globals")
+          continue;
+        else if (!iT->has_data())
+          return false;
+      }
+      return true;
+    }
     void post_parameter_load() {
       flowchart_loaded = load_nodes();
     }
@@ -262,6 +273,25 @@ namespace geoflow::nodes::core {
           flowchart->global_flowchart_params[key] = val;
         }
         flowchart->global_flowchart_params["GF_I"] = std::make_shared<ParameterByValue<std::string>>(std::to_string(i), "GF_I", "");
+
+        // create globals from inputs on .globals terminal
+        auto& glterm = poly_input(get_name()+".globals");
+        for(auto& sterm : glterm.sub_terminals()) {
+          if(sterm->accepts_type(typeid(std::string))) {
+            auto& val = sterm->get<std::string>(i);
+            flowchart->global_flowchart_params[sterm->get_name()] = std::make_shared<ParameterByValue<std::string>>(val, sterm->get_name(), "global from polyinput");
+          } else if(sterm->accepts_type(typeid(int))) {
+            auto val = sterm->get<int>(i);
+            flowchart->global_flowchart_params[sterm->get_name()] = std::make_shared<ParameterByValue<int>>(val, sterm->get_name(), "global from polyinput");
+          } else if(sterm->accepts_type(typeid(float))) {
+            auto val = sterm->get<float>(i);
+            flowchart->global_flowchart_params[sterm->get_name()] = std::make_shared<ParameterByValue<float>>(val, sterm->get_name(), "global from polyinput");
+          } else if(sterm->accepts_type(typeid(bool))) {
+            auto val = sterm->get<bool>(i);
+            flowchart->global_flowchart_params[sterm->get_name()] = std::make_shared<ParameterByValue<bool>>(val, sterm->get_name(), "global from polyinput");
+          }
+        }
+
         set_inputs(flowchart, i);
         // run
         std::cout << "Processing item " << i+1 << "/" << input_size_ << "\n";
