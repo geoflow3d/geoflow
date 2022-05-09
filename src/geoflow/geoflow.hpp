@@ -607,6 +607,8 @@ namespace geoflow {
     const std::string get_type_name() { return type_name; };
     const NodeRegister& get_register() { return *node_register; };
     const NodeManager& get_manager() { return manager; };
+    
+    std::string substitute_from_term(const std::string& textt, gfMultiFeatureInputTerminal& term, const size_t& i=0);
 
     protected:
     void set_name(std::string new_name);

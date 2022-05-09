@@ -147,7 +147,7 @@ namespace geoflow::nodes::core {
     void init() {
       nested_node_manager_ = std::make_unique<NodeManager>(manager.get_node_registers()); // this will only transfer the node registers
       add_param(ParamPath(filepath_, "filepath", "Flowchart file"));
-      add_param(ParamBool(use_parallel_processing, "use_parallel_processing", "Use parallel processing"));
+      // add_param(ParamBool(use_parallel_processing, "use_parallel_processing", "Use parallel processing"));
 
     };
     void post_parameter_load() {

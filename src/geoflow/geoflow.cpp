@@ -412,6 +412,48 @@ std::string Node::debug_info() {
   return s.str();
 }
 
+std::string Node::substitute_from_term(const std::string& textt, gfMultiFeatureInputTerminal& term, const size_t& i) {
+  size_t start_pos=0;
+  std::string text(textt);
+  while(true) {
+    auto open = text.find("[[", start_pos);
+    if (open==std::string::npos) break;
+
+    auto close = text.find("]]", start_pos);
+    if (close==std::string::npos) break;
+    open+=2;
+    auto len = close-open;
+    std::string attr_name = text.substr(open, len);
+    for(auto& sterm : term.sub_terminals()) {
+      if (sterm->get_name() == attr_name) {
+        if(sterm->accepts_type(typeid(std::string))) {
+          auto& val = sterm->get<std::string>(i);
+          text.replace(open-2, len+4, val);
+        } else if(sterm->accepts_type(typeid(int))) {
+          auto val = sterm->get<int>(i);
+          text.replace(open-2, len+4, std::to_string(val));
+        } else if(sterm->accepts_type(typeid(float))) {
+          auto val = sterm->get<float>(i);
+          text.replace(open-2, len+4, std::to_string(val));
+        } else if(sterm->accepts_type(typeid(bool))) {
+          auto val = sterm->get<bool>(i);
+          if (val)
+            text.replace(open-2, len+4, "true");
+          else
+            text.replace(open-2, len+4, "false");
+        } else {
+          // throw warning that subtitute param is not found
+          start_pos = close;
+        }
+      }  else {
+        // throw warning that subtitute param is not subtituted
+        start_pos = close;
+      }
+    }
+  }
+  return text;
+}
+
 void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
 }

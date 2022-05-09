@@ -49,6 +49,7 @@ class AttributeVecMap
 {
   attribute_vec_map attribs_;
   template<typename T> const T* get_attribute(const std::string& name) const;
+  template<typename T> T* get_attribute(const std::string& name);
 
   public:
   attribute_vec_map& get_attributes();
@@ -59,6 +60,12 @@ class AttributeVecMap
   const vec1s* get_attribute_vec1s(const std::string& name) const;
   const vec1f* get_attribute_vec1f(const std::string& name) const;
   const vec3f* get_attribute_vec3f(const std::string& name) const;
+
+  vec1b* get_attribute_vec1b(const std::string& name);
+  vec1i* get_attribute_vec1i(const std::string& name);
+  vec1s* get_attribute_vec1s(const std::string& name);
+  vec1f* get_attribute_vec1f(const std::string& name);
+  vec3f* get_attribute_vec3f(const std::string& name);
 
   vec1b& add_attribute_vec1b(const std::string& name);
   vec1i& add_attribute_vec1i(const std::string& name);

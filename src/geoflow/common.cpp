@@ -222,6 +222,12 @@ template<typename T> const T* AttributeVecMap::get_attribute(const std::string& 
   }
   return nullptr;
 }
+template<typename T> T* AttributeVecMap::get_attribute(const std::string& name) {
+  if (attribs_.find(name) != attribs_.end()) {
+    return std::get_if<T>(&attribs_.at(name));
+  }
+  return nullptr;
+}
 const vec1b* AttributeVecMap::get_attribute_vec1b(const std::string& name) const {
   return get_attribute<vec1b>(name);
 }
@@ -235,6 +241,21 @@ const vec1f* AttributeVecMap::get_attribute_vec1f(const std::string& name) const
   return get_attribute<vec1f>(name);
 }
 const vec3f* AttributeVecMap::get_attribute_vec3f(const std::string& name) const {
+  return get_attribute<vec3f>(name);
+}
+vec1b* AttributeVecMap::get_attribute_vec1b(const std::string& name) {
+  return get_attribute<vec1b>(name);
+}
+vec1i* AttributeVecMap::get_attribute_vec1i(const std::string& name) {
+  return get_attribute<vec1i>(name);
+}
+vec1s* AttributeVecMap::get_attribute_vec1s(const std::string& name) {
+  return get_attribute<vec1s>(name);
+}
+vec1f* AttributeVecMap::get_attribute_vec1f(const std::string& name) {
+  return get_attribute<vec1f>(name);
+}
+vec3f* AttributeVecMap::get_attribute_vec3f(const std::string& name) {
   return get_attribute<vec3f>(name);
 }
 
