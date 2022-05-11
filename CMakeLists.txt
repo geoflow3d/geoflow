@@ -251,7 +251,7 @@ install(TARGETS geoflow-core EXPORT geoflow-targets
   PUBLIC_HEADER DESTINATION include/geoflow)
 install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
 
-install(FILES thirdparty/json/single_include/nlohmann/json.hpp DESTINATION include/geoflow/nlohmann)
+# install(FILES thirdparty/json/single_include/nlohmann/json.hpp DESTINATION include/geoflow/nlohmann)
 
 include ( CMakePackageConfigHelpers )
 configure_package_config_file(cmake/geoflow-config.cmake.in
