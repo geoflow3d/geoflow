@@ -592,6 +592,7 @@ namespace geoflow {
     // virtual std::map<std::string,std::shared_ptr<OutputTerminal>> init_outputs() {};
     // virtual ParameterMap init_parameters() {};
     virtual bool inputs_valid();
+    virtual bool parameters_valid();
     virtual void process() = 0;
     virtual void gui() {};
     virtual void on_receive(gfSingleFeatureInputTerminal& it){};

@@ -345,9 +345,12 @@ bool Node::inputs_valid() {
   }
   return true;
 }
+bool Node::parameters_valid() {
+  return true;
+}
 bool Node::update_status() {
   auto status_before = status_;
-  if (inputs_valid())
+  if (inputs_valid() && parameters_valid())
     status_ = GF_NODE_READY;
   else
     status_ = GF_NODE_WAITING;
@@ -458,6 +461,12 @@ void NodeManager::queue(std::shared_ptr<Node> n) {
   node_queue.push(n);
 }
 size_t NodeManager::run_all(bool notify_children) {
+  // disable autorun on nodes that do not have valid parameters
+  for (auto& [nname, node] : nodes) {
+    if(!node->parameters_valid())
+      node->autorun = false;
+      std::cout << "Not executing " << nname << std::endl;
+  }
   // find all root nodes with autorun enabled
   std::vector<NodeHandle> to_run;
   for (auto& [name, node] : nodes) {
