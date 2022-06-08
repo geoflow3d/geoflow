@@ -36,10 +36,24 @@ Have a look at the [workflow files](https://github.com/tudelft3d/geoflow/tree/ma
 
 # Usage
 ## Command line interface (`geof`)
-`geof <flowchart file> [--config <TOML config file with globals>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]`
+```
+Geoflow
+Usage: geof [OPTIONS] [SUBCOMMAND]
 
-You can also simply print just information on the plugins that are loaded with:
-`geof info`
+Options:
+  -h,--help                   Print this help message and exit
+  --verbose                   Print verbose messages
+  --version                   Print version information
+  --plugins                   List available plugins
+  --nodes                     List available nodes from plugins that are loaded
+
+Subcommands:
+  run                         Load and run flowchart
+```
+
+Running a flowchart:
+`geof run <flowchart file> [--config <TOML config file with globals>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]`
+
 
 ## GUI (`geoflow`)
 Takes the same parameters as `geof` on the command line.
@@ -48,16 +62,3 @@ Takes the same parameters as `geof` on the command line.
 - Drag from input/output terminals to make connections
 - Right click on a node to access its context menu
 - Translate in the 3D viewer by left-mouse dragging while holding `ctrl`, faster zooming by holding `ctrl` while scrolling.
-
-
-## cli
-geof [--verbose] [--version] [--log] run <flowchart> [--config <toml file>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]
-
-geof --version # prints geoflow version info
-geof --plugins # lists available plugins and their version 
-geof --nodes # lists available nodes for each plugin
-
-with --verbose also prints plugins that failed to load
-
-? geof run flowchart.json --config ... # normal run
-? geof run flowchart.json --info # print fc info like # nodes, available global and default values etc? Cancels the actual rune
