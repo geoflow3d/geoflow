@@ -274,7 +274,7 @@ int main(int argc, const char * argv[]) {
     // launch gui or just run the flowchart in cli mode
     fs::current_path(flowchart_folder);
     #ifdef GF_BUILD_WITH_GUI
-      if (no_arguments) launch_gui(flowchart, flowchart_path);
+      launch_gui(flowchart, flowchart_path);
     #else
       if (*run_subcommand) flowchart.run_all();
     #endif
