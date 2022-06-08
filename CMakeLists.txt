@@ -73,6 +73,9 @@ if(GF_BUILD_GUI_FILE_DIALOGS)
   add_definitions(-DGF_BUILD_GUI_FILE_DIALOGS)
 endif()
 
+# version
+configure_file(cmake/version.h ${PROJECT_BINARY_DIR}/version.h)
+
 # includes
 include_directories(
   src

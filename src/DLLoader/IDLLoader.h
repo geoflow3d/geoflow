@@ -24,7 +24,7 @@ namespace dlloader
 		/*
 		**
 		*/
-		virtual bool DLOpenLib() = 0;
+		virtual bool DLOpenLib(bool verbose=false) = 0;
 
 		/*
 		** Return a shared pointer on an instance of class loaded through
@@ -35,7 +35,7 @@ namespace dlloader
 		/*
 		** Correctly delete the instance of the "dynamically loaded" class.
 		*/
-		virtual void DLCloseLib() = 0;
+		virtual void DLCloseLib(bool verbose=false) = 0;
 
 	};
 }

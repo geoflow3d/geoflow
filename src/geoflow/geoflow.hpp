@@ -623,6 +623,8 @@ namespace geoflow {
     // Allows us to have a register of node types. Each node type is registered using a unique string (the type_name). The type_name can be used to create a node of the corresponding type with the create function.
     // private:
     public:
+    typedef std::unordered_map<std::string, std::string> string_map;
+
     NodeRegister(const std::string& name) : name(name) {};
     NodeRegister();
 
@@ -636,6 +638,7 @@ namespace geoflow {
       node_types[type_name] = create_node_type<NodeClass>;
     }
     std::string get_name() const {return name;}
+    string_map& get_plugin_info() {return plugin_info;}
     
     protected:
     template<class NodeClass> static std::shared_ptr<NodeClass> create_node_type(NodeRegisterHandle nr, NodeManager& nm, std::string type_name, std::string node_name){
@@ -651,6 +654,7 @@ namespace geoflow {
       auto n = f(shared_from_this(), nm, type_name, node_name);
       return n;
     }
+    string_map plugin_info;
     std::string name;
     friend class NodeManager;
   };

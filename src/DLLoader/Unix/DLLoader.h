@@ -33,10 +33,11 @@ namespace dlloader
 
 		~DLLoader() = default;
 
-		bool DLOpenLib() override
+		bool DLOpenLib(bool verbose) override
 		{
 			if (!(_handle = dlopen(_pathToLib.c_str(), RTLD_LAZY | RTLD_GLOBAL))) {
-				std::cout << dlerror() << std::endl;
+				if (verbose) std::cout << "Can't open and load " << _pathToLib << std::endl;
+				if (verbose) std::cout << "->" << dlerror() << std::endl;
 				return false;
 			}
 
@@ -45,15 +46,18 @@ namespace dlloader
 			auto headerHashFunc = reinterpret_cast<getHeaderHash>(
 					dlsym(_handle, _getHeaderHashSymbol.c_str()));
 			if(!headerHashFunc) {
-				std::cout << dlerror() << std::endl;
-				DLCloseLib();
+				if (verbose) std::cout << "Can't open and load " << _pathToLib << std::endl;
+				if (verbose) std::cout << "->" << dlerror() << std::endl;
+				DLCloseLib(verbose);
 				return false;
 			} else {
 				char plugin_hash[33];
 				headerHashFunc(plugin_hash);
 				if(strcmp(plugin_hash, GF_SHARED_HEADERS_HASH)!=0) {
-					std::cout << "Plugin header hash incompatible!\n";
-					DLCloseLib();
+					if (verbose) std::cout << "Can't open and load " << _pathToLib << std::endl;
+					if (verbose) std::cout << "-> Plugin header hash incompatible!\n";
+					// std::cout << plugin_hash << ", geof: " << GF_SHARED_HEADERS_HASH << "\n";
+					DLCloseLib(verbose);
 					return false;
 				}
 			}
@@ -76,7 +80,7 @@ namespace dlloader
 				std::cout << dlerror() << std::endl;
 
 			if (!allocFunc || !deleteFunc) {
-				DLCloseLib();
+				DLCloseLib(true);
 			}
 
 			return std::shared_ptr<T>(
@@ -84,10 +88,10 @@ namespace dlloader
 					[deleteFunc](T *p){ deleteFunc(p); });
 		}
 
-		void DLCloseLib() override
+		void DLCloseLib(bool verbose) override
 		{
 			if (dlclose(_handle) != 0) {
-				std::cout << dlerror() << std::endl;
+				if (verbose) std::cout << dlerror() << std::endl;
 			}
 		}
 

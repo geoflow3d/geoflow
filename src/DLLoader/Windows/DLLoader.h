@@ -50,11 +50,11 @@ namespace dlloader
         return message;
     }
 
-		bool DLOpenLib() override
+		bool DLOpenLib(bool verbose) override
 		{
 			if (!(_handle = LoadLibrary(_pathToLib.c_str()))) {
-				std::cout << "Can't open and load " << _pathToLib << std::endl;
-				std::cout << "ERROR: " << GetLastErrorAsString() << std::endl;
+				if (verbose) std::cout << "Can't open and load " << _pathToLib << std::endl;
+				if (verbose) std::cout << "-> ERROR: " << GetLastErrorAsString() << std::endl;
 				return false;
 			}
 
@@ -63,16 +63,18 @@ namespace dlloader
 			auto headerHashFunc = reinterpret_cast<getHeaderHash>(
 					GetProcAddress(_handle, _getHeaderHashSymbol.c_str()));
 			if(!headerHashFunc) {
-				std::cout << "Can't find _getHeaderHashSymbol symbol in " << _pathToLib << std::endl;
-				DLCloseLib();
+				if (verbose) std::cout << "Can't open and load " << _pathToLib << std::endl;
+				if (verbose) std::cout << "-> Can't find _getHeaderHashSymbol" << std::endl;
+				DLCloseLib(verbose);
 				return false;
 			} else {
 				char plugin_hash[33];
 				headerHashFunc(plugin_hash);
 				if(strcmp(plugin_hash, GF_SHARED_HEADERS_HASH)!=0) {
-					std::cout << plugin_hash << ", geof: " << GF_SHARED_HEADERS_HASH << "\n";
-					std::cout << "Plugin header hash incompatible!\n";
-					DLCloseLib();
+					if (verbose) std::cout << "Can't open and load " << _pathToLib << std::endl;
+					if (verbose) std::cout << "-> Plugin header hash incompatible!\n";
+					// std::cout << plugin_hash << ", geof: " << GF_SHARED_HEADERS_HASH << "\n";
+					DLCloseLib(verbose);
 					return false;
 				}
 			}
@@ -90,7 +92,7 @@ namespace dlloader
 				GetProcAddress(_handle, _deleteClassSymbol.c_str()));
 
 			if (!allocFunc || !deleteFunc) {
-				DLCloseLib();
+				DLCloseLib(true);
 				std::cout << "Can't find allocator or deleter symbol in " << _pathToLib << std::endl;
 			}
 
@@ -99,10 +101,10 @@ namespace dlloader
 				[deleteFunc](T *p) { deleteFunc(p); });
 		}
 
-		void DLCloseLib() override
+		void DLCloseLib(bool verbose) override
 		{
 			if (FreeLibrary(_handle) == 0) {
-				std::cout << "Can't close " << _pathToLib << std::endl;
+				if (verbose) std::cout << "Can't close " << _pathToLib << std::endl;
 			}
 		}
 

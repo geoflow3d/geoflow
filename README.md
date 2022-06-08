@@ -48,3 +48,16 @@ Takes the same parameters as `geof` on the command line.
 - Drag from input/output terminals to make connections
 - Right click on a node to access its context menu
 - Translate in the 3D viewer by left-mouse dragging while holding `ctrl`, faster zooming by holding `ctrl` while scrolling.
+
+
+## cli
+geof [--verbose] [--version] [--log] run <flowchart> [--config <toml file>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]
+
+geof --version # prints geoflow version info
+geof --plugins # lists available plugins and their version 
+geof --nodes # lists available nodes for each plugin
+
+with --verbose also prints plugins that failed to load
+
+? geof run flowchart.json --config ... # normal run
+? geof run flowchart.json --info # print fc info like # nodes, available global and default values etc? Cancels the actual rune

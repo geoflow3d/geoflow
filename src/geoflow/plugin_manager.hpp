@@ -15,31 +15,23 @@ namespace geoflow {
         if (p.path().extension() == GF_PLUGIN_EXTENSION) {
           const std::string path = p.path().string();
           const std::string plugin_target_name = p.path().stem().string();
-          
-          std::cout << "Loading " << path << " ...\n";
-          
+                    
           dloaders_.emplace(path, std::make_unique<DLLoader>(path, plugin_target_name));
           
-          if (dloaders_[path]->DLOpenLib()) {
+          if (dloaders_[path]->DLOpenLib(verbose)) {
+            if (verbose) std::cout << "Loaded " << path << std::endl;
             auto [reg, success] = node_registers.emplace( dloaders_[path]->DLGetInstance() );
-            if (verbose) {
-              for (auto& [key, val] : reg->second->node_types) {
-                std::cout << "loaded type: " << key << "\n";
-              }
-            std::cout << "... success :)\n";
-            }
           } else {
             dloaders_.erase(path);
-            std::cout << "... failed :(\n";
           }
         }
       }
     }
 
-    void unload() {
+    void unload(bool verbose=false) {
       for (auto& [path, loader] : dloaders_) {
-        std::cout << "Unloading " << path << "\n";
-        loader->DLCloseLib();
+        if (verbose) std::cout << "Unloading " << path << "\n";
+        loader->DLCloseLib(verbose);
       }
     }
 

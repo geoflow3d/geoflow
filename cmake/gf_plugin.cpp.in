@@ -13,6 +13,16 @@ extern "C"
 	{
     auto node_register = new geoflow::NodeRegister("@GF_PLUGIN_NAME@");
     register_nodes(*node_register);
+
+		auto& info = node_register->get_plugin_info();
+		info["version_major"] = "@PROJECT_VERSION_MAJOR@";
+		info["version_minor"] = "@PROJECT_VERSION_MINOR@";
+		info["version_patch"] = "@PROJECT_VERSION_PATCH@";
+		info["host_system"] = "@CMAKE_HOST_SYSTEM@";
+		info["compiler_id"] = "@CMAKE_CXX_COMPILER_ID@";
+		info["compiler_version"] = "@CMAKE_CXX_COMPILER_VERSION@";
+		info["build_type"] = "@CMAKE_BUILD_TYPE@";
+
 		return node_register;
 	}
 
