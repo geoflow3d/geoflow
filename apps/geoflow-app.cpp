@@ -135,11 +135,13 @@ int main(int argc, const char * argv[]) {
     // sc_listnodes->parse_complete_callback([&plugin_manager, &node_registers, &plugin_folder](){
     //   load_plugins(plugin_manager, node_registers, plugin_folder, true);
     // });
-
-    if(!(*run_subcommand) && !(*version_flag) && !(*nodes_flag) && !(*plugins_flag) && !(verbose)) {
-      std::cout << cli.help() << std::flush;
-      return 1;
-    }
+    bool no_arguments = !(*run_subcommand) && !(*version_flag) && !(*nodes_flag) && !(*plugins_flag) && !(verbose);
+    #ifndef GF_BUILD_WITH_GUI
+      if(no_arguments) {
+        std::cout << cli.help() << std::flush;
+        return 1;
+      }
+    #endif
 
     if(*version_flag) {
       std::cout << "Geoflow " << PROJECT_VERSION_MAJOR;
@@ -272,11 +274,9 @@ int main(int argc, const char * argv[]) {
     // launch gui or just run the flowchart in cli mode
     fs::current_path(flowchart_folder);
     #ifdef GF_BUILD_WITH_GUI
-      if(node_registers.size()==0)
-        load_plugins(plugin_manager, node_registers, plugin_folder);
-      launch_gui(flowchart, flowchart_path);
+      if (no_arguments) launch_gui(flowchart, flowchart_path);
     #else
-      flowchart.run_all();
+      if (*run_subcommand) flowchart.run_all();
     #endif
 
 
