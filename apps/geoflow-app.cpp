@@ -136,6 +136,11 @@ int main(int argc, const char * argv[]) {
     //   load_plugins(plugin_manager, node_registers, plugin_folder, true);
     // });
 
+    if(!(*run_subcommand) && !(*version_flag) && !(*nodes_flag) && !(*plugins_flag) && !(verbose)) {
+      std::cout << cli.help() << std::flush;
+      return 1;
+    }
+
     if(*version_flag) {
       std::cout << "Geoflow " << PROJECT_VERSION_MAJOR;
       std::cout << "." << PROJECT_VERSION_MINOR;
