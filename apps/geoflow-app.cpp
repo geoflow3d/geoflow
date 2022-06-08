@@ -90,6 +90,7 @@ int main(int argc, const char * argv[]) {
   }
 
   PluginManager plugin_manager;
+  bool verbose{false};
 
   {
     NodeRegisterMap node_registers;
@@ -102,7 +103,6 @@ int main(int argc, const char * argv[]) {
     //   std::cout << "Setting plugin folder to " << plugin_folder << "\n";
     // }
 
-    bool verbose{false};
     cli.add_flag("--verbose", verbose, "Print verbose messages");
 
     auto version_flag = cli.add_flag("--version", "Print version information");
@@ -212,7 +212,7 @@ int main(int argc, const char * argv[]) {
       for (auto&[key,val] : flowchart.global_flowchart_params) {
         auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{}));
         sc_globals.add_option("--"+key, (it->second), "");
-        if (verbose) std::cout << "add global option" << key << "\n";
+        if (verbose) std::cout << "add global option " << key << "\n";
       }
       sc_globals.parse(run_subcommand->remaining_for_passthrough());
 
@@ -267,6 +267,7 @@ int main(int argc, const char * argv[]) {
 
     std::ofstream logfile;
     if( ! verbose ) {
+      std::clog.setstate(std::ios_base::failbit);
       std::cout.setstate(std::ios_base::failbit);
       std::cerr.setstate(std::ios_base::failbit);
     }
@@ -281,13 +282,14 @@ int main(int argc, const char * argv[]) {
 
 
     if( ! verbose ) {
+      std::clog.clear();
       std::cout.clear();
       std::cerr.clear();
     }
   }
 
   // NOTICE that we first must destroy any related node_registers before we can unload the plugin_manager!
-  plugin_manager.unload();
+  plugin_manager.unload(verbose);
 
   // std::cout.rdbuf(cout_rdbuf);
   // std::cerr.rdbuf(cerr_rdbuf);

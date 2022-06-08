@@ -350,7 +350,7 @@ bool Node::parameters_valid() {
 }
 bool Node::update_status() {
   auto status_before = status_;
-  if (inputs_valid() && parameters_valid())
+  if (inputs_valid())
     status_ = GF_NODE_READY;
   else
     status_ = GF_NODE_WAITING;
