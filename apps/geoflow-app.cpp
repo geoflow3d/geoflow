@@ -76,6 +76,49 @@ void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers
     std::cout << "Plugin folder does not exist: " << plugin_dir << "\n";
   }
 }
+void print_version() {
+  std::cout << "Geoflow " << PROJECT_VERSION_MAJOR;
+  std::cout << "." << PROJECT_VERSION_MINOR;
+  std::cout << "." << PROJECT_VERSION_PATCH; std::cout << std::endl;
+  // std::cout << "host_system : " << CMAKE_HOST_SYSTEM; std::cout << std::endl;
+  std::cout << "compiled with " << CMAKE_CXX_COMPILER_ID;
+  std::cout << " v" << CMAKE_CXX_COMPILER_VERSION;
+  std::cout << " (" << CMAKE_BUILD_TYPE;
+  std::cout << ")" << std::endl;
+}
+void print_plugins(NodeRegisterMap& node_registers) {
+  if (node_registers.size()) {
+    // std::cout << "Available plugins:\n";
+    for (auto& [rname, reg] : node_registers) {
+      auto& rinfo = reg->get_plugin_info();
+      std::cout << "> " << rname;
+      if (rinfo.size()) {
+        std::cout << " " << rinfo["version_major"]
+        << "." << rinfo["version_minor"] << "." << rinfo["version_patch"] 
+        << std::endl;
+        std::cout << "  compiled with " << rinfo["compiler_id"]
+        << " v" << rinfo["compiler_version"];
+        if (rinfo["build_type"] != "") {
+          std::cout << " (" << rinfo["build_type"];
+          std::cout << ")";
+        }
+        std::cout << std::endl;
+      } else {
+        std::cout << " [built-in]\n";
+      }
+    }
+  }
+}
+void print_nodes(NodeRegisterMap& node_registers) {
+  if (node_registers.size()) {
+    for (auto& [rname, reg] : node_registers) {
+      std::cout << "Available nodes for plugin " << rname << ":\n";
+      for (auto& [nname, val] : reg->node_types) {
+        std::cout << " > " << nname << "\n";
+      }
+    }
+  }
+}
 
 int main(int argc, const char * argv[]) {
   std::string flowchart_path = "flowchart.json";
@@ -95,6 +138,7 @@ int main(int argc, const char * argv[]) {
   {
     NodeRegisterMap node_registers;
     NodeManager flowchart(node_registers);
+    load_plugins(plugin_manager, node_registers, plugin_folder, verbose);
 
     CLI::App cli{"Geoflow"};
 
@@ -102,12 +146,12 @@ int main(int argc, const char * argv[]) {
     // if(*opt_plugin_folder) {
     //   std::cout << "Setting plugin folder to " << plugin_folder << "\n";
     // }
-
     cli.add_flag("--verbose", verbose, "Print verbose messages");
-
-    auto version_flag = cli.add_flag("--version", "Print version information");
-    auto plugins_flag = cli.add_flag("--plugins", "List available plugins");
-    auto nodes_flag = cli.add_flag("--nodes", "List available nodes from plugins that are loaded");
+    auto info_options = cli.add_option_group("Info", "Debug information");
+    
+    auto version_flag = info_options->add_flag("--version,-v", "Print version information");
+    auto plugins_flag = info_options->add_flag("--plugins,-p", "List available plugins");
+    auto nodes_flag = info_options->add_flag("--nodes,-n", "List available nodes from plugins that are loaded");
 
     // CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
     // opt_log->check([](const std::string& s)->std::string {
@@ -117,82 +161,44 @@ int main(int argc, const char * argv[]) {
     // });
 
     auto run_subcommand = cli.add_subcommand("run", "Load and run flowchart");
-    CLI::Option* opt_flowchart_path = run_subcommand->add_option("flowchart", flowchart_path, "Flowchart file");
+    auto opt_flowchart_path = run_subcommand->add_option("flowchart", flowchart_path, "Flowchart file");
+    auto opt_list_globals = run_subcommand->add_flag("--globals,-g", "List flowchart globals");
     opt_flowchart_path->check(CLI::ExistingFile);
     // #ifndef GF_BUILD_WITH_GUI
     opt_flowchart_path->required();
+    // run_subcommand->fallthrough();
     // #endif
     // run_subcommand->set_config("--config,-c", "", "Read flowchart globals from a config file");
-    run_subcommand->allow_extras(); // for globals
 
-    try {
-      cli.parse(argc, argv);
-    } catch (const CLI::ParseError &e) {
-      return cli.exit(e);
-    }
-    // auto sc_listnodes = cli.add_subcommand("list", "List available nodes")->excludes(sc_run);
+    auto config_subcommand = cli.add_subcommand("set", "Set flowchart global parameters (comes after run)");
+    config_subcommand->needs(run_subcommand);
+    config_subcommand->set_config("--file,-f", "", "Read parameters from file");
+    config_subcommand->allow_extras(); // for globals
 
-    // sc_listnodes->parse_complete_callback([&plugin_manager, &node_registers, &plugin_folder](){
-    //   load_plugins(plugin_manager, node_registers, plugin_folder, true);
-    // });
-    bool no_arguments = !(*run_subcommand) && !(*version_flag) && !(*nodes_flag) && !(*plugins_flag) && !(verbose);
-    #ifndef GF_BUILD_WITH_GUI
-      if(no_arguments) {
-        std::cout << cli.help() << std::flush;
-        return 1;
+    // CLI11 Callbacks
+    info_options->preparse_callback([&](size_t n) -> void {
+      std::cout << "info_options->preparse_callback\n";
+      
+    });
+
+    info_options->parse_complete_callback([&]() -> void {
+      std::cout << "info_options->parse_complete_callback\n";
+
+      if(*version_flag) {
+        print_version();
       }
-    #endif
 
-    if(*version_flag) {
-      std::cout << "Geoflow " << PROJECT_VERSION_MAJOR;
-      std::cout << "." << PROJECT_VERSION_MINOR;
-      std::cout << "." << PROJECT_VERSION_PATCH; std::cout << std::endl;
-      // std::cout << "host_system : " << CMAKE_HOST_SYSTEM; std::cout << std::endl;
-      std::cout << "compiled with " << CMAKE_CXX_COMPILER_ID;
-      std::cout << " v" << CMAKE_CXX_COMPILER_VERSION;
-      std::cout << " (" << CMAKE_BUILD_TYPE;
-      std::cout << ")" << std::endl;
-    }
-
-    load_plugins(plugin_manager, node_registers, plugin_folder, verbose);
-
-    if(*plugins_flag) {
-      if (node_registers.size()) {
-        // std::cout << "Available plugins:\n";
-        for (auto& [rname, reg] : node_registers) {
-          auto& rinfo = reg->get_plugin_info();
-          std::cout << "> " << rname;
-          if (rinfo.size()) {
-            std::cout << " " << rinfo["version_major"]
-            << "." << rinfo["version_minor"] << "." << rinfo["version_patch"] 
-            << std::endl;
-            std::cout << "  compiled with " << rinfo["compiler_id"]
-            << " v" << rinfo["compiler_version"];
-            if (rinfo["build_type"] != "") {
-              std::cout << " (" << rinfo["build_type"];
-              std::cout << ")";
-            }
-            std::cout << std::endl;
-          } else {
-            std::cout << " [built-in]\n";
-          }
-        }
+      if(*plugins_flag) {
+        print_plugins(node_registers);
       }
-    }
 
-    if(*nodes_flag) {
-      if (node_registers.size()) {
-        for (auto& [rname, reg] : node_registers) {
-          std::cout << "Available nodes for plugin " << rname << ":\n";
-          for (auto& [nname, val] : reg->node_types) {
-            std::cout << " > " << nname << "\n";
-          }
-        }
+      if(*nodes_flag) {
+        print_nodes(node_registers);
       }
-    }
-
+    });
     std::map<std::string, std::vector<std::string>> globals_from_cli;
-    if (*run_subcommand) {
+    run_subcommand->parse_complete_callback([&]() -> void {
+      std::cout << "run_subcommand->parse_complete_callback\n";
       // load flowchart from file
       if(*opt_flowchart_path) {
         // set current work directory to folder containing flowchart file
@@ -205,19 +211,21 @@ int main(int argc, const char * argv[]) {
       }
 
       // handle globals overrides provided by user
-      CLI::App sc_globals{"globals", "Set flowchart globals"};
-      
-      // allow user to pass globals through a toml file. 
-      sc_globals.set_config("--config,-c", "", "Read flowchart globals from a config file");
+
       for (auto&[key,val] : flowchart.global_flowchart_params) {
         auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{}));
-        sc_globals.add_option("--"+key, (it->second), "");
-        if (verbose) std::cout << "add global option " << key << "\n";
+        config_subcommand->add_option("--"+key, (it->second), "");
+        if (*opt_list_globals) std::cout << "add global option " << key << "\n";
       }
-      sc_globals.parse(run_subcommand->remaining_for_passthrough());
-
+      // sc_globals.parse(run_subcommand->remaining_for_passthrough());
+    });
+    config_subcommand->preparse_callback([&](size_t n) -> void {
+      std::cout << "config_subcommand->preparse_callback\n";
+    });
+    config_subcommand->parse_complete_callback([&]() -> void {
+      std::cout << "config_subcommand->parse_complete_callback\n";
       // process global values from cli/config file
-      if(sc_globals.count()) {
+      if(config_subcommand->count()) {
         for (auto& [key, values] : globals_from_cli) {
           if (values.size()) {
             std::string concat_values{};
@@ -249,12 +257,30 @@ int main(int argc, const char * argv[]) {
             } catch (const std::exception& e) {
               std::cout << "Error in parsing global parameters\n";
               std::cout << e.what();
-              return 1;
+              // return 1;
             }
           }
         }
       }
-    };
+    });
+
+    try {
+      cli.parse(argc, argv);
+    } catch (const CLI::ParseError &e) {
+      return cli.exit(e);
+    }
+    // auto sc_listnodes = cli.add_subcommand("list", "List available nodes")->excludes(sc_run);
+
+    // sc_listnodes->parse_complete_callback([&plugin_manager, &node_registers, &plugin_folder](){
+    //   load_plugins(plugin_manager, node_registers, plugin_folder, true);
+    // });
+    #ifndef GF_BUILD_WITH_GUI
+      bool no_arguments = !(*run_subcommand) && !(*version_flag) && !(*nodes_flag) && !(*plugins_flag) && !(verbose);
+      if(no_arguments) {
+        std::cout << cli.help() << std::flush;
+        return 1;
+      }
+    #endif
 
     // auto cout_rdbuf = std::cout.rdbuf();
     // auto cerr_rdbuf = std::cerr.rdbuf(); 
