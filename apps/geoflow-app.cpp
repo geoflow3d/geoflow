@@ -91,12 +91,12 @@ void print_plugins(NodeRegisterMap& node_registers) {
     // std::cout << "Available plugins:\n";
     for (auto& [rname, reg] : node_registers) {
       auto& rinfo = reg->get_plugin_info();
-      std::cout << "> " << rname;
+      std::cout << " > " << rname;
       if (rinfo.size()) {
         std::cout << " " << rinfo["version_major"]
         << "." << rinfo["version_minor"] << "." << rinfo["version_patch"] 
         << std::endl;
-        std::cout << "  compiled with " << rinfo["compiler_id"]
+        std::cout << "   compiled with " << rinfo["compiler_id"]
         << " v" << rinfo["compiler_version"];
         if (rinfo["build_type"] != "") {
           std::cout << " (" << rinfo["build_type"];
@@ -162,27 +162,20 @@ int main(int argc, const char * argv[]) {
 
     auto run_subcommand = cli.add_subcommand("run", "Load and run flowchart");
     auto opt_flowchart_path = run_subcommand->add_option("flowchart", flowchart_path, "Flowchart file");
-    auto opt_list_globals = run_subcommand->add_flag("--globals,-g", "List flowchart globals");
+    auto opt_list_globals = run_subcommand->add_flag("--globals,-g", "List flowchart globals. Skips flowchart execution.");
     opt_flowchart_path->check(CLI::ExistingFile);
-    // #ifndef GF_BUILD_WITH_GUI
-    opt_flowchart_path->required();
-    // run_subcommand->fallthrough();
-    // #endif
-    // run_subcommand->set_config("--config,-c", "", "Read flowchart globals from a config file");
 
-    auto config_subcommand = cli.add_subcommand("set", "Set flowchart global parameters (comes after run)");
+    opt_flowchart_path->required();
+    run_subcommand->fallthrough();
+
+    auto config_subcommand = cli.add_subcommand("set", "Set flowchart globals (comes after run)");
     config_subcommand->needs(run_subcommand);
-    config_subcommand->set_config("--file,-f", "", "Read parameters from file");
+    config_subcommand->set_config("--config,-c", "", "Read globals from config file");
     config_subcommand->allow_extras(); // for globals
 
     // CLI11 Callbacks
-    info_options->preparse_callback([&](size_t n) -> void {
-      std::cout << "info_options->preparse_callback\n";
-      
-    });
-
     info_options->parse_complete_callback([&]() -> void {
-      std::cout << "info_options->parse_complete_callback\n";
+      // std::cout << "info_options->parse_complete_callback\n";
 
       if(*version_flag) {
         print_version();
@@ -198,7 +191,7 @@ int main(int argc, const char * argv[]) {
     });
     std::map<std::string, std::vector<std::string>> globals_from_cli;
     run_subcommand->parse_complete_callback([&]() -> void {
-      std::cout << "run_subcommand->parse_complete_callback\n";
+      // std::cout << "run_subcommand->parse_complete_callback\n";
       // load flowchart from file
       if(*opt_flowchart_path) {
         // set current work directory to folder containing flowchart file
@@ -211,19 +204,23 @@ int main(int argc, const char * argv[]) {
       }
 
       // handle globals overrides provided by user
-
+      if (*opt_list_globals) std::cout << "Available globals:\n";
       for (auto&[key,val] : flowchart.global_flowchart_params) {
         auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{}));
         config_subcommand->add_option("--"+key, (it->second), "");
-        if (*opt_list_globals) std::cout << "add global option " << key << "\n";
+        if (*opt_list_globals) {
+          std::cout << " > " << key;
+          if (!val->get_help().empty()) std::cout << " [" << val->get_help() << "]";
+          std::cout << "\n   default value: " << val->as_json() << "\n";
+        }
       }
       // sc_globals.parse(run_subcommand->remaining_for_passthrough());
     });
     config_subcommand->preparse_callback([&](size_t n) -> void {
-      std::cout << "config_subcommand->preparse_callback\n";
+      // std::cout << "config_subcommand->preparse_callback\n";
     });
     config_subcommand->parse_complete_callback([&]() -> void {
-      std::cout << "config_subcommand->parse_complete_callback\n";
+      // std::cout << "config_subcommand->parse_complete_callback\n";
       // process global values from cli/config file
       if(config_subcommand->count()) {
         for (auto& [key, values] : globals_from_cli) {
@@ -233,7 +230,7 @@ int main(int argc, const char * argv[]) {
               concat_values += value + " ";
             }
             concat_values.pop_back();
-            std::cout << "global " << key << " = " << concat_values << "\n";
+            std::cout << "set global " << key << " = " << concat_values << "\n";
             
             auto& g = flowchart.global_flowchart_params[key];
             try{
@@ -282,6 +279,27 @@ int main(int argc, const char * argv[]) {
       }
     #endif
 
+    if( ! *opt_list_globals ) {  
+      if( ! verbose ) {
+        std::clog.setstate(std::ios_base::failbit);
+        std::cout.setstate(std::ios_base::failbit);
+        std::cerr.setstate(std::ios_base::failbit);
+      }
+
+      // launch gui or just run the flowchart in cli mode
+      fs::current_path(flowchart_folder);
+      #ifdef GF_BUILD_WITH_GUI
+        launch_gui(flowchart, flowchart_path);
+      #else
+        if (*run_subcommand) flowchart.run_all();
+      #endif
+
+      if( ! verbose ) {
+        std::clog.clear();
+        std::cout.clear();
+        std::cerr.clear();
+      }
+    }
     // auto cout_rdbuf = std::cout.rdbuf();
     // auto cerr_rdbuf = std::cerr.rdbuf(); 
     // std::ofstream logfile;
@@ -290,28 +308,6 @@ int main(int argc, const char * argv[]) {
     //   std::cout.rdbuf(logfile.rdbuf());
     //   std::cerr.rdbuf(logfile.rdbuf());
     // }
-
-    std::ofstream logfile;
-    if( ! verbose ) {
-      std::clog.setstate(std::ios_base::failbit);
-      std::cout.setstate(std::ios_base::failbit);
-      std::cerr.setstate(std::ios_base::failbit);
-    }
-
-    // launch gui or just run the flowchart in cli mode
-    fs::current_path(flowchart_folder);
-    #ifdef GF_BUILD_WITH_GUI
-      launch_gui(flowchart, flowchart_path);
-    #else
-      if (*run_subcommand) flowchart.run_all();
-    #endif
-
-
-    if( ! verbose ) {
-      std::clog.clear();
-      std::cout.clear();
-      std::cerr.clear();
-    }
   }
 
   // NOTICE that we first must destroy any related node_registers before we can unload the plugin_manager!
