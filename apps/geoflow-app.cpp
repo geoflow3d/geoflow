@@ -275,9 +275,21 @@ int main(int argc, const char * argv[]) {
     // launch gui or just run the flowchart in cli mode
     fs::current_path(flowchart_folder);
     #ifdef GF_BUILD_WITH_GUI
-      launch_gui(flowchart, flowchart_path);
+      try {
+        launch_gui(flowchart, flowchart_path);
+      }
+      catch (const gfException& e) {
+        std::cerr << e.what() << "\n";
+        throw;
+      }
     #else
-      if (*run_subcommand) flowchart.run_all();
+      try {
+        if (*run_subcommand) flowchart.run_all();
+      }
+      catch (const gfException& e) {
+        std::cerr << e.what() << "\n";
+        throw;
+      }
     #endif
 
 
