@@ -57,7 +57,7 @@ namespace geoflow {
   {
   public:
     explicit gfException(const std::string& message):
-      msg_(message)
+      msg_("Error: " + message)
       {}
     virtual const char* what() const throw (){
       return msg_.c_str();
@@ -71,67 +71,31 @@ namespace geoflow {
   class gfFlowchartError: public gfException
   {
   public:
-    explicit gfFlowchartError(const std::string& message)
-      : gfException(message)
-      , msg_(message)
-    {}
-    virtual const char* what() const throw (){
-      return msg_.c_str();
-    }
-
-  protected:
-    std::string msg_;
+    using gfException::gfException;
   };
 
   // Thrown at a broken input (e.g. invalid file paths).
   class gfIOError: public gfException
   {
   public:
-    explicit gfIOError(const std::string& message)
-      : gfException(message)
-      , msg_(message)
-    {}
-    virtual const char* what() const throw (){
-      return msg_.c_str();
-    }
-
-  protected:
-    std::string msg_;
+    using gfException::gfException;
   };
 
   // Thrown when the data on the inputs of a node has the right type but
-  // an inappropriate value (e.g. two input vectors should be of the same
+  // inappropriate data (e.g. two input vectors should be of the same
   // length).
-  class gfNodeInputValueError: public gfException
+  class gfNodeInputDataError: public gfException
   {
   public:
-    explicit gfNodeInputValueError(const std::string& message)
-      : gfException(message)
-      , msg_(message)
-    {}
-    virtual const char* what() const throw (){
-      return msg_.c_str();
-    }
-
-  protected:
-    std::string msg_;
+    using gfException::gfException;
   };
 
   // Thrown when the data on the inputs of a node has an inappropriate type
   // or logic (e.g. a loop).
-  class gfNodeInputTypeError: public gfException
+  class gfNodeTerminalError: public gfException
   {
   public:
-    explicit gfNodeInputTypeError(const std::string& message)
-      : gfException(message)
-      , msg_(message)
-    {}
-    virtual const char* what() const throw (){
-      return msg_.c_str();
-    }
-
-  protected:
-    std::string msg_;
+    using gfException::gfException;
   };
 
   class Node;

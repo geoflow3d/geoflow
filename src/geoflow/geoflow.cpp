@@ -149,10 +149,10 @@ std::set<NodeHandle> gfOutputTerminal::get_child_nodes() {
 void gfOutputTerminal::connect(gfInputTerminal& in) {
     //check type compatibility
   if (!is_compatible(in))
-    throw gfNodeInputTypeError("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Terminals have incompatible types!");
+    throw gfNodeTerminalError("Failed to connect output " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Terminals have incompatible types!");
     
   if (detect_loop(*this, in))
-    throw gfNodeInputTypeError("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Loop detected!");
+    throw gfNodeTerminalError("Failed to connect output " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Loop detected!");
 
   in.connect_output(*this);
   connections_.insert(in.get_ptr());
@@ -737,7 +737,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
             if (nodes.count(cval[0]))
               try {
                 if (!nodes[cval[0]]->input_terminals.count(cval[1]))
-                  throw gfNodeInputTypeError("No input terminal '" + cval[1] + "' on node '" + cval[0] + "', failed to connect.");
+                  throw gfNodeTerminalError("No input terminal '" + cval[1] + "' on node '" + cval[0] + "', failed to connect.");
                 nhandle->output_terminals.at(conn_j.key())->connect(*nodes.at(cval[0])->input_terminals[cval[1]]);
               } catch (const std::exception& e) {
                 if(strict) {

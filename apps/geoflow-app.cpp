@@ -255,7 +255,7 @@ int main(int argc, const char * argv[]) {
             } catch (const std::exception& e) {
               std::cerr << "Error in parsing global parameters\n";
               std::cerr << e.what();
-              // return 1;
+              throw;
             }
           }
         }
@@ -294,6 +294,7 @@ int main(int argc, const char * argv[]) {
         launch_gui(flowchart, flowchart_path);
         }
         catch (const gfException& e) {
+          std::cerr.clear();
           std::cerr << e.what() << "\n";
           throw;
         }
@@ -302,6 +303,7 @@ int main(int argc, const char * argv[]) {
           if (*run_subcommand) flowchart.run_all();
         }
         catch (const gfException& e) {
+          std::cerr.clear();
           std::cerr << e.what() << "\n";
           throw;
         }
