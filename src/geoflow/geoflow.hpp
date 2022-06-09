@@ -50,6 +50,9 @@ namespace geoflow {
     const std::string* get_name_ptr() const { return &name_; };
   };
 
+  // This is the base class for all Geoflow exceptions.
+  // More specific exceptions are derived from this class.
+  // This class is also used when all Geoflow exception need to be caught.
   class gfException: public std::exception
   {
   public:
@@ -62,6 +65,73 @@ namespace geoflow {
 
   protected:
       std::string msg_;
+  };
+
+  // Thrown when there are issues with the flowchart (e.g. it cannot be read).
+  class gfFlowchartError: public gfException
+  {
+  public:
+    explicit gfFlowchartError(const std::string& message)
+      : gfException(message)
+      , msg_(message)
+    {}
+    virtual const char* what() const throw (){
+      return msg_.c_str();
+    }
+
+  protected:
+    std::string msg_;
+  };
+
+  // Thrown at a broken input (e.g. invalid file paths).
+  class gfIOError: public gfException
+  {
+  public:
+    explicit gfIOError(const std::string& message)
+      : gfException(message)
+      , msg_(message)
+    {}
+    virtual const char* what() const throw (){
+      return msg_.c_str();
+    }
+
+  protected:
+    std::string msg_;
+  };
+
+  // Thrown when the data on the inputs of a node has the right type but
+  // an inappropriate value (e.g. two input vectors should be of the same
+  // length).
+  class gfNodeInputValueError: public gfException
+  {
+  public:
+    explicit gfNodeInputValueError(const std::string& message)
+      : gfException(message)
+      , msg_(message)
+    {}
+    virtual const char* what() const throw (){
+      return msg_.c_str();
+    }
+
+  protected:
+    std::string msg_;
+  };
+
+  // Thrown when the data on the inputs of a node has an inappropriate type
+  // or logic (e.g. a loop).
+  class gfNodeInputTypeError: public gfException
+  {
+  public:
+    explicit gfNodeInputTypeError(const std::string& message)
+      : gfException(message)
+      , msg_(message)
+    {}
+    virtual const char* what() const throw (){
+      return msg_.c_str();
+    }
+
+  protected:
+    std::string msg_;
   };
 
   class Node;
