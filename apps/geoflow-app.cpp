@@ -162,7 +162,8 @@ int main(int argc, const char * argv[]) {
 
     auto run_subcommand = cli.add_subcommand("run", "Load and run flowchart");
     auto opt_flowchart_path = run_subcommand->add_option("flowchart", flowchart_path, "Flowchart file");
-    auto opt_list_globals = run_subcommand->add_flag("--globals,-g", "List flowchart globals. Skips flowchart execution.");
+    auto opt_list_globals = run_subcommand->add_flag("--globals,-g", "List flowchart globals. Skips flowchart execution");
+    auto opt_workdir = run_subcommand->add_flag("--workdir,-w", "Set working directory to folder containing flowchart file");
     opt_flowchart_path->check(CLI::ExistingFile);
 
     opt_flowchart_path->required();
@@ -198,9 +199,9 @@ int main(int argc, const char * argv[]) {
         auto abs_path = fs::absolute(fs::path(flowchart_path));
         flowchart_folder = abs_path.parent_path();
         flowchart_path = abs_path.string();
-        fs::current_path(flowchart_folder);
+        // fs::current_path(flowchart_folder);
         flowchart.load_json(flowchart_path);
-        fs::current_path(launch_path);
+        // fs::current_path(launch_path);
       }
 
       // handle globals overrides provided by user
@@ -287,12 +288,13 @@ int main(int argc, const char * argv[]) {
       }
 
       // launch gui or just run the flowchart in cli mode
-      fs::current_path(flowchart_folder);
+      if(*opt_workdir) fs::current_path(flowchart_folder);
       #ifdef GF_BUILD_WITH_GUI
         launch_gui(flowchart, flowchart_path);
       #else
         if (*run_subcommand) flowchart.run_all();
       #endif
+      fs::current_path(launch_path);
 
       if( ! verbose ) {
         std::clog.clear();
