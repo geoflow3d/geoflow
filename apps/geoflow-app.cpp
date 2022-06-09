@@ -267,11 +267,7 @@ int main(int argc, const char * argv[]) {
     } catch (const CLI::ParseError &e) {
       return cli.exit(e);
     }
-    // auto sc_listnodes = cli.add_subcommand("list", "List available nodes")->excludes(sc_run);
-
-    // sc_listnodes->parse_complete_callback([&plugin_manager, &node_registers, &plugin_folder](){
-    //   load_plugins(plugin_manager, node_registers, plugin_folder, true);
-    // });
+    
     #ifndef GF_BUILD_WITH_GUI
       bool no_arguments = !(*run_subcommand) && !(*version_flag) && !(*nodes_flag) && !(*plugins_flag) && !(verbose);
       if(no_arguments) {
