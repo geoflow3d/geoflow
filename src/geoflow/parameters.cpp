@@ -32,6 +32,9 @@ namespace geoflow {
   const std::string& Parameter::get_help() const {
     return help_;
   }
+  std::string& Parameter::get_help() {
+    return help_;
+  }
   bool Parameter::is_type(std::type_index type) {
     return type_ == type;
   }

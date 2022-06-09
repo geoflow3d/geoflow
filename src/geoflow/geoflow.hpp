@@ -753,7 +753,7 @@ namespace geoflow {
     // global flowchart parameters
 
     public:
-    std::unordered_map<std::string, std::shared_ptr<Parameter>> global_flowchart_params;
+    std::map<std::string, std::shared_ptr<Parameter>> global_flowchart_params;
     std::optional<std::array<double,3>> data_offset;
     NodeManager(NodeRegisterMap&  node_registers)
       : registers_(node_registers) {};

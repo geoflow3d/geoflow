@@ -43,16 +43,33 @@ Usage: geof [OPTIONS] [SUBCOMMAND]
 Options:
   -h,--help                   Print this help message and exit
   --verbose                   Print verbose messages
-  --version                   Print version information
-  --plugins                   List available plugins
-  --nodes                     List available nodes from plugins that are loaded
+[Option Group: Info]
+  Debug information
+  Options:
+    -v,--version                Print version information
+    -p,--plugins                List available plugins
+    -n,--nodes                  List available nodes from plugins that are loaded
 
 Subcommands:
   run                         Load and run flowchart
-```
+  set                         Set flowchart globals (comes after run)
 
-Running a flowchart:
-`geof run <flowchart file> [--config <TOML config file with globals>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]`
+```
+### examples
+Print version information:
+`geof --version`
+
+Get help on subcommand:
+`geof run --help`
+
+Running a flowchart with default globals:
+`geof run <flowchart file>`
+
+List available globals:
+`geof run <flowchart file> --globals`
+
+Running a flowchart with user-specified global values:
+`geof run <flowchart file> set [--config <TOML config file with globals>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]`
 
 
 ## GUI (`geoflow`)
