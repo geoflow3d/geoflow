@@ -63,7 +63,7 @@ class gfImNodes : public RenderObject {
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-        if (ImGui::MenuItem("Save", "Ctrl+S")) {
+        if (ImGui::MenuItem("Save", "")) {
           for (auto& [node,pos,selected,name_buffer] : node_draw_list_) {
             node->set_position(pos.x, pos.y);
           }
@@ -79,7 +79,7 @@ class gfImNodes : public RenderObject {
               node_manager_.dump_json(result.value());
             }
           }
-          if (ImGui::MenuItem("Load from JSON", "Ctrl+O")) {
+          if (ImGui::MenuItem("Load from JSON", "")) {
             auto result = osdialog_file(OSDIALOG_OPEN, NULL, "JSON:json");
             if (result.has_value()) {
               node_manager_.clear();
@@ -120,14 +120,16 @@ class gfImNodes : public RenderObject {
     if (ImGui::BeginMenu("Globals")) {
       // std::string to_remove;
       for (auto it=node_manager_.global_flowchart_params.begin(); it!=node_manager_.global_flowchart_params.end(); ) {
-        draw_global_parameter(it->second.get());
-        ImGui::SameLine();
         ImGui::PushID(it->first.c_str());
-        if(ImGui::Button("Remove")) {
+        auto gparam = it->second.get();
+        if(ImGui::Button("X")) {
           node_manager_.global_flowchart_params.erase(it++);
+          continue;
         } else {
           ++it;
         }
+        ImGui::SameLine();
+        draw_global_parameter(gparam);
         ImGui::PopID();
       }
       ImGui::InputTextWithHint("##key", "Global name", &global_new_key);

@@ -9,12 +9,20 @@
 namespace geoflow {
   void draw_global_parameter(Parameter* param) {
     if( auto* valptr = dynamic_cast<ParameterByValue<int>*>(param)) {
+        ImGui::InputText("?", &valptr->get_help());
+        ImGui::SameLine();
         ImGui::DragInt(valptr->get_label().c_str(), &valptr->get());
     } else if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(param)) {
+        ImGui::InputText("?", &valptr->get_help());
+        ImGui::SameLine();
         ImGui::DragFloat(valptr->get_label().c_str(), &valptr->get(), 0.1);
     } else if( auto* valptr = dynamic_cast<ParameterByValue<std::string>*>(param)) {
+        ImGui::InputText("?", &valptr->get_help());
+        ImGui::SameLine();
         ImGui::InputText(valptr->get_label().c_str(), &valptr->get());
     } else if( auto* valptr = dynamic_cast<ParameterByValue<bool>*>(param)) {
+        ImGui::InputText("?", &valptr->get_help());
+        ImGui::SameLine();
         ImGui::Checkbox(valptr->get_label().c_str(), &valptr->get());
     }
   };

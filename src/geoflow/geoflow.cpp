@@ -573,13 +573,13 @@ void NodeManager::json_serialise(std::ostream& json_sstream) {
   j["globals"] = json::object();
   for (auto& [name, param] : global_flowchart_params) {
     if(param->is_type(typeid(int))) {
-      j["globals"][name] = {std::string("int"), param->as_json()};
+      j["globals"][name] = {param->get_help(), std::string("int"), param->as_json()};
     } else if(param->is_type(typeid(float))) {
-      j["globals"][name] = {std::string("float"), param->as_json()};
+      j["globals"][name] = {param->get_help(), std::string("float"), param->as_json()};
     } else if(param->is_type(typeid(bool))) {
-      j["globals"][name] = {std::string("bool"), param->as_json()};
+      j["globals"][name] = {param->get_help(), std::string("bool"), param->as_json()};
     } else if(param->is_type(typeid(std::string))) {
-      j["globals"][name] = {std::string("str"), param->as_json()};
+      j["globals"][name] = {param->get_help(), std::string("str"), param->as_json()};
     }
   }
   j["nodes"] = json::object();
@@ -633,16 +633,33 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
     if(global_flowchart_params.find(gname)!=global_flowchart_params.end())
       continue;
     try {
-      auto global_type = val[0].get<std::string>(); 
-      auto& global_val = val[1]; 
-      if(global_type=="str") {
-        global_flowchart_params[gname] = std::make_shared<ParameterByValue<std::string>>(global_val.get<std::string>(), gname, "");
-      } else if(global_type=="bool") {
-        global_flowchart_params[gname] = std::make_shared<ParameterByValue<bool>>(global_val.get<bool>(), gname, "");
-      } else if(global_type=="int") {
-        global_flowchart_params[gname] = std::make_shared<ParameterByValue<int>>(global_val.get<int>(), gname, "");
-      } else if(global_type=="float") {
-        global_flowchart_params[gname] = std::make_shared<ParameterByValue<float>>(global_val.get<float>(), gname, "");
+      // case that no help text is provided (keep compatibility with old flowchart files)
+      if (val.size() == 2) {
+        auto global_type = val[0].get<std::string>(); 
+        auto& global_val = val[1]; 
+        if(global_type=="str") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<std::string>>(global_val.get<std::string>(), gname, "");
+        } else if(global_type=="bool") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<bool>>(global_val.get<bool>(), gname, "");
+        } else if(global_type=="int") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<int>>(global_val.get<int>(), gname, "");
+        } else if(global_type=="float") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<float>>(global_val.get<float>(), gname, "");
+        }
+      // case that help text is available as it should be
+      } else if (val.size() == 3) {
+        auto help_text = val[0].get<std::string>(); 
+        auto global_type = val[1].get<std::string>(); 
+        auto& global_val = val[2]; 
+        if(global_type=="str") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<std::string>>(global_val.get<std::string>(), gname, help_text);
+        } else if(global_type=="bool") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<bool>>(global_val.get<bool>(), gname, help_text);
+        } else if(global_type=="int") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<int>>(global_val.get<int>(), gname, help_text);
+        } else if(global_type=="float") {
+          global_flowchart_params[gname] = std::make_shared<ParameterByValue<float>>(global_val.get<float>(), gname, help_text);
+        }
       }
     } catch (const std::exception& e) {
       std::cout << "Unable to read global " << gname <<"\n";
