@@ -244,12 +244,10 @@ int main(int argc, const char * argv[]) {
                   gptr->set(true);
                 else if(concat_values == "false")
                   gptr->set(false);
-                else throw gfException("failed to get boolean from string\n");
+                else throw gfFlowchartError("failed to get boolean from string");
               }
             } catch (const std::exception& e) {
-              std::cout << "Error in parsing global parameters\n";
-              std::cout << e.what();
-              return 1;
+              throw(gfFlowchartError("Error in parsing global parameters"));
             }
           }
         }

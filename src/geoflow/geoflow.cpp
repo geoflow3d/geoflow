@@ -149,10 +149,10 @@ std::set<NodeHandle> gfOutputTerminal::get_child_nodes() {
 void gfOutputTerminal::connect(gfInputTerminal& in) {
     //check type compatibility
   if (!is_compatible(in))
-    throw gfException("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Terminals have incompatible types!");
+    throw gfNodeInputTypeError("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Terminals have incompatible types!");
     
   if (detect_loop(*this, in))
-    throw gfException("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Loop detected!");
+    throw gfNodeInputTypeError("Failed to connect ouput " +get_name()+ " from "+parent_.get_name()+" to input " + in.get_name() + " from " +in.parent_.get_name()+ ". Loop detected!");
 
   in.connect_output(*this);
   connections_.insert(in.get_ptr());
@@ -624,7 +624,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
   json j;
   std::vector<NodeHandle> new_nodes;
   if (json_sstream.peek() == std::ifstream::traits_type::eof()) {
-    std::cout << "bad json stream\n";
+    std::cerr << "bad json stream\n";
     return new_nodes;
   }
   json_sstream >> j;
@@ -645,7 +645,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
         global_flowchart_params[gname] = std::make_shared<ParameterByValue<float>>(global_val.get<float>(), gname, "");
       }
     } catch (const std::exception& e) {
-      std::cout << "Unable to read global " << gname <<"\n";
+      throw(gfFlowchartError("Unable to read global " + std::string(gname)));
     }
   }
   json nodes_j = j["nodes"];
@@ -664,7 +664,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
         auto params_j = node_j.value().at("parameters");
         for (auto& pel : params_j.items()) {
           if(!nhandle->parameters.count(pel.key())) {
-            std::cout << "key not found in node parameters: " << pel.key() << "\n";
+            std::cerr << "key not found in node parameters: " << pel.key() << "\n";
             continue;
           }
           auto phandle = nhandle->parameters[pel.key()];
@@ -674,7 +674,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
               auto mgname = get_global_name( pel.value().get<std::string>() );
               phandle->set_master(global_flowchart_params[mgname]);
             } catch (const std::exception& e) {
-              std::cout << e.what();
+              std::cerr << e.what();
             }
           } else phandle->from_json(pel.value());
         }
@@ -696,12 +696,12 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
           }
         }
       } catch (const std::out_of_range& oor) {
-        std::cout << "could not find one marked terminal\n";
+        std::cerr << "could not find one marked terminal\n";
       }
     } else {
-      std::cout << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
+      std::cerr << "Could not load node of type " << tt[1] << ", register not found: " << tt[0] <<"\n";
       if (strict)
-        throw gfException("Unable to load json file");
+        throw gfFlowchartError("Unable to load json file");
     }
   }
   // create connections
@@ -717,17 +717,17 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
             if (nodes.count(cval[0]))
               try {
                 if (!nodes[cval[0]]->input_terminals.count(cval[1]))
-                  throw gfException("No input terminal '" + cval[1] + "' on node '" + cval[0] + "', failed to connect.");
+                  throw gfNodeInputTypeError("No input terminal '" + cval[1] + "' on node '" + cval[0] + "', failed to connect.");
                 nhandle->output_terminals.at(conn_j.key())->connect(*nodes.at(cval[0])->input_terminals[cval[1]]);
               } catch (const std::exception& e) {
                 if(strict) {
-                  throw e;
+                  throw;
                 } else {
-                  std::cout << e.what() << "\n";
+                  std::cerr << e.what() << "\n";
                 }
               }
             else 
-              std::cout << "Could not connect output " << conn_j.key() << "\n";
+              std::cerr << "Could not connect output " << conn_j.key() << "\n";
           }
         }
       }
@@ -783,10 +783,10 @@ std::string NodeManager::substitute_globals(const std::string& textt) const {
 
 std::string geoflow::get_global_name(const std::string& text) {
   auto open = text.find("{{", 0);
-  if (open==std::string::npos) throw gfException("Can not retrive global name");
+  if (open==std::string::npos) throw gfFlowchartError("Can not retrive global name");
 
   auto close = text.find("}}", 0);
-  if (close==std::string::npos) throw gfException("Can not retrive global name");
+  if (close==std::string::npos) throw gfFlowchartError("Can not retrive global name");
   open+=2;
   auto len = close-open;
   return text.substr(open, len);
