@@ -463,6 +463,9 @@ void NodeManager::queue(std::shared_ptr<Node> n) {
 size_t NodeManager::run_all(bool notify_children) {
   // disable autorun on nodes that do not have valid parameters
   for (auto& [nname, node] : nodes) {
+    for (auto& [name, param] : node->parameters) {
+        param->copy_value_from_master();
+    }
     if(!node->parameters_valid()) {
       node->autorun = false;
       std::cout << "Not executing " << nname << std::endl;
