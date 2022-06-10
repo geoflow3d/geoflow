@@ -100,7 +100,11 @@ class gfImNodes : public RenderObject {
 		}
     if (ImGui::BeginMenu("Flowchart")) {
         if (ImGui::MenuItem("Run all root nodes")) {
-					node_manager_.run_all();
+          try {
+					  node_manager_.run_all();
+          } catch (const gfException& e) {
+            std::cerr << e.what() << "\n";
+          }
 				}
         // This sort of works, but very prone to crashes because most of geoflow is not threadsafe atm. Especially painters.
         // if (ImGui::MenuItem("Run all threaded")) {
@@ -205,7 +209,11 @@ class gfImNodes : public RenderObject {
                     auto& target_term = target_node->input_terminals[std::string(target_term_title)];
                     // std::cerr << "connect " << source_node->get_name() << " [" << source_term_title << ", " << &source_term << "] to " << target_node->get_name() << " [" << target_term_title << ", " << &target_term << "]\n";
                     source_term->connect(*target_term);
-                    node_manager_.run(*target_node);
+                    try {
+                      node_manager_.run(*target_node);
+                    } catch (const gfException& e) {
+                      std::cerr << e.what() << "\n";
+                    }                    
                 }
 
                 // Render output connections of this node
@@ -259,7 +267,11 @@ class gfImNodes : public RenderObject {
               }
               ImGui::Checkbox("Autorun", &(node->autorun));
               if (ImGui::MenuItem("Run")) {
-                node_manager_.run(*node);
+                try {
+                  node_manager_.run(*node);
+                } catch (const gfException& e) {
+                  std::cerr << e.what() << "\n";
+                }
               }
               ImGui::Separator();
               

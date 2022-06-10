@@ -280,7 +280,7 @@ int main(int argc, const char * argv[]) {
       if( ! verbose ) {
         std::clog.setstate(std::ios_base::failbit);
         std::cout.setstate(std::ios_base::failbit);
-        std::cerr.setstate(std::ios_base::failbit);
+        // std::cerr.setstate(std::ios_base::failbit);
       }
 
       // launch gui or just run the flowchart in cli mode
@@ -290,7 +290,7 @@ int main(int argc, const char * argv[]) {
         launch_gui(flowchart, flowchart_path);
         }
         catch (const gfException& e) {
-          std::cerr.clear();
+          // std::cerr.clear();
           std::cerr << e.what() << "\n";
           throw;
         }
@@ -299,7 +299,7 @@ int main(int argc, const char * argv[]) {
           if (*run_subcommand) flowchart.run_all();
         }
         catch (const gfException& e) {
-          std::cerr.clear();
+          // std::cerr.clear();
           std::cerr << e.what() << "\n";
           throw;
         }
@@ -309,7 +309,7 @@ int main(int argc, const char * argv[]) {
       if( ! verbose ) {
         std::clog.clear();
         std::cout.clear();
-        std::cerr.clear();
+        // std::cerr.clear();
       }
     }
     // auto cout_rdbuf = std::cout.rdbuf();
