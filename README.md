@@ -4,6 +4,9 @@ Flowchart tool for geo-spatial data processing. Highly experimental with many ro
 ![Build](https://github.com/geoflow3d/geoflow/workflows/Build/badge.svg)
 
 # Installation
+## Requirements
++ [nlohmann JSON](https://github.com/nlohmann/json/releases) at least version 3.10.5
+
 ## Windows
 Simply download and run the Geoflow-bundle installer from the [latest release](https://github.com/geoflow3d/geoflow-bundle/releases/latest). This will also install the most important plugins.
 
