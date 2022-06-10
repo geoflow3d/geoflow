@@ -255,7 +255,6 @@ int main(int argc, const char * argv[]) {
             } catch (const std::exception& e) {
               std::cerr << "Error in parsing global parameters\n";
               std::cerr << e.what();
-              throw;
             }
           }
         }
@@ -292,7 +291,7 @@ int main(int argc, const char * argv[]) {
         catch (const gfException& e) {
           // std::cerr.clear();
           std::cerr << e.what() << "\n";
-          throw;
+          exit(1);
         }
       #else
         try {
@@ -301,7 +300,7 @@ int main(int argc, const char * argv[]) {
         catch (const gfException& e) {
           // std::cerr.clear();
           std::cerr << e.what() << "\n";
-          throw;
+          exit(1);
         }
       #endif
       fs::current_path(launch_path);
