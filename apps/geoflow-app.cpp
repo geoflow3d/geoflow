@@ -169,7 +169,7 @@ int main(int argc, const char * argv[]) {
     opt_flowchart_path->required();
     run_subcommand->fallthrough();
 
-    auto config_subcommand = cli.add_subcommand("set", "Set flowchart globals (comes after run)");
+    auto config_subcommand = cli.add_subcommand("set", "Set flowchart globals (comes after run). Set the parameters as '--parameter1=value1 --parameter2=value2 ...'.");
     config_subcommand->needs(run_subcommand);
     auto config_file = config_subcommand->set_config("--config,-c", "", "Read globals from config file");
     config_subcommand->allow_config_extras(); // for globals
