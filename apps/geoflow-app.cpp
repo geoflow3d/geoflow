@@ -169,10 +169,10 @@ int main(int argc, const char * argv[]) {
     opt_flowchart_path->required();
     run_subcommand->fallthrough();
 
-    auto config_subcommand = cli.add_subcommand("set", "Set flowchart globals (comes after run)");
+    auto config_subcommand = cli.add_subcommand("set", "Set flowchart globals (comes after run). Set the parameters as '--parameter1=value1 --parameter2=value2 ...'.");
     config_subcommand->needs(run_subcommand);
-    config_subcommand->set_config("--config,-c", "", "Read globals from config file");
-    config_subcommand->allow_extras(); // for globals
+    auto config_file = config_subcommand->set_config("--config,-c", "", "Read globals from config file");
+    config_subcommand->allow_config_extras(); // for globals
 
     // CLI11 Callbacks
     info_options->parse_complete_callback([&]() -> void {
@@ -223,6 +223,7 @@ int main(int argc, const char * argv[]) {
     config_subcommand->parse_complete_callback([&]() -> void {
       // std::cout << "config_subcommand->parse_complete_callback\n";
       // process global values from cli/config file
+      if (*config_file) std::cout << "Reading configuration from file " << config_subcommand->get_config_ptr()->as<std::string>() << std::endl;
       if(config_subcommand->count()) {
         for (auto& [key, values] : globals_from_cli) {
           if (values.size()) {
