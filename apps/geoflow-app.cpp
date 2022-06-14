@@ -239,8 +239,9 @@ int main(int argc, const char * argv[]) {
         return EXIT_FAILURE;
       }
       std::cout << "Reading configuration from file " << config_path << std::endl;
-      try: {
-        auto config = toml::parse_file( config_path );
+      toml::table config;
+      try {
+        config = toml::parse_file( config_path );
       } catch (const std::exception& e) {
         std::cerr << "ERROR: unable to parse config file " << config_path << "\n";
         std::cerr << "  " << e.what() << std::endl;
