@@ -121,36 +121,26 @@ void print_nodes(NodeRegisterMap& node_registers) {
   }
 }
 
-void print_usage(std::string program_name) {
-  std::cout << "Usage:\n\n";
-  std::cout << program_name << " [--version | --list-nodes | --list-plugins] [<flowchart file> [-g] | [-w] [-c <config file>] [--PARAM1=value1 --PARAM2=value2 ...] ]";
-//     cli.add_flag("--verbose", verbose, "Print verbose messages");
-//     auto info_options = cli.add_option_group("Info", "Debug information");
-
-//     auto version_flag = info_options->add_flag("--version,-v", "Print version information");
-//     auto plugins_flag = info_options->add_flag("--plugins,-p", "List available plugins");
-//     auto nodes_flag = info_options->add_flag("--nodes,-n", "List available nodes from plugins that are loaded");
-//     auto run_subcommand = cli.add_subcommand("run", "Load and run flowchart");
-//     auto opt_flowchart_path = run_subcommand->add_option("flowchart", flowchart_path, "Flowchart file");
-//     auto opt_list_globals = run_subcommand->add_flag("--globals,-g", "List flowchart globals. Skips flowchart execution");
-//     auto opt_workdir = run_subcommand->add_flag("--workdir,-w", "Set working directory to folder containing flowchart file");
-   
-//     auto config_subcommand = cli.add_subcommand("set", "Set flowchart globals (comes after run). Set the parameters as '--parameter1=value1 --parameter2=value2 ...'.");
-
-//        auto config_file = config_subcommand->set_config("--config,-c", "", "Read globals from config file");
-
-//     // CLI::Option* opt_plugin_folder = cli.add_option("-p,--plugin-folder", plugin_folder, "Plugin folder");
-//     // if(*opt_plugin_folder) {
-//     //   std::cout << "Setting plugin folder to " << plugin_folder << "\n";
-//     // }
-
-
-//     // CLI::Option* opt_log = cli.add_option("-l,--log", log_filename, "Write log to file");
-//     // opt_log->check([](const std::string& s)->std::string {
-//     //   if(!fs::exists(fs::absolute(fs::path(s)).parent_path())) {
-//     //     return std::string("Path to log file does not exist");
-//     //   } else return std::string();
-//     // });
+void print_help(std::string program_name) {
+  // see http://docopt.org/
+  std::cout << "Usage: \n";
+  std::cout << "   " << program_name;
+  std::cout << " [-v | -p | -n | -h]\n";
+  std::cout << "   " << program_name;
+  std::cout << " <flowchart_file> [-V] [-g] [-w] [-c <file>] [--GLOBAL1=A --GLOBAL2=B ...]\n";
+  std::cout << "\n";
+  std::cout << "Options:\n";
+  std::cout << "   -v, --version                Print version information\n";
+  std::cout << "   -p, --list-plugins           List available plugins\n";
+  std::cout << "   -n, --list-nodes             List available nodes for plugins that are loaded\n";
+  std::cout << "   -h, --help                   Print this help message\n";
+  std::cout << "\n";
+  std::cout << "   <flowchart_file>             JSON flowchart file\n";
+  std::cout << "   -V, --verbose                Print verbose messages during flowchart execution\n";
+  std::cout << "   -g, --list-globals           List available flowchart globals. Cancels flowchart execution\n";
+  std::cout << "   -w, --workdir                Set working directory to folder containing flowchart file\n";
+  std::cout << "   -c <file>, --config <file>   Read globals from TOML config file\n";
+  std::cout << "   --GLOBAL1=A --GLOBAL2=B ...  Specify globals for flowchart (list availale globals with -g)\n";
 }
 
 int main(int argc, const char * argv[]) {
@@ -175,7 +165,7 @@ int main(int argc, const char * argv[]) {
   }
 
   if(cmdl[{ "-h", "--help" }]) {
-    print_usage(program_name);
+    print_help(program_name);
     return EXIT_SUCCESS;
   }
 
@@ -185,7 +175,7 @@ int main(int argc, const char * argv[]) {
     NodeRegisterMap node_registers;
     NodeManager flowchart(node_registers);
     
-    verbose = cmdl[{ "--verbose" }];
+    verbose = cmdl[{ "-V", "--verbose" }];
     load_plugins(plugin_manager, node_registers, plugin_folder, verbose);
 
     if(cmdl[{ "-p", "--list-plugins" }]) {
@@ -199,15 +189,15 @@ int main(int argc, const char * argv[]) {
     // check for flowchart
     std::map<std::string, std::vector<std::string>> globals_from_cli;
     if(cmdl[1].empty()) {
-      std::cerr << "Error, no flowchart path provided!\n";
-      print_usage(program_name);
+      std::cerr << "ERROR: no flowchart_file provided!\n";
+      print_help(program_name);
       return EXIT_FAILURE;
     }
 
     flowchart_path = cmdl[1];
     if (!fs::exists(flowchart_path)) {
-      std::cerr << "Error, no such flowchart file: " << flowchart_path << "\n";
-      print_usage(program_name);
+      std::cerr << "ERROR: no such flowchart_file: " << flowchart_path << "\n";
+      print_help(program_name);
       return EXIT_FAILURE;
     }
 
@@ -237,15 +227,15 @@ int main(int argc, const char * argv[]) {
     std::string config_path;
     // config is seen as flag because there is no value provided
     if (cmdl[{"-c", "--config"}]) {
-      std::cerr << "Error, no config file provided\n";
-      print_usage(program_name);
+      std::cerr << "ERROR: no config file provided\n";
+      print_help(program_name);
       return EXIT_FAILURE;
     }
     // config is seen as parameter and there is a value provided
     if (cmdl({"-c", "--config"}) >> config_path) {
       if (!fs::exists(config_path)) {
-        std::cerr << "Error, no such config file: " << config_path << "\n";
-        print_usage(program_name);
+        std::cerr << "ERROR: no such config file: " << config_path << "\n";
+        print_help(program_name);
         return EXIT_FAILURE;
       }
       std::cout << "Reading configuration from file " << config_path << std::endl;
@@ -254,8 +244,8 @@ int main(int argc, const char * argv[]) {
       for (auto&& [key, value] : config)
       {
         if (flowchart.global_flowchart_params.find(key.data()) == flowchart.global_flowchart_params.end()) {
-          std::cerr << "Error, no such global parameter (in config): " << key.str() << " (use -g to view available globals)\n";
-          print_usage(program_name);
+          std::cerr << "ERROR: no such global parameter (in config): " << key.str() << " (use -g to list available globals)\n";
+          print_help(program_name);
           return EXIT_FAILURE;
         }
         auto& g = flowchart.global_flowchart_params[key.data()];
@@ -281,9 +271,9 @@ int main(int argc, const char * argv[]) {
             auto* gptr = static_cast<ParameterByValue<int>*>(g.get());
             gptr->set(b);
           }
-          std::cout << "set global from config file " << key.data() << " = " << config[key.data()] << "\n";
+          std::cout << "set global " << key.data() << " = " << config[key.data()] << " (from config file)\n";
         } catch (const std::exception& e) {
-          std::cerr << "Error in parsing global parameter '" << key << "':\n";
+          std::cerr << "ERROR in parsing global parameter '" << key << "':\n";
           std::cerr << e.what() << std::endl;
         }
       }
@@ -292,8 +282,8 @@ int main(int argc, const char * argv[]) {
       if (key == "c" || key == "config") continue;
       
       if (flowchart.global_flowchart_params.find(key) == flowchart.global_flowchart_params.end()) {
-        std::cerr << "Error, no such global parameter: " << key << " (use -g to view available globals)\n";
-        print_usage(program_name);
+        std::cerr << "ERROR: no such global parameter: " << key << " (use -g to view available globals)\n";
+        print_help(program_name);
         return EXIT_FAILURE;
       }
       auto& g = flowchart.global_flowchart_params[key];
@@ -321,7 +311,7 @@ int main(int argc, const char * argv[]) {
             gptr->set(false);
           else throw gfFlowchartError("Unable set boolean global from provided value (" + value + "). Please use 'true' or 'false'.");
         }
-        std::cout << "set global from CLI " << key << " = " << value << "\n";
+        std::cout << "set global " << key << " = " << value << " (from command line)\n";
       } catch (const std::exception& e) {
         std::cerr << "Error in parsing global parameter '" << key << "':\n";
         std::cerr << e.what() << std::endl;
@@ -343,8 +333,8 @@ int main(int argc, const char * argv[]) {
         }
         catch (const gfException& e) {
           // std::cerr.clear();
-          std::cerr << e.what() << "\n";
-          exit(1);
+          std::cerr << "ERROR: " << e.what() << "\n";
+          return EXIT_FAILURE;
         }
       #else
         try {
@@ -352,8 +342,8 @@ int main(int argc, const char * argv[]) {
         }
         catch (const gfException& e) {
           // std::cerr.clear();
-          std::cerr << e.what() << "\n";
-          exit(1);
+          std::cerr << "ERROR: " << e.what() << "\n";
+          return EXIT_FAILURE;
         }
       #endif
       fs::current_path(launch_path);
