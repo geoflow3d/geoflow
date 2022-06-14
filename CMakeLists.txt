@@ -4,7 +4,7 @@ project (Geoflow VERSION 0.0.1)
 
 include(GNUInstallDirs)
 
-set(GF_PLUGIN_FOLDER "${CMAKE_INSTALL_LIBDIR}/geoflow-plugins" CACHE STRING "Geoflow plugin folder")
+set(GF_PLUGIN_FOLDER "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/geoflow-plugins" CACHE STRING "Geoflow plugin folder")
 if(PROJECT_IS_TOP_LEVEL)
   if (WIN32)
     set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
