@@ -81,7 +81,7 @@ include_directories(
   src
   thirdparty/filesystem/include
   thirdparty/json/single_include
-  ${CMAKE_BINARY_DIR}
+  ${PROJECT_BINARY_DIR}
 )
 
 # targets
