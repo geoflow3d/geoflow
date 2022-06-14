@@ -2,7 +2,9 @@ cmake_minimum_required (VERSION 3.21)
 
 project (Geoflow VERSION 0.0.1)
 
-set(GF_PLUGIN_FOLDER "$ENV{HOME}/.geoflow/plugins" CACHE STRING "Geoflow plugin folder")
+include(GNUInstallDirs)
+
+set(GF_PLUGIN_FOLDER "${CMAKE_INSTALL_LIBDIR}/geoflow-plugins" CACHE STRING "Geoflow plugin folder")
 if(PROJECT_IS_TOP_LEVEL)
   if (WIN32)
     set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
@@ -10,7 +12,7 @@ if(PROJECT_IS_TOP_LEVEL)
   endif()
 else()
   if (WIN32)
-    set(GF_PLUGIN_FOLDER "..\\plugins")
+    set(GF_PLUGIN_FOLDER "..\\lib\\geoflow-plugins")
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
   endif()
 endif()
@@ -248,44 +250,27 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
 # )
 
 install(TARGETS geoflow-core EXPORT geoflow-targets 
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  PUBLIC_HEADER DESTINATION include/geoflow)
-install(EXPORT geoflow-targets DESTINATION lib/cmake/geoflow)
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/geoflow)
+install(EXPORT geoflow-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow)
 
 # install(FILES thirdparty/json/single_include/nlohmann/json.hpp DESTINATION include/geoflow/nlohmann)
 
 include ( CMakePackageConfigHelpers )
 configure_package_config_file(cmake/geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
-  INSTALL_DESTINATION lib/cmake/geoflow
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow
   PATH_VARS GF_PLUGIN_FOLDER)
 
 install(FILES 
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake 
   cmake/gf_plugin.cpp.in
-  DESTINATION lib/cmake/geoflow)
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow)
 
 add_subdirectory(apps)
 # add_subdirectory(examples)
-
-if (WIN32)
-  set(CPACK_GENERATOR NSIS)
-  set(CPACK_NSIS_MODIFY_PATH ON)
-  include(InstallRequiredSystemLibraries)
-  INSTALL(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
-endif (WIN32)
-set(CPACK_PACKAGE_NAME "Geoflow")
-set(CPACK_PACKAGE_VENDOR "Ravi Peters")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Geoflow - Software")
-set(CPACK_PACKAGE_VERSION "0.1.0")
-set(CPACK_PACKAGE_VERSION_MAJOR "0")
-set(CPACK_PACKAGE_VERSION_MINOR "1")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Geoflow")
-
-INCLUDE(CPack)
 
 function(geoflow_create_plugin)
   configure_file(${GF_PLUGIN_FILE} ${PROJECT_BINARY_DIR}/gf_plugin.cpp)
@@ -301,5 +286,5 @@ function(geoflow_create_plugin)
     PREFIX ""
   )
 
-  install(TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION "plugins")
+  install(TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION ${GF_PLUGIN_FOLDER})
 endfunction()
