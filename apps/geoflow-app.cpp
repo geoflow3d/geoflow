@@ -179,6 +179,7 @@ int main(int argc, const char * argv[]) {
     load_plugins(plugin_manager, node_registers, plugin_folder, verbose);
 
     if(cmdl[{ "-p", "--list-plugins" }]) {
+      std::cout << "GF_PLUGIN_FOLDER = " << plugin_folder << "\n";
       print_plugins(node_registers);
       return EXIT_SUCCESS;
     } else if(cmdl[{ "-n", "--list-nodes" }]) {
