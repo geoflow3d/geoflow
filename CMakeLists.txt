@@ -24,7 +24,7 @@ option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
 # dependencies
 add_subdirectory(thirdparty)
 
-find_package(nlohmann_json CONFIG REQUIRED)
+find_package(nlohmann_json 3.10.5 CONFIG REQUIRED)
 
 if(GF_BUILD_GUI)
 find_package(glfw3 3.3 REQUIRED)
