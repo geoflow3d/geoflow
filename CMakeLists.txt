@@ -4,16 +4,18 @@ project (Geoflow VERSION 0.0.1)
 
 include(GNUInstallDirs)
 
-set(GF_PLUGIN_FOLDER "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/geoflow-plugins" CACHE STRING "Geoflow plugin folder")
+set(GF_PLUGIN_FOLDER_INSTALL "${CMAKE_INSTALL_LIBDIR}/geoflow-plugins")
+set(GF_PLUGIN_FOLDER "${CMAKE_INSTALL_PREFIX}/${GF_PLUGIN_FOLDER_INSTALL}" CACHE STRING "Geoflow plugin folder")
 if(PROJECT_IS_TOP_LEVEL)
   if (WIN32)
-    set(GF_PLUGIN_FOLDER "$ENV{USERPROFILE}\\.geoflow\\plugins")
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
+    string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER_INSTALL ${GF_PLUGIN_FOLDER})
   endif()
 else()
   if (WIN32)
-    set(GF_PLUGIN_FOLDER "..\\lib\\geoflow-plugins")
+    set(GF_PLUGIN_FOLDER "..\\lib\\geoflow-plugins") # this needs to be a relative to the installed geof.exe
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
+    string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER_INSTALL ${GF_PLUGIN_FOLDER})
   endif()
 endif()
 
@@ -190,17 +192,10 @@ SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-if(PROJECT_IS_TOP_LEVEL)
-  # get absolute path to plugin folder. If it is a relative path we assume it is relative to the CMAKE_BINARY_DIR
-  get_filename_component(GF_PLUGIN_FOLDER_ABSOLUTE ${GF_PLUGIN_FOLDER} ABSOLUTE ${CMAKE_BINARY_DIR})
-  add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER_ABSOLUTE}\")
-  message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER_ABSOLUTE}")
-else()
-  # if (WIN32) # when building NSIS installer package from geoflow-bundle
-    add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
-    message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER}")
-  # endif()
-endif()
+
+add_definitions(-DGF_PLUGIN_FOLDER=\"${GF_PLUGIN_FOLDER}\")
+message(STATUS "Geoflow plugin folder set to ${GF_PLUGIN_FOLDER}")
+message(STATUS "Geoflow plugin folder install set to ${GF_PLUGIN_FOLDER_INSTALL}")
 
 set(GF_PLUGIN_EXTENSION ".so")
 if (WIN32)
@@ -286,5 +281,8 @@ function(geoflow_create_plugin)
     PREFIX ""
   )
 
-  install(TARGETS ${GF_PLUGIN_TARGET_NAME} DESTINATION ${GF_PLUGIN_FOLDER})
+  install(
+    TARGETS ${GF_PLUGIN_TARGET_NAME}
+    LIBRARY DESTINATION lib/geoflow-plugins
+  )
 endfunction()
