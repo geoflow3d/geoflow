@@ -46,6 +46,10 @@ bool gfTerminal::accepts_type(std::type_index ttype) const {
   return false;
 }
 
+std::string gfTerminal::get_full_name() const {
+  return parent_.get_name() + "." + get_name();
+}
+
 void gfInputTerminal::clear() {
   parent_.update_status();
   parent_.on_clear(*this);

@@ -134,6 +134,7 @@ namespace geoflow {
 
     bool accepts_type(std::type_index type) const;
     bool supports_multiple_elements() const { return supports_multiple_elements_; };
+    std::string get_full_name() const;
     const std::vector<std::type_index>& get_types() const { return types_; };
     const virtual gfIO get_side() = 0;
     const virtual gfTerminalFamily get_family() = 0;
