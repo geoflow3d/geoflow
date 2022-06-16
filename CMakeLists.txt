@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.21)
 
-project (Geoflow VERSION 0.1.0)
+project (Geoflow VERSION 0.2.0)
 
 include(GNUInstallDirs)
 
