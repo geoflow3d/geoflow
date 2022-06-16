@@ -13,7 +13,7 @@ Requires compiler with c++17 support  (see https://en.cppreference.com/w/cpp/com
 ```
 mkdir build
 cd build
-cmake .. -DGF_BUILD_GUI=OFF
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DGF_BUILD_GUI=OFF
 cmake --build . --parallel 4 --config Release
 ```
 
