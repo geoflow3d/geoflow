@@ -42,7 +42,7 @@ add_executable(geof geoflow-app.cpp)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR LINUX)
   target_link_libraries(geof PRIVATE -ldl)
 endif()
-target_link_libraries(geof PRIVATE geoflow-core nlohmann_json::nlohmann_json Threads::Threads)
+target_link_libraries(geof PRIVATE geoflow-core nlohmann_json::nlohmann_json)
 target_link_directories(geof PRIVATE ${CMAKE_SOURCE_DIR}/src)
 # last include dir is for the shared header hash|
 target_include_directories(geof PRIVATE ${CMAKE_BINARY_DIR}/include)

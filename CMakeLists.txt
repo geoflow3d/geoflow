@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.21)
 
-project (Geoflow VERSION 0.0.1)
+project (Geoflow VERSION 0.2.0)
 
 include(GNUInstallDirs)
 
@@ -21,7 +21,6 @@ endif()
 
 option(GF_BUILD_GUI "Build the GUI components of geoflow" TRUE)
 option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
-# option(GF_USE_EXTERNAL_JSON "Use an external JSON library" ON)
 
 # dependencies
 add_subdirectory(thirdparty)
@@ -33,8 +32,8 @@ find_package(glfw3 3.3 REQUIRED)
 #message(STATUS "GLFW libs: ${GLFW_LIBRARIES}")
 endif()
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads)
+# set(THREADS_PREFER_PTHREAD_FLAG ON)
+# find_package(Threads)
 
 # DLLoader
 if (WIN32)
@@ -251,8 +250,6 @@ install(TARGETS geoflow-core EXPORT geoflow-targets
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/geoflow)
 install(EXPORT geoflow-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow)
 
-# install(FILES thirdparty/json/single_include/nlohmann/json.hpp DESTINATION include/geoflow/nlohmann)
-
 include ( CMakePackageConfigHelpers )
 configure_package_config_file(cmake/geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
@@ -262,27 +259,9 @@ configure_package_config_file(cmake/geoflow-config.cmake.in
 install(FILES 
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake 
   cmake/gf_plugin.cpp.in
+  cmake/geoflow_create_plugin.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow)
 
 add_subdirectory(apps)
-# add_subdirectory(examples)
 
-function(geoflow_create_plugin)
-  configure_file(${GF_PLUGIN_FILE} ${PROJECT_BINARY_DIR}/gf_plugin.cpp)
-
-  add_library(${GF_PLUGIN_TARGET_NAME} MODULE
-    ${PROJECT_BINARY_DIR}/gf_plugin.cpp
-    ${ARGN}
-  )
-  set_target_properties(
-    ${GF_PLUGIN_TARGET_NAME} PROPERTIES 
-    CXX_STANDARD 17
-    CXX_VISIBILITY_PRESET hidden
-    PREFIX ""
-  )
-
-  install(
-    TARGETS ${GF_PLUGIN_TARGET_NAME}
-    LIBRARY DESTINATION lib/geoflow-plugins
-  )
-endfunction()
+include(cmake/geoflow_create_plugin.cmake)

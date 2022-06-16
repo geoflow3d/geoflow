@@ -119,19 +119,19 @@ namespace geoflow::nodes::core {
           for (auto [name, input_term] : node->input_terminals) {
             if (input_term->is_marked()) {
               if(input_term->get_family() == GF_SINGLE_FEATURE)
-                add_vector_input(node_name+"."+input_term->get_name(), input_term->get_types());
+                add_vector_input(input_term->get_full_name(), input_term->get_types());
               else
-                add_poly_input(node_name+"."+input_term->get_name(), input_term->get_types());
+                add_poly_input(input_term->get_full_name(), input_term->get_types());
             }
           }
           for (auto [name, output_term_] : node->output_terminals) {
             if (output_term_->is_marked()) {
               if (output_term_->get_family() == GF_SINGLE_FEATURE) {
                 auto output_term = (gfSingleFeatureOutputTerminal*)(output_term_.get());
-                add_vector_output(node_name+"."+output_term->get_name(), output_term->get_type());
+                add_vector_output(output_term->get_full_name(), output_term->get_type());
               } else {
                 auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
-                add_poly_output(node_name+"."+output_term->get_name(), output_term->get_types());
+                add_poly_output(output_term->get_full_name(), output_term->get_types());
               }
             }
           }
@@ -198,7 +198,7 @@ namespace geoflow::nodes::core {
       for (auto& [node_name, node] : flowchart->get_nodes()) {
           for (auto& [name, input_term] : node->input_terminals) {
             if (input_term->is_marked()) {
-              auto input_name = node_name+"."+input_term->get_name();
+              auto input_name = input_term->get_full_name();
               if(input_term->get_family() == GF_SINGLE_FEATURE) {
                 proxy_node->add_output(input_name, input_term->get_types());
                 proxy_node->output(input_name).connect(*input_term);

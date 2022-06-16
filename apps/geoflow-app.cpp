@@ -125,7 +125,7 @@ void print_help(std::string program_name) {
   // see http://docopt.org/
   std::cout << "Usage: \n";
   std::cout << "   " << program_name;
-  std::cout << " [-v | -p | -n | -h]\n";
+  std::cout << " [-v|-p|-n|-h]\n";
   std::cout << "   " << program_name;
   std::cout << " <flowchart_file> [-V] [-g] [-w] [-c <file>] [--GLOBAL1=A --GLOBAL2=B ...]\n";
   std::cout << "\n";
@@ -189,140 +189,144 @@ int main(int argc, const char * argv[]) {
 
     // check for flowchart
     std::map<std::string, std::vector<std::string>> globals_from_cli;
+    bool list_globals{false};
     if(cmdl[1].empty()) {
-      std::cerr << "ERROR: no flowchart_file provided!\n";
-      print_help(program_name);
-      return EXIT_FAILURE;
-    }
+      #ifndef GF_BUILD_WITH_GUI
+        std::cerr << "ERROR: no flowchart_file provided!\n";
+        print_help(program_name);
+        return EXIT_FAILURE;
+      #endif
+    } else {
 
-    flowchart_path = cmdl[1];
-    if (!fs::exists(flowchart_path)) {
-      std::cerr << "ERROR: no such flowchart_file: " << flowchart_path << "\n";
-      print_help(program_name);
-      return EXIT_FAILURE;
-    }
-
-    // set current work directory to folder containing flowchart file
-    auto abs_path = fs::absolute(fs::path(flowchart_path));
-    flowchart_folder = abs_path.parent_path();
-    flowchart_path = abs_path.string();
-    // fs::current_path(flowchart_folder);
-    flowchart.load_json(flowchart_path);
-    // fs::current_path(launch_path);
-
-    // handle globals overrides provided by user
-    bool list_globals = cmdl[{"-g", "--list-globals"}];
-    if (list_globals) std::cout << "Available globals:\n";
-    for (auto&[key,val] : flowchart.global_flowchart_params) {
-      auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{}));
-      // config_subcommand->add_option("--"+key, (it->second), "");
-      if (list_globals) {
-        std::cout << " > " << key;
-        if (!val->get_help().empty()) std::cout << " [" << val->get_help() << "]";
-        std::cout << "\n   default value: " << val->as_json() << "\n";
-      }
-    }
-    if (list_globals) return EXIT_SUCCESS;  
-
-    // process global values from cli/config file
-    std::string config_path;
-    // config is seen as flag because there is no value provided
-    if (cmdl[{"-c", "--config"}]) {
-      std::cerr << "ERROR: no config file provided\n";
-      print_help(program_name);
-      return EXIT_FAILURE;
-    }
-    // config is seen as parameter and there is a value provided
-    if (cmdl({"-c", "--config"}) >> config_path) {
-      if (!fs::exists(config_path)) {
-        std::cerr << "ERROR: no such config file: " << config_path << "\n";
+      flowchart_path = cmdl[1];
+      if (!fs::exists(flowchart_path)) {
+        std::cerr << "ERROR: no such flowchart_file: " << flowchart_path << "\n";
         print_help(program_name);
         return EXIT_FAILURE;
       }
-      std::cout << "Reading configuration from file " << config_path << std::endl;
-      toml::table config;
-      try {
-        config = toml::parse_file( config_path );
-      } catch (const std::exception& e) {
-        std::cerr << "ERROR: unable to parse config file " << config_path << "\n";
-        std::cerr << "  " << e.what() << std::endl;
+
+      // set current work directory to folder containing flowchart file
+      auto abs_path = fs::absolute(fs::path(flowchart_path));
+      flowchart_folder = abs_path.parent_path();
+      flowchart_path = abs_path.string();
+      // fs::current_path(flowchart_folder);
+      flowchart.load_json(flowchart_path);
+      // fs::current_path(launch_path);
+
+      // handle globals overrides provided by user
+      list_globals = cmdl[{"-g", "--list-globals"}];
+      if (list_globals) std::cout << "Available globals:\n";
+      for (auto&[key,val] : flowchart.global_flowchart_params) {
+        auto [it, inserted] = globals_from_cli.emplace(std::make_pair(key, vec1s{}));
+        // config_subcommand->add_option("--"+key, (it->second), "");
+        if (list_globals) {
+          std::cout << " > " << key;
+          if (!val->get_help().empty()) std::cout << " [" << val->get_help() << "]";
+          std::cout << "\n   default value: " << val->as_json() << "\n";
+        }
+      }
+      if (list_globals) return EXIT_SUCCESS;  
+
+      // process global values from cli/config file
+      std::string config_path;
+      // config is seen as flag because there is no value provided
+      if (cmdl[{"-c", "--config"}]) {
+        std::cerr << "ERROR: no config file provided\n";
+        print_help(program_name);
         return EXIT_FAILURE;
       }
-
-      for (auto&& [key, value] : config)
-      {
-        if (flowchart.global_flowchart_params.find(key.data()) == flowchart.global_flowchart_params.end()) {
-          std::cerr << "ERROR: no such global parameter (in config): " << key.str() << " (use -g to list available globals)\n";
+      // config is seen as parameter and there is a value provided
+      if (cmdl({"-c", "--config"}) >> config_path) {
+        if (!fs::exists(config_path)) {
+          std::cerr << "ERROR: no such config file: " << config_path << "\n";
           print_help(program_name);
           return EXIT_FAILURE;
         }
-        auto& g = flowchart.global_flowchart_params[key.data()];
+        std::cout << "Reading configuration from file " << config_path << std::endl;
+        toml::table config;
+        try {
+          config = toml::parse_file( config_path );
+        } catch (const std::exception& e) {
+          std::cerr << "ERROR: unable to parse config file " << config_path << "\n";
+          std::cerr << "  " << e.what() << std::endl;
+          return EXIT_FAILURE;
+        }
+
+        for (auto&& [key, value] : config)
+        {
+          if (flowchart.global_flowchart_params.find(key.data()) == flowchart.global_flowchart_params.end()) {
+            std::cerr << "ERROR: no such global parameter (in config): " << key.str() << " (use -g to list available globals)\n";
+            print_help(program_name);
+            return EXIT_FAILURE;
+          }
+          auto& g = flowchart.global_flowchart_params[key.data()];
+          try{
+            if (g->is_type(typeid(std::string))) {
+              if (!value.is_string()) throw gfFlowchartError("Unable to set string from provided value");
+              auto& s = value.ref<std::string>();
+              auto* gptr = static_cast<ParameterByValue<std::string>*>(g.get());
+              gptr->set(s);
+            } else if (g->is_type(typeid(float))) {
+              if (!value.is_floating_point()) throw gfFlowchartError("Unable to set float from provided value");
+              auto& f = value.ref<double>();
+              auto* gptr = static_cast<ParameterByValue<float>*>(g.get());
+              gptr->set(float(f));
+            } else if(g->is_type(typeid(int))) {
+              if (!value.is_integer()) throw gfFlowchartError("Unable to set integer from provided value");
+              auto& i = value.ref<int64_t>();
+              auto* gptr = static_cast<ParameterByValue<int>*>(g.get());
+              gptr->set(int(i));
+            } else if(g->is_type(typeid(bool))) {
+              if (!value.is_boolean()) throw gfFlowchartError("Unable set boolean global from provided value");
+              auto& b = value.ref<bool>();
+              auto* gptr = static_cast<ParameterByValue<int>*>(g.get());
+              gptr->set(b);
+            }
+            std::cout << "set global " << key.data() << " = " << config[key.data()] << " (from config file)\n";
+          } catch (const std::exception& e) {
+            std::cerr << "ERROR in parsing global parameter '" << key << "':\n";
+            std::cerr << e.what() << std::endl;
+          }
+        }
+      }
+      for (auto& [key, value] : cmdl.params()) {
+        if (key == "c" || key == "config") continue;
+        
+        if (flowchart.global_flowchart_params.find(key) == flowchart.global_flowchart_params.end()) {
+          std::cerr << "ERROR: no such global parameter: " << key << " (use -g to view available globals)\n";
+          print_help(program_name);
+          return EXIT_FAILURE;
+        }
+        auto& g = flowchart.global_flowchart_params[key];
         try{
           if (g->is_type(typeid(std::string))) {
-            if (!value.is_string()) throw gfFlowchartError("Unable to set string from provided value");
-            auto& s = value.ref<std::string>();
+            std::string s;
+            if (!(cmdl(key) >> s)) throw gfFlowchartError("Unable to set string from provided value (" + value + ")");
             auto* gptr = static_cast<ParameterByValue<std::string>*>(g.get());
             gptr->set(s);
           } else if (g->is_type(typeid(float))) {
-            if (!value.is_floating_point()) throw gfFlowchartError("Unable to set float from provided value");
-            auto& f = value.ref<double>();
+            float f;
+            if (!(cmdl(key) >> f)) throw gfFlowchartError("Unable to set float from provided value (" + value + ")");
             auto* gptr = static_cast<ParameterByValue<float>*>(g.get());
-            gptr->set(float(f));
+            gptr->set(f);
           } else if(g->is_type(typeid(int))) {
-            if (!value.is_integer()) throw gfFlowchartError("Unable to set integer from provided value");
-            auto& i = value.ref<int64_t>();
+            int i;
+            if (!(cmdl(key) >> i)) throw gfFlowchartError("Unable to set integer from provided value (" + value + ")");
             auto* gptr = static_cast<ParameterByValue<int>*>(g.get());
-            gptr->set(int(i));
+            gptr->set(i);
           } else if(g->is_type(typeid(bool))) {
-            if (!value.is_boolean()) throw gfFlowchartError("Unable set boolean global from provided value");
-            auto& b = value.ref<bool>();
-            auto* gptr = static_cast<ParameterByValue<int>*>(g.get());
-            gptr->set(b);
+            auto* gptr = static_cast<ParameterByValue<bool>*>(g.get());
+            if(value == "true")
+              gptr->set(true);
+            else if(value == "false")
+              gptr->set(false);
+            else throw gfFlowchartError("Unable set boolean global from provided value (" + value + "). Please use 'true' or 'false'.");
           }
-          std::cout << "set global " << key.data() << " = " << config[key.data()] << " (from config file)\n";
+          std::cout << "set global " << key << " = " << value << " (from command line)\n";
         } catch (const std::exception& e) {
-          std::cerr << "ERROR in parsing global parameter '" << key << "':\n";
+          std::cerr << "Error in parsing global parameter '" << key << "':\n";
           std::cerr << e.what() << std::endl;
         }
-      }
-    }
-    for (auto& [key, value] : cmdl.params()) {
-      if (key == "c" || key == "config") continue;
-      
-      if (flowchart.global_flowchart_params.find(key) == flowchart.global_flowchart_params.end()) {
-        std::cerr << "ERROR: no such global parameter: " << key << " (use -g to view available globals)\n";
-        print_help(program_name);
-        return EXIT_FAILURE;
-      }
-      auto& g = flowchart.global_flowchart_params[key];
-      try{
-        if (g->is_type(typeid(std::string))) {
-          std::string s;
-          if (!(cmdl(key) >> s)) throw gfFlowchartError("Unable to set string from provided value (" + value + ")");
-          auto* gptr = static_cast<ParameterByValue<std::string>*>(g.get());
-          gptr->set(s);
-        } else if (g->is_type(typeid(float))) {
-          float f;
-          if (!(cmdl(key) >> f)) throw gfFlowchartError("Unable to set float from provided value (" + value + ")");
-          auto* gptr = static_cast<ParameterByValue<float>*>(g.get());
-          gptr->set(f);
-        } else if(g->is_type(typeid(int))) {
-          int i;
-          if (!(cmdl(key) >> i)) throw gfFlowchartError("Unable to set integer from provided value (" + value + ")");
-          auto* gptr = static_cast<ParameterByValue<int>*>(g.get());
-          gptr->set(i);
-        } else if(g->is_type(typeid(bool))) {
-          auto* gptr = static_cast<ParameterByValue<bool>*>(g.get());
-          if(value == "true")
-            gptr->set(true);
-          else if(value == "false")
-            gptr->set(false);
-          else throw gfFlowchartError("Unable set boolean global from provided value (" + value + "). Please use 'true' or 'false'.");
-        }
-        std::cout << "set global " << key << " = " << value << " (from command line)\n";
-      } catch (const std::exception& e) {
-        std::cerr << "Error in parsing global parameter '" << key << "':\n";
-        std::cerr << e.what() << std::endl;
       }
     }
 
