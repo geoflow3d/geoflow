@@ -1,84 +1,59 @@
 # Geoflow
 Flowchart tool for geo-spatial data processing. Highly experimental with many rough edges!
 
-![Build](https://github.com/geoflow3d/geoflow/workflows/Build/badge.svg)
-
 # Installation
-## Requirements
-+ [nlohmann JSON](https://github.com/nlohmann/json/releases) at least version 3.10.5
 
-## Windows
-Simply download and run the Geoflow-bundle installer from the [latest release](https://github.com/geoflow3d/geoflow-bundle/releases/latest). This will also install the most important plugins.
-
-### Installing and using plugins
-Geoflow plugins provide the nodes for Geoflow. Nodes are the functional parts of the flowchart that implement a specific function. You can find the plugins on the [geoflow3d organisation page](https://github.com/geoflow3d). The plugin repositories have the `gfp-` prefix, that is an acronym for geoflow plugin.
-
-To use plugins you need to do this:
-
-1. Set an environment variable called `GF_PLUGIN_FOLDER` that points to a directory where you will put the plugins, e.g. `C:\Users\<USERNAME>\.geoflow\plugins`.
-2. Download the plugin from the plugin repository, eg. the [LAS plugin](https://github.com/geoflow3d/gfp-las/releases/latest). Currently a plugin on Windows is simply a `.dll` file.
-3. Copy the plugin file, eg. `gfp_las.dll` to the `GF_PLUGIN_FOLDER` folder you set up earlier.
-
-Geoflow should automatically load all plugins that it finds in the `GF_PLUGIN_FOLDER` folder. Notice that a new version of geoflow may also require a new version of a plugin.
+## As part of [geoflow-bundle](https://github.com/geoflow3d/geoflow-bundle/)
+This the recommended way since it will also include the commonly used plugins and flowcharts to get you started quickly. Also binary pacakges are available.
 
 ## Building from source
+
 Requires compiler with c++17 support  (see https://en.cppreference.com/w/cpp/compiler_support).
 
 ```
 mkdir build
 cd build
-cmake .. -DGF_BUILD_GUI=[ON|OFF]
+cmake .. -DGF_BUILD_GUI=OFF
 cmake --build . --parallel 4 --config Release
 ```
 
-### Building with GUI
-Requires additional dependencies `glm` and `glfw` that need to be installed by the user.
-
-### Platform specific instructions
-Have a look at the [workflow files](https://github.com/tudelft3d/geoflow/tree/master/.github/workflows).
+### dependencies
++ [nlohmann JSON](https://github.com/nlohmann/json/releases) at least version 3.10.5
 
 # Usage
 ## Command line interface (`geof`)
 ```
-Geoflow
-Usage: geof [OPTIONS] [SUBCOMMAND]
+Usage: 
+   geof [-v | -p | -n | -h]
+   geof <flowchart_file> [-V] [-g] [-w] [-c <file>] [--GLOBAL1=A --GLOBAL2=B ...]
 
 Options:
-  -h,--help                   Print this help message and exit
-  --verbose                   Print verbose messages
-[Option Group: Info]
-  Debug information
-  Options:
-    -v,--version                Print version information
-    -p,--plugins                List available plugins
-    -n,--nodes                  List available nodes from plugins that are loaded
+   -v, --version                Print version information
+   -p, --list-plugins           List available plugins
+   -n, --list-nodes             List available nodes for plugins that are loaded
+   -h, --help                   Print this help message
 
-Subcommands:
-  run                         Load and run flowchart
-  set                         Set flowchart globals (comes after run)
-
+   <flowchart_file>             JSON flowchart file
+   -V, --verbose                Print verbose messages during flowchart execution
+   -g, --list-globals           List available flowchart globals. Cancels flowchart execution
+   -w, --workdir                Set working directory to folder containing flowchart file
+   -c <file>, --config <file>   Read globals from TOML config file
+   --GLOBAL1=A --GLOBAL2=B ...  Specify globals for flowchart (list availale globals with -g)
 ```
 ### examples
 Print version information:
-`geof --version`
+```geof --version```
 
-Get help on subcommand:
-`geof run --help`
+Print help:
+```geof --help```
 
 Running a flowchart with default globals:
-`geof run <flowchart file>`
+```geof <flowchart file>```
 
 List available globals:
-`geof run <flowchart file> --globals`
+```geof <flowchart file> --list-globals```
 
 Running a flowchart with user-specified global values:
-`geof run <flowchart file> set [--config <TOML config file with globals>] [--GLOBAL1 <value> --GLOBAL2 <value> ...]`
+```geof <flowchart file> [--config <TOML config file with globals>] [--GLOBAL1=value1 --GLOBAL2=value2 ...]```
 
-
-## GUI (`geoflow`)
-Takes the same parameters as `geof` on the command line.
-
-- Right click to open the menu to create new nodes
-- Drag from input/output terminals to make connections
-- Right click on a node to access its context menu
-- Translate in the 3D viewer by left-mouse dragging while holding `ctrl`, faster zooming by holding `ctrl` while scrolling.
+Command line specified globals have the highest priority and will override default values and/or config file provided values.
