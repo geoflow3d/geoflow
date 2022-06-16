@@ -83,7 +83,6 @@ configure_file(cmake/version.h ${PROJECT_BINARY_DIR}/version.h)
 include_directories(
   src
   thirdparty/filesystem/include
-  thirdparty/json/single_include
   ${PROJECT_BINARY_DIR}
 )
 

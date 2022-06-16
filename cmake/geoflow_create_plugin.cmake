@@ -12,6 +12,10 @@ function(geoflow_create_plugin)
     PREFIX ""
   )
 
+  # this is an unfortunate requirement due to how parameters currently work. Should get rid of it.
+  find_package(nlohmann_json 3.10.5 CONFIG REQUIRED)
+  target_link_libraries( ${GF_PLUGIN_TARGET_NAME} PRIVATE nlohmann_json::nlohmann_json )
+
   install(
     TARGETS ${GF_PLUGIN_TARGET_NAME} 
     LIBRARY DESTINATION lib/geoflow-plugins
