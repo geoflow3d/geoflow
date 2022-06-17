@@ -261,7 +261,7 @@ install(FILES
   cmake/geoflow_create_plugin.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow)
 
-install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/geoflow)
+install(FILES LICENSE DESTINATION share/geoflow)
 
 add_subdirectory(apps)
 
