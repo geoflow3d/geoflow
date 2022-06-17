@@ -1,5 +1,5 @@
 // This file is part of Geoflow
-// Copyright (C) 2018-2019  Ravi Peters, 3D geoinformation TU Delft
+// Copyright (C) 2018-2022 Ravi Peters
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
