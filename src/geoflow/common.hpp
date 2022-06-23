@@ -48,12 +48,20 @@ typedef std::unordered_map<std::string, attribute_vec> attribute_vec_map;
 class AttributeVecMap
 {
   attribute_vec_map attribs_;
+  template<typename T> bool is_attribute_type(const std::string& name) const;
   template<typename T> const T* get_attribute(const std::string& name) const;
   template<typename T> T* get_attribute(const std::string& name);
 
   public:
   attribute_vec_map& get_attributes();
+  const attribute_vec_map& get_attributes() const;
   bool has_attributes() const;
+
+  bool is_attribute_vec1b(const std::string& name) const;
+  bool is_attribute_vec1i(const std::string& name) const;
+  bool is_attribute_vec1s(const std::string& name) const;
+  bool is_attribute_vec1f(const std::string& name) const;
+  bool is_attribute_vec3f(const std::string& name) const;
 
   const vec1b* get_attribute_vec1b(const std::string& name) const;
   const vec1i* get_attribute_vec1i(const std::string& name) const;
@@ -199,7 +207,7 @@ public:
   bool has_attributes() const;
 };
 
-class SegmentCollection : public GeometryCollection<std::array<arr3f, 2>>
+class SegmentCollection : public GeometryCollection<std::array<arr3f, 2>>, public AttributeVecMap
 {
 public:
   size_t vertex_count() const;

@@ -212,9 +212,19 @@ attribute_vec_map& AttributeVecMap::get_attributes()
 {
   return attribs_;
 }
+const attribute_vec_map& AttributeVecMap::get_attributes() const
+{
+  return attribs_;
+}
 bool AttributeVecMap::has_attributes() const
 {
   return attribs_.size() != 0;
+}
+template<typename T> bool AttributeVecMap::is_attribute_type(const std::string& name) const{
+  if (attribs_.find(name) != attribs_.end()) {
+    return std::holds_alternative<T>(attribs_.at(name));
+  }
+  return false;
 }
 template<typename T> const T* AttributeVecMap::get_attribute(const std::string& name) const{
   if (attribs_.find(name) != attribs_.end()) {
@@ -227,6 +237,21 @@ template<typename T> T* AttributeVecMap::get_attribute(const std::string& name) 
     return std::get_if<T>(&attribs_.at(name));
   }
   return nullptr;
+}
+bool AttributeVecMap::is_attribute_vec1b(const std::string& name) const {
+  return is_attribute_type<vec1b>(name);
+}
+bool AttributeVecMap::is_attribute_vec1i(const std::string& name) const {
+  return is_attribute_type<vec1i>(name);
+}
+bool AttributeVecMap::is_attribute_vec1s(const std::string& name) const {
+  return is_attribute_type<vec1s>(name);
+}
+bool AttributeVecMap::is_attribute_vec1f(const std::string& name) const {
+  return is_attribute_type<vec1f>(name);
+}
+bool AttributeVecMap::is_attribute_vec3f(const std::string& name) const {
+  return is_attribute_type<vec3f>(name);
 }
 const vec1b* AttributeVecMap::get_attribute_vec1b(const std::string& name) const {
   return get_attribute<vec1b>(name);
