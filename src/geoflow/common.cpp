@@ -490,4 +490,17 @@ const AttributeMap& MultiTriangleCollection::attr_at(size_t i) const
   return attributes_.at(i);
 }
 
+std::vector<std::string> split_string(const std::string& s, std::string delimiter) {
+  std::vector<std::string> parts;
+  size_t last = 0;
+  size_t next = 0;
+
+  while ((next = s.find(delimiter, last)) != std::string::npos) { 
+    parts.push_back(s.substr(last, next-last));
+    last = next + 1;
+  } 
+  parts.push_back(s.substr(last));
+  return parts;
+}
+
 } // namespace geoflow

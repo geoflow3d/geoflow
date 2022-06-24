@@ -297,4 +297,6 @@ struct Image {
   float nodataval;
 };
 
+std::vector<std::string> split_string(const std::string& s, std::string delimiter);
+
 } // namespace geoflow
