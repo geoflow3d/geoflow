@@ -255,9 +255,10 @@ int main(int argc, const char * argv[]) {
         for (auto&& [key, value] : config)
         {
           if (flowchart.global_flowchart_params.find(key.data()) == flowchart.global_flowchart_params.end()) {
-            std::cerr << "ERROR: no such global parameter (in config): " << key.str() << " (use -g to list available globals)\n";
-            print_help(program_name);
-            return EXIT_FAILURE;
+            std::cerr << "WARNING: no such global parameter (in config): " << key.str() << " (use -g to list available globals)\n";
+            continue;
+            // print_help(program_name);
+            // return EXIT_FAILURE;
           }
           auto& g = flowchart.global_flowchart_params[key.data()];
           try{
@@ -293,9 +294,10 @@ int main(int argc, const char * argv[]) {
         if (key == "c" || key == "config") continue;
         
         if (flowchart.global_flowchart_params.find(key) == flowchart.global_flowchart_params.end()) {
-          std::cerr << "ERROR: no such global parameter: " << key << " (use -g to view available globals)\n";
-          print_help(program_name);
-          return EXIT_FAILURE;
+          std::cerr << "WARNING: no such global parameter: " << key << " (use -g to view available globals)\n";
+          continue;
+          // print_help(program_name);
+          // return EXIT_FAILURE;
         }
         auto& g = flowchart.global_flowchart_params[key];
         try{
