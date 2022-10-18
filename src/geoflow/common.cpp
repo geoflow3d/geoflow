@@ -120,6 +120,25 @@ size_t Geometry::dimension()
   return 3;
 }
 
+// geometry helpers:
+template<typename T> float ring_signed_area(T& ring)
+{
+  float result = 0;
+  const auto n = ring.size();
+  for (size_t i=0; i < n; ++i)
+  {
+    size_t i_n;
+    if ( i == (n-1) ) {
+      i_n = 0;
+    } else {
+      i_n = i+1;
+    }
+
+    result += ring[i][0]*ring[i_n][1] - ring[i_n][0]*ring[i][1];
+  }
+  return result/2;
+}
+
 // geometry types:
 
 void LinearRing::compute_box()
@@ -132,6 +151,15 @@ void LinearRing::compute_box()
       bbox->add(t);
     }
   }
+}
+float LinearRing::signed_area() const
+{
+  float result = ring_signed_area(*this);
+  for (auto& iring : interior_rings_) {
+    // ring_signed_area should be negative if iring is stored clockwise as it should
+    result += ring_signed_area(iring);
+  }
+  return result;
 }
 size_t LinearRing::vertex_count() const
 {
