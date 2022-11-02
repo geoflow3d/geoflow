@@ -253,7 +253,7 @@ include ( CMakePackageConfigHelpers )
 configure_package_config_file(cmake/geoflow-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow
-  PATH_VARS GF_PLUGIN_FOLDER)
+)
 
 install(FILES 
   ${CMAKE_CURRENT_BINARY_DIR}/geoflow-config.cmake 

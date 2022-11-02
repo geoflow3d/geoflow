@@ -18,6 +18,6 @@ function(geoflow_create_plugin)
 
   install(
     TARGETS ${GF_PLUGIN_TARGET_NAME} 
-    LIBRARY DESTINATION lib/geoflow-plugins
+    LIBRARY DESTINATION ${GF_PLUGIN_FOLDER}
   )
 endfunction()
