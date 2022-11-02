@@ -35,6 +35,18 @@
 #include <iostream>
 #include <sstream>
 
+#if defined(__cplusplus) && __cplusplus >= 201703L && defined(__has_include)
+  #if __has_include(<filesystem>)
+    #define GHC_USE_STD_FS
+    #include <filesystem>
+    namespace fs = std::filesystem;
+  #endif
+#endif
+#ifndef GHC_USE_STD_FS
+  #include <ghc/filesystem.hpp>
+  namespace fs = ghc::filesystem;
+#endif
+
 #include "common.hpp"
 #include "parameters.hpp"
 
@@ -720,6 +732,7 @@ namespace geoflow {
     public:
     std::map<std::string, std::shared_ptr<Parameter>> global_flowchart_params;
     std::optional<std::array<double,3>> data_offset;
+    fs::path flowchart_path{};
     NodeManager(NodeRegisterMap&  node_registers)
       : registers_(node_registers) {};
     NodeManager(NodeManager&  other_node_manager)

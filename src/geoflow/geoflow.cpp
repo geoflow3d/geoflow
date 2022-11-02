@@ -545,6 +545,7 @@ void NodeManager::remove_node(NodeHandle node) {
   nodes.erase(node->get_name());
 }
 void NodeManager::clear() {
+  flowchart_path.clear();
   nodes.clear();
   data_offset.reset();
   global_flowchart_params.clear();
@@ -760,6 +761,7 @@ std::vector<NodeHandle> NodeManager::json_unserialise(std::istream& json_sstream
   return new_nodes;
 }
 std::vector<NodeHandle> NodeManager::load_json(std::string filepath, bool strict) {
+  flowchart_path.assign(filepath);
   std::ifstream ifs(filepath);
   return json_unserialise(ifs, strict);
 }

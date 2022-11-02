@@ -116,17 +116,23 @@ namespace geoflow::nodes::core {
     size_t input_size_=0;
 
     bool load_nodes() {
-      if (fs::exists(filepath_)) {
+      auto& parent_manager = get_manager();
+      auto filepath = fs::path(filepath_);
+      if(filepath.is_relative()) {
+        filepath = parent_manager.flowchart_path.parent_path() / filepath;
+      }
+      if (fs::exists(filepath)) {
         input_terminals.clear();
         output_terminals.clear();
         nested_node_manager_->clear();
 
         add_poly_input(get_name()+".globals", {typeid(int), typeid(float), typeid(bool), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
-        nested_node_manager_->set_globals(get_manager());
+        nested_node_manager_->set_globals(parent_manager);
         // nested_outputs_.clear();
         // nested_inputs_.clear();
         // load nodes from json file
-        auto nodes = nested_node_manager_->load_json(filepath_);
+        
+        auto nodes = nested_node_manager_->load_json(filepath.string());
         // find inputs and outputs to connect to this node's terminals...
         // create vectormonoinputs/outputs on this node
         for (auto& node : nodes) {
@@ -154,6 +160,8 @@ namespace geoflow::nodes::core {
         // output terminal for outputting the execution time for each run inside this nestnode
         add_vector_output(get_name()+".timings", typeid(float));
         return true;
+      } else {
+        throw(gfIOError("Cannot find nested flowchart: " + filepath.string()));
       }
       return false;
     }
