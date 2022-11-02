@@ -9,4 +9,4 @@ set(GF_PLUGIN_FILE ${SELF_DIR}/gf_plugin.cpp.in)
 include(${SELF_DIR}/geoflow_create_plugin.cmake)
 
 @PACKAGE_INIT@
-set(GF_PLUGIN_FOLDER @GF_PLUGIN_FOLDER@)
+set(GF_PLUGIN_FOLDER_INSTALL @GF_PLUGIN_FOLDER_INSTALL@)
