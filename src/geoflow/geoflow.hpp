@@ -47,6 +47,8 @@
   namespace fs = ghc::filesystem;
 #endif
 
+#include <proj.h>
+
 #include "common.hpp"
 #include "parameters.hpp"
 
@@ -105,6 +107,13 @@ namespace geoflow {
   // Thrown when the data on the inputs of a node has an inappropriate type
   // or logic (e.g. a loop).
   class gfNodeTerminalError: public gfException
+  {
+  public:
+    using gfException::gfException;
+  };
+
+  // Thrown when there is a problem with CRS setting or transformation
+  class gfCRSError: public gfException
   {
   public:
     using gfException::gfException;
@@ -731,10 +740,20 @@ namespace geoflow {
 
     public:
     std::map<std::string, std::shared_ptr<Parameter>> global_flowchart_params;
+    
     std::optional<std::array<double,3>> data_offset;
+    
+    PJ_CONTEXT *projContext = nullptr;
+    PJ *processCRS = nullptr;
+    PJ *projFwdTransform = nullptr;
+    PJ *projRevTransform = nullptr;
+
     fs::path flowchart_path{};
+    
     NodeManager(NodeRegisterMap&  node_registers)
-      : registers_(node_registers) {};
+      : registers_(node_registers) {
+        projContext = proj_context_create();
+      };
     NodeManager(NodeManager&  other_node_manager)
       : registers_(other_node_manager.registers_) {
         std::stringstream ss;
@@ -742,12 +761,23 @@ namespace geoflow {
         set_globals(other_node_manager);
         json_unserialise(ss);
         data_offset = *other_node_manager.data_offset;
+        projContext = proj_context_clone(other_node_manager.projContext);
+        processCRS = proj_clone(projContext, other_node_manager.processCRS);
+        projFwdTransform = proj_clone(projContext, other_node_manager.projFwdTransform);
+        projRevTransform = proj_clone(projContext, other_node_manager.projRevTransform);
       };
     
     NodeRegisterMap& get_node_registers() const { return registers_; };
     void operator= (const NodeManager& other_manager) {
       registers_ = other_manager.get_node_registers();
     };
+
+    arr3f coord_transform_fwd(const arr3f& p);
+    arr3f coord_transform_rev(const arr3f& p);
+
+    void set_process_crs(std::string& crs);
+    void set_fwd_crs_transform(std::string& source_crs);
+    void set_rev_crs_transform(std::string& target_crs);
 
     NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name);
     NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);

@@ -548,6 +548,16 @@ void NodeManager::clear() {
   flowchart_path.clear();
   nodes.clear();
   data_offset.reset();
+  
+  proj_context_destroy(projContext);
+  projContext = proj_context_create();
+  proj_destroy(processCRS);
+  processCRS = nullptr;
+  proj_destroy(projFwdTransform);
+  projFwdTransform = nullptr;
+  proj_destroy(projRevTransform);
+  projRevTransform = nullptr;
+  
   global_flowchart_params.clear();
 }
 bool NodeManager::name_node(NodeHandle node, std::string new_name) {
@@ -805,6 +815,71 @@ std::string NodeManager::substitute_globals(const std::string& textt) const {
     }
   }
   return text;
+}
+void NodeManager::set_process_crs(std::string& crs) {
+  // https://proj.org/development/reference/functions.html#c.proj_create
+  processCRS = proj_create(projContext, crs.c_str());
+  if (!processCRS)
+    throw gfCRSError("Unable to create CRS from string: " + crs);
+}
+void NodeManager::set_fwd_crs_transform(std::string& source_crs) {
+  if (!processCRS)
+    throw gfCRSError("Unable to create CRS transform, process CRS is undefined");
+
+  PJ *sCRS = proj_create(projContext, source_crs.c_str());
+  if (!sCRS)
+    throw gfCRSError("Unable to create source CRS from string: " + source_crs);
+
+  projFwdTransform = proj_create_crs_to_crs_from_pj(projContext, sCRS, processCRS, 0, 0);
+
+  if (!projFwdTransform)
+    throw gfCRSError("Unable to create forward transformation.");
+}
+void NodeManager::set_rev_crs_transform(std::string& target_crs) {
+  if (!processCRS)
+    throw gfCRSError("Unable to create CRS transform, process CRS is undefined");
+
+  PJ *tCRS = proj_create(projContext, target_crs.c_str());
+  if (!tCRS)
+    throw gfCRSError("Unable to create source CRS from string: " + target_crs);
+
+  projRevTransform = proj_create_crs_to_crs_from_pj(projContext, processCRS, tCRS, 0, 0);
+
+  if (!projRevTransform)
+    throw gfCRSError("Unable to create reverse transformation.");
+}
+arr3f NodeManager::coord_transform_fwd(const arr3f& p) {
+  PJ_COORD coord;
+  if(!data_offset.has_value()) {
+    data_offset = {p[0], p[1], p[2]};
+  }
+  coord = proj_coord(
+    p[0] - (*data_offset)[0],
+    p[1] - (*data_offset)[1],
+    p[2] - (*data_offset)[2],
+    0
+  );
+
+  if (projFwdTransform) coord = proj_trans(projFwdTransform, PJ_FWD, coord);
+
+  return arr3f{coord.xyz.x, coord.xyz.y, coord.xyz.z};
+}
+arr3f NodeManager::coord_transform_rev(const arr3f& p) {
+  PJ_COORD coord;
+  if(!data_offset.has_value()) {
+    coord = proj_coord(p[0], p[1], p[2], 0);
+  } else {
+    coord = proj_coord(
+      p[0] + (*data_offset)[0],
+      p[1] + (*data_offset)[1],
+      p[2] + (*data_offset)[2],
+      0
+    );
+  }
+
+  if (projRevTransform) coord = proj_trans(projRevTransform, PJ_FWD, coord);
+
+  return arr3f{coord.xyz.x, coord.xyz.y, coord.xyz.z};
 }
 
 std::string geoflow::get_global_name(const std::string& text) {
