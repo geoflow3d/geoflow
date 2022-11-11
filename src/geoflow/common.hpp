@@ -30,7 +30,9 @@ namespace geoflow
 {
 
 typedef std::array<float, 2> arr2f;
+typedef std::array<double, 2> arr2d;
 typedef std::array<float, 3> arr3f;
+typedef std::array<double, 3> arr3d;
 typedef std::vector<arr3f> vec3f;
 typedef std::vector<std::array<float, 2>> vec2f;
 typedef std::vector<int> vec1i;
@@ -97,7 +99,9 @@ public:
   float size_y() const;
   void set(std::array<float, 3> nmin, std::array<float, 3> nmax);
   void add(float p[]);
+  void add(double p[]);
   void add(arr3f a);
+  void add(arr3d a);
   void add(const Box &otherBox);
   void add(Box &otherBox);
   void add(vec3f &vec);

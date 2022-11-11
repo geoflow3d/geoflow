@@ -81,6 +81,36 @@ namespace geoflow::nodes::core {
     };
   };
 
+  class ProjTesterNode : public Node {
+    std::string inCRS_="";
+    std::string outCRS_="";
+    float x{0}, y{0}, z{0};
+    public:
+    using Node::Node;
+    void init(){
+      // add_output("value", typeid(std::string));
+      add_param(ParamString(inCRS_, "inCRS", "input coordinate CRS"));
+      add_param(ParamString(outCRS_, "outCRS", "output coordinate CRS"));
+      add_param(ParamFloat(x, "x", "input x coordinate"));
+      add_param(ParamFloat(y, "y", "input y coordinate"));
+      add_param(ParamFloat(z, "z", "input z coordinate"));
+    };
+    void process(){
+      manager.set_fwd_crs_transform(inCRS_.c_str());
+      manager.set_rev_crs_transform(outCRS_.c_str());
+
+      auto coord_proc = manager.coord_transform_fwd(x, y, z);
+      auto coord_out = manager.coord_transform_rev(coord_proc[0], coord_proc[1], coord_proc[2]);
+      std::cout << "input: " << x << ", " << y << ", " << z <<"\n";
+      std::cout << "proc: " << coord_proc[0] << ", " << coord_proc[1] << ", " << coord_proc[2] <<"\n";
+      std::cout << "output: " << coord_out[0] << ", " << coord_out[1] << ", " << coord_out[2] <<"\n";
+      
+      // output("value").set( manager.substitute_globals(value_) );
+      manager.clear_fwd_crs_transform();
+      manager.clear_rev_crs_transform();
+    };
+  };
+
 
   class TextWriterNode : public Node {
     std::string filepath_="";

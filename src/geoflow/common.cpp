@@ -59,7 +59,30 @@ void Box::add(float p[])
   pmax[1] = std::max(p[1], pmax[1]);
   pmax[2] = std::max(p[2], pmax[2]);
 }
+void Box::add(double p[])
+{
+  if (just_cleared)
+  {
+    pmin[0] = float(p[0]);
+    pmin[1] = float(p[1]);
+    pmin[2] = float(p[2]);
+    pmax[0] = float(p[0]);
+    pmax[1] = float(p[1]);
+    pmax[2] = float(p[2]);
+    just_cleared = false;
+  }
+  pmin[0] = std::min(float(p[0]), pmin[0]);
+  pmin[1] = std::min(float(p[1]), pmin[1]);
+  pmin[2] = std::min(float(p[2]), pmin[2]);
+  pmax[0] = std::max(float(p[0]), pmax[0]);
+  pmax[1] = std::max(float(p[1]), pmax[1]);
+  pmax[2] = std::max(float(p[2]), pmax[2]);
+}
 void Box::add(arr3f a)
+{
+  add(a.data());
+}
+void Box::add(std::array<double, 3> a)
 {
   add(a.data());
 }

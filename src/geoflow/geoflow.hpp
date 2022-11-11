@@ -745,6 +745,8 @@ namespace geoflow {
     
     PJ_CONTEXT *projContext = nullptr;
     PJ *processCRS = nullptr;
+    PJ *sCRS = nullptr;
+    PJ *tCRS = nullptr;
     PJ *projFwdTransform = nullptr;
     PJ *projRevTransform = nullptr;
 
@@ -772,12 +774,17 @@ namespace geoflow {
       registers_ = other_manager.get_node_registers();
     };
 
-    arr3f coord_transform_fwd(const arr3f& p);
-    arr3f coord_transform_rev(const arr3f& p);
+    arr3f coord_transform_fwd(const double& x, const double& y, const double& z);
+    arr3d coord_transform_rev(const float& x, const float& y, const float& z);
+    arr3d coord_transform_rev(const arr3f& p);
 
-    void set_process_crs(std::string& crs);
-    void set_fwd_crs_transform(std::string& source_crs);
-    void set_rev_crs_transform(std::string& target_crs);
+    void set_process_crs(const char* crs);
+    void set_fwd_crs_transform(const char* source_crs, bool normalize_for_visualization = false);
+    void set_rev_crs_transform(const char* target_crs, bool normalize_for_visualization = false);
+    std::string get_rev_crs_id_auth_name();
+    std::string get_rev_crs_id_code();
+    void clear_fwd_crs_transform();
+    void clear_rev_crs_transform();
 
     NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name);
     NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);
