@@ -93,6 +93,7 @@ add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
   src/geoflow/common.cpp
   src/geoflow/parameters.cpp
+  src/geoflow/api.cpp
 )
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PROJ::proj)
 set_target_properties(geoflow-core PROPERTIES 
@@ -226,6 +227,8 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
   src/geoflow/common.hpp
   src/geoflow/parameters.hpp
   src/geoflow/geoflow.hpp
+  src/geoflow/api.hpp
+  src/geoflow/plugin_manager.hpp
   ${GF_SHH_FILE}
 )
 
