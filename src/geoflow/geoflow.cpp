@@ -888,14 +888,14 @@ arr3f NodeManager::coord_transform_fwd(const double& x, const double& y, const d
 
   if (projFwdTransform) coord = proj_trans(projFwdTransform, PJ_FWD, coord);
 
-  auto result = arr3f{float(coord.xyz.x), float(coord.xyz.y), float(coord.xyz.z)};
-
   if(!data_offset.has_value()) {
-    data_offset = {result[0], result[1], result[2]};
+    data_offset = {coord.xyz.x, coord.xyz.y, coord.xyz.z};
   }
-  result[0] -= (*data_offset)[0];
-  result[1] -= (*data_offset)[1];
-  result[2] -= (*data_offset)[2];
+  auto result = arr3f{
+    float(coord.xyz.x - (*data_offset)[0]),
+    float(coord.xyz.y - (*data_offset)[1]),
+    float(coord.xyz.z - (*data_offset)[2])
+  };
 
   return result;
 }
