@@ -19,12 +19,12 @@
 
 namespace geoflow {
 
-  class PluginManager {
+  class PluginManager : public PluginManagerInterface {
     public:
-    PluginManager() {};
-    ~PluginManager() {
-      // unload();
-    };
+    // PluginManager() {};
+    // ~PluginManager() {
+    //   // unload();
+    // };
     void load(std::string& plugin_directory, NodeRegisterMap& node_registers, bool verbose=false) {
       for(auto& p: fs::directory_iterator(plugin_directory)) {
         if (p.path().extension() == GF_PLUGIN_EXTENSION) {
@@ -54,6 +54,9 @@ namespace geoflow {
     typedef dlloader::DLLoader<geoflow::NodeRegister> DLLoader;
     std::unordered_map<std::string, std::unique_ptr<DLLoader>> dloaders_;
 
+  };
+  std::unique_ptr<PluginManagerInterface> createPluginManager(){
+    return std::make_unique<PluginManager>();
   };
 
 }

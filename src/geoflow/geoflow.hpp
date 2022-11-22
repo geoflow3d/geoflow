@@ -795,6 +795,7 @@ namespace geoflow {
     bool name_node(NodeHandle node, std::string new_name);
 
     NodeHandle& get_node(std::string& node_name) { return nodes[node_name]; };
+    NodeHandle& get_node(const char* node_name) { return nodes[node_name]; };
     std::unordered_map<std::string, NodeHandle>& get_nodes() { return nodes; };
     std::vector<NodeHandle> dump_nodes();
 
@@ -835,4 +836,11 @@ namespace geoflow {
   bool detect_loop(gfTerminal& t1, gfTerminal& t2);
 
   // bool detect_loop(gfOutputTerminal& iT, gfInputTerminal& oT);
+
+  class PluginManagerInterface {
+    public:
+    virtual void load(std::string& plugin_directory, NodeRegisterMap& node_registers, bool verbose=false) = 0;
+    virtual void unload(bool verbose=false) = 0;
+  };
+  std::unique_ptr<PluginManagerInterface> createPluginManager();
 }

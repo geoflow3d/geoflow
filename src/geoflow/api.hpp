@@ -15,13 +15,13 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <geoflow/geoflow.hpp>
-#include <geoflow/plugin_manager.hpp>
 
 namespace geoflow {
 
   class GeoflowRunner {
+    protected:
     bool verbose = false;
-    PluginManager plugin_manager;
+    std::unique_ptr<PluginManagerInterface> plugin_manager;
     NodeRegisterMap node_registers;
     NodeManager flowchart;
     

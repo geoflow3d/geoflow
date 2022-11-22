@@ -15,11 +15,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "api.hpp"
+#include <geoflow/plugin_manager.hpp>
 #include <geoflow/core_nodes.hpp>
 
 namespace geoflow {
 
-  GeoflowRunner::GeoflowRunner(std::string flowchart_json, bool verbose) : verbose(verbose), flowchart(node_registers) {
+  GeoflowRunner::GeoflowRunner(std::string flowchart_json, bool verbose) 
+  : verbose(verbose), flowchart(node_registers), plugin_manager(createPluginManager()) 
+  {
     // load node registers from libraries
     auto R_core = NodeRegister::create("Core");
     R_core->register_node<nodes::core::NestNode>("NestedFlowchart");
@@ -35,8 +38,9 @@ namespace geoflow {
     if(const char* env_p = std::getenv("GF_PLUGIN_FOLDER")) {
       plugin_folder = env_p;
     }
+    
     if(fs::exists(plugin_folder)) {
-      plugin_manager.load(plugin_folder, node_registers, verbose);
+      plugin_manager->load(plugin_folder, node_registers, verbose);
     } else {
       throw gfException("Plugin folder does not exist: " + plugin_folder);
     };
@@ -51,7 +55,7 @@ namespace geoflow {
   };
   GeoflowRunner::~GeoflowRunner() {
     // NOTICE that we first must destruct any related node_registers before we can unload the plugin_manager!
-    plugin_manager.unload(verbose);
+    plugin_manager->unload(verbose);
   }
 
   /*==========================================================================================

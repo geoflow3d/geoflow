@@ -228,7 +228,6 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
   src/geoflow/parameters.hpp
   src/geoflow/geoflow.hpp
   src/geoflow/api.hpp
-  src/geoflow/plugin_manager.hpp
   ${GF_SHH_FILE}
 )
 
