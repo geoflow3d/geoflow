@@ -107,7 +107,8 @@ namespace geoflow {
     return options.at(value_);
   }
 
-  ParamStrMap::ParamStrMap(StrMap& val, std::vector<std::string>& key_options, std::string label, std::string help) : key_options_(key_options), ParameterByReference(val, label, help) {};
+  ParamStrMapSelect::ParamStrMapSelect(StrMap& val, std::vector<std::string>& key_options, std::string label, std::string help) : key_options_(key_options), ParameterByReference(val, label, help) {};
+  ParamStrMapInput::ParamStrMapInput(StrMap& val, std::string label, std::string help) : ParameterByReference(val, label, help) {};
 
   ParamSelector::ParamSelector(std::vector<std::string> options, size_t& index, std::string label, std::string help) : ParameterByReference(index, label, help) {};
 

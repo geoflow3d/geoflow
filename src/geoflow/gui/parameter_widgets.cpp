@@ -54,6 +54,8 @@ namespace geoflow {
     }
   }
 
+  static std::string new_attr_name="";
+  static ImGuiComboFlags flags = 0;
   bool draw_parameter(Parameter* param) {
     bool changed=false;
     if( ParamTypeInt == param->get_ptype() ) {
@@ -102,8 +104,8 @@ namespace geoflow {
     } else if( ParamTypeText == param->get_ptype() ) {
         auto* valptr = static_cast<ParamString*>(param);
         changed = ImGui::InputTextMultiline(valptr->get_label().c_str(), &valptr->get(), ImVec2(ImGui::GetTextLineHeight() * 32, ImGui::GetTextLineHeight() * 16), ImGuiInputTextFlags_AllowTabInput);
-    } else if( param->is_type(typeid(StrMap))) {
-        auto* valptr = static_cast<ParamStrMap*>(param);;
+    } else if( ParamTypeStrMapSelect == param->get_ptype() ) {
+        auto* valptr = static_cast<ParamStrMapSelect*>(param);;
         if (ImGui::TreeNode(valptr->get_label().c_str())) {
           auto& mapvalues = valptr->get();
           for (auto it=mapvalues.begin(); it!=mapvalues.end(); ) {
@@ -117,7 +119,6 @@ namespace geoflow {
             }
             ImGui::PopID();
           }
-          static ImGuiComboFlags flags = 0;
           if (ImGui::BeginCombo("Create item", "select..", flags)) // The second parameter is the label previewed before opening the combo.
           {
             for (auto& key_option : valptr->key_options_)
@@ -127,6 +128,34 @@ namespace geoflow {
               }
             }
             ImGui::EndCombo();
+          }
+          ImGui::TreePop();
+        }
+    } else if( ParamTypeStrMapInput == param->get_ptype() ) {
+        auto* valptr = static_cast<ParamStrMapSelect*>(param);;
+        if (ImGui::TreeNode(valptr->get_label().c_str())) {
+          auto& mapvalues = valptr->get();
+          for (auto it=mapvalues.begin(); it!=mapvalues.end(); ) {
+            ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
+            ImGui::SameLine();
+            ImGui::PushID(it->first.c_str());
+            if(ImGui::Button("Remove")) {
+              mapvalues.erase(it++);
+            } else {
+              ++it;
+            }
+            ImGui::PopID();
+          }
+          
+          ImGui::InputTextWithHint("##NewAttrName", "Attribute name", &new_attr_name);
+          ImGui::SameLine();
+          if (!new_attr_name.empty()) {
+            ImGui::PushID("##createAttr");
+            if(ImGui::Button("Create")) {
+              mapvalues[new_attr_name] = "";
+              new_attr_name="";
+            }
+            ImGui::PopID();
           }
           ImGui::TreePop();
         }

@@ -85,6 +85,7 @@ configure_file(cmake/version.h ${PROJECT_BINARY_DIR}/version.h)
 include_directories(
   src
   thirdparty/filesystem/include
+  thirdparty/exprtk
   ${PROJECT_BINARY_DIR}
 )
 
@@ -94,6 +95,7 @@ add_library(geoflow-core SHARED
   src/geoflow/common.cpp
   src/geoflow/parameters.cpp
   src/geoflow/api.cpp
+  src/geoflow/AttributeCalcNode.cpp
 )
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PROJ::proj)
 set_target_properties(geoflow-core PROPERTIES 

@@ -38,7 +38,9 @@ namespace geoflow {
     ParamTypeBool,
     ParamTypePath,
     ParamTypeString,
-    ParamTypeText
+    ParamTypeText,
+    ParamTypeStrMapSelect,
+    ParamTypeStrMapInput
   };
 
   class Parameter {
@@ -166,10 +168,17 @@ namespace geoflow {
   };
 
   typedef std::unordered_map<std::string,std::string> StrMap;
-  class ParamStrMap : public ParameterByReference<StrMap> {
+  class ParamStrMapSelect : public ParameterByReference<StrMap> {
     public:
     std::vector<std::string>& key_options_;
-    ParamStrMap(StrMap& val, std::vector<std::string>& key_options, std::string label, std::string help="");
+    ParamStrMapSelect(StrMap& val, std::vector<std::string>& key_options, std::string label, std::string help="");
+    ParamType get_ptype() { return ParamTypeStrMapSelect; };
+  };
+  typedef ParamStrMapSelect ParamStrMap; // for compatibility
+  class ParamStrMapInput : public ParameterByReference<StrMap> {
+    public:
+    ParamStrMapInput(StrMap& val, std::string label, std::string help="");
+    ParamType get_ptype() { return ParamTypeStrMapInput; };
   };
 
   class ParamSelector : public ParameterByReference<size_t> {

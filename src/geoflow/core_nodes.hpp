@@ -135,6 +135,72 @@ namespace geoflow::nodes::core {
     };
   };
 
+  class AttributeMapNode : public Node {
+    // std::string filepath_="";
+    bool only_output_mapped_attrs_ = false;
+    vec1s key_options;
+    StrMap output_attribute_names;
+    public:
+    using Node::Node;
+    void init(){
+      add_poly_input("attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
+      add_poly_output("attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
+      
+      // add_param(ParamPath(filepath_, "filepath", "File path"));
+      add_param(ParamBool(only_output_mapped_attrs_, "only_output_mapped_attrs", "Only output those attributes selected under Output attribute names"));
+      add_param(ParamStrMap(output_attribute_names, key_options, "Attribute re-naming", "Override output attribute names"));
+    };
+    
+    void on_receive(gfMultiFeatureInputTerminal& it) override {
+      key_options.clear();
+      if(&it == &poly_input("attributes")) {
+        for(auto sub_term : it.sub_terminals()) {
+          key_options.push_back(sub_term->get_full_name());
+        }
+      }
+    };
+    
+    void process(){
+      for (auto& iterm : poly_input("attributes").sub_terminals()) {
+        std::string name = iterm->get_full_name();
+        auto search = output_attribute_names.find(name);
+        if(search != output_attribute_names.end()) {
+          if(search->second.size()!=0) //ignore if the new name is an empty string
+            name = search->second;
+        } else if(only_output_mapped_attrs_) {
+          continue; // skip attribute creation if not added by user in output_attribute_names
+        }
+        auto &oterm = poly_output("attributes").add_vector(name, iterm->get_type());
+        oterm = iterm->get_data_vec();
+      }
+    };
+  };
+
+  class AttributeCalcNode : public Node {
+    // std::string filepath_="";
+    bool only_output_mapped_attrs_ = false;
+    StrMap attribute_expressions;
+    public:
+    using Node::Node;
+    void init(){
+      add_poly_input("attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
+      add_poly_output("attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
+      
+      // add_param(ParamPath(filepath_, "filepath", "File path"));
+      add_param(ParamStrMapInput(attribute_expressions, "attribute_expressions", "Attribute expressions"));
+    };
+    
+    // void on_receive(gfMultiFeatureInputTerminal& it) override {
+    //   if(&it == &poly_input("attributes")) {
+    //     for(auto sub_term : it.sub_terminals()) {
+    //       key_options.push_back(sub_term->get_full_name());
+    //     }
+    //   }
+    // };
+    
+    void process() override;
+  };
+
   class NestNode : public Node {
     private:
     bool flowchart_loaded=false;
