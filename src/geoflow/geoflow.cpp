@@ -890,6 +890,9 @@ arr3f NodeManager::coord_transform_fwd(const double& x, const double& y, const d
 
   if(!data_offset.has_value()) {
     data_offset = {coord.xyz.x, coord.xyz.y, coord.xyz.z};
+    global_flowchart_params["GF_PROCESS_OFFSET_X"] = std::make_shared<ParameterByValue<float>>(coord.xyz.x, "GF_PROCESS_OFFSET_X", "offset in X coordinate");
+    global_flowchart_params["GF_PROCESS_OFFSET_Y"] = std::make_shared<ParameterByValue<float>>(coord.xyz.y, "GF_PROCESS_OFFSET_Y", "offset in Y coordinate");
+    global_flowchart_params["GF_PROCESS_OFFSET_Z"] = std::make_shared<ParameterByValue<float>>(coord.xyz.z, "GF_PROCESS_OFFSET_Z", "offset in Z coordinate");
   }
   auto result = arr3f{
     float(coord.xyz.x - (*data_offset)[0]),
