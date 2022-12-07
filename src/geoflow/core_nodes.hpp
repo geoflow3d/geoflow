@@ -57,6 +57,16 @@ namespace geoflow::nodes::core {
       output("value").set(value_);
     };
   };
+  class FloatExprNode : public Node {
+    std::string expr_string_="";
+    public:
+    using Node::Node;
+    void init(){
+      add_output("value", typeid(float));
+      add_param(ParamString(expr_string_, "value", "Expression string"));
+    };
+    void process();
+  };
   class BoolNode : public Node {
     bool value_=true;
     public:

@@ -3,6 +3,15 @@
 
 namespace geoflow::nodes::core {
 
+  void FloatExprNode::process(){
+    auto computer = createExpressionComputer();
+
+    computer->add_symbols(manager);
+    computer->add_expression("result", expr_string_);
+
+    output("value").set(computer->eval("result"));
+  };
+
   void AttributeCalcNode::process() {
 
     auto computer = createExpressionComputer();
