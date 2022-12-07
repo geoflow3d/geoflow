@@ -96,6 +96,7 @@ add_library(geoflow-core SHARED
   src/geoflow/parameters.cpp
   src/geoflow/api.cpp
   src/geoflow/AttributeCalcNode.cpp
+  src/geoflow/ExpressionComputer.cpp
 )
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PROJ::proj)
 set_target_properties(geoflow-core PROPERTIES 
