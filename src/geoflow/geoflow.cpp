@@ -857,7 +857,6 @@ void NodeManager::set_rev_crs_transform(const char* target_crs, bool normalize_f
     if (normalize_for_visualization) tCRS = proj_normalize_for_visualization(projContext, tCRS);
 
     projRevTransform = proj_create_crs_to_crs_from_pj(projContext, processCRS, tCRS, 0, 0);
-    proj_destroy(tCRS);
 
     if (!projRevTransform)
       throw gfCRSError("Unable to create reverse transformation.");

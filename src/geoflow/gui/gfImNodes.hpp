@@ -153,7 +153,6 @@ class gfImNodes : public RenderObject {
         auto gparam = it->second.get();
         if(ImGui::Button("X")) {
           node_manager_.global_flowchart_params.erase(it++);
-          continue;
         } else {
           ++it;
         }
