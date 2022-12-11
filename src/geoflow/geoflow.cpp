@@ -508,6 +508,30 @@ size_t NodeManager::run(Node &node, bool notify_children) {
   } else {
     std::cout << "GF_PROCESS_CRS not found\n";
   }
+  if( global_flowchart_params.count("GF_PROCESS_OFFSET_OVERRIDE") ) {
+    auto param =  global_flowchart_params["GF_PROCESS_OFFSET_OVERRIDE"].get();
+    if( dynamic_cast<ParameterByValue<bool>*>(param)->get() ) {
+      if( global_flowchart_params.count("GF_PROCESS_OFFSET_X")
+          && global_flowchart_params.count("GF_PROCESS_OFFSET_Y")
+          && global_flowchart_params.count("GF_PROCESS_OFFSET_Z")
+        ) {
+        auto paramX =  global_flowchart_params["GF_PROCESS_OFFSET_X"].get();
+        if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(paramX)) {
+          (*data_offset)[0] = valptr->get();
+        }
+        auto paramY =  global_flowchart_params["GF_PROCESS_OFFSET_Y"].get();
+        if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(paramY)) {
+          (*data_offset)[1] = valptr->get();
+        }
+        auto paramZ =  global_flowchart_params["GF_PROCESS_OFFSET_Z"].get();
+        if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(paramZ)) {
+          (*data_offset)[2] = valptr->get();
+        }
+      } else {
+        throw gfCRSError("GF_PROCESS_OFFSET_OVERRIDE is true but GF_PROCESS_OFFSET_[X|Y|Z] not set");
+      }
+    }
+  }
   if (node.queue()) {
     if (notify_children) node.notify_children();
     while (!node_queue.empty()) {
@@ -881,6 +905,9 @@ std::string NodeManager::get_rev_crs_id_auth_name(){
 std::string NodeManager::get_rev_crs_id_code(){
   std::string code = proj_get_id_code(tCRS, 0);
   return code;
+}
+std::string NodeManager::get_rev_crs_wkt(){
+  return proj_as_wkt(projContext, tCRS, PJ_WKT1_GDAL, nullptr);
 }
 arr3f NodeManager::coord_transform_fwd(const double& x, const double& y, const double& z) {
   PJ_COORD coord = proj_coord(x, y, z, 0);

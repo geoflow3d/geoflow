@@ -783,6 +783,7 @@ namespace geoflow {
     void set_rev_crs_transform(const char* target_crs, bool normalize_for_visualization = false);
     std::string get_rev_crs_id_auth_name();
     std::string get_rev_crs_id_code();
+    std::string get_rev_crs_wkt();
     void clear_fwd_crs_transform();
     void clear_rev_crs_transform();
 
