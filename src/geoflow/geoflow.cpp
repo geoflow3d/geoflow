@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <cstdlib>
 
 #include "geoflow.hpp"
 
@@ -906,8 +907,9 @@ std::string NodeManager::get_rev_crs_id_code(){
   std::string code = proj_get_id_code(tCRS, 0);
   return code;
 }
+static const char *proj_wkt_options[] = {"MULTILINE=NO", NULL};
 std::string NodeManager::get_rev_crs_wkt(){
-  return proj_as_wkt(projContext, tCRS, PJ_WKT1_GDAL, nullptr);
+  return proj_as_wkt(projContext, tCRS, PJ_WKT1_GDAL, proj_wkt_options);
 }
 arr3f NodeManager::coord_transform_fwd(const double& x, const double& y, const double& z) {
   PJ_COORD coord = proj_coord(x, y, z, 0);
