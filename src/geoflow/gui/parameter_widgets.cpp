@@ -132,14 +132,17 @@ namespace geoflow {
           ImGui::TreePop();
         }
     } else if( ParamTypeStrMapInput == param->get_ptype() ) {
-        auto* valptr = static_cast<ParamStrMapSelect*>(param);;
+        auto* valptr = static_cast<ParamStrMapInput*>(param);;
         if (ImGui::TreeNode(valptr->get_label().c_str())) {
           auto& mapvalues = valptr->get();
           for (auto it=mapvalues.begin(); it!=mapvalues.end(); ) {
-            ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
-            ImGui::SameLine();
+            // ImGui::InputTextWithHint(it->first.c_str(), "Value", &(it->second));
+            ImGui::InputTextMultiline(it->first.c_str(), &(it->second), ImVec2(ImGui::GetTextLineHeight() * 24, ImGui::GetTextLineHeight() * 10), ImGuiInputTextFlags_AllowTabInput);
+            // ImGui::SameLine();
             ImGui::PushID(it->first.c_str());
-            if(ImGui::Button("Remove")) {
+            ImGui::Text("%s", it->first.c_str());
+            ImGui::SameLine();
+            if(ImGui::Button("^Remove")) {
               mapvalues.erase(it++);
             } else {
               ++it;

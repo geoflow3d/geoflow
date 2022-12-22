@@ -45,9 +45,10 @@ void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers
   R_core->register_node<nodes::core::BoolNode>("Bool");
   R_core->register_node<nodes::core::TextNode>("Text");
   R_core->register_node<nodes::core::TextWriterNode>("TextWriter");
+  R_core->register_node<nodes::core::TextReaderNode>("TextReader");
   R_core->register_node<nodes::core::ProjTesterNode>("ProjTester");
   R_core->register_node<nodes::core::AttributeCalcNode>("AttributeCalc");
-  R_core->register_node<nodes::core::AttributeMapNode>("AttributeMap");
+  R_core->register_node<nodes::core::AttributeRenamerNode>("AttributeRenamer");
   node_registers.emplace(R_core);
 
   #ifdef GF_BUILD_WITH_GUI

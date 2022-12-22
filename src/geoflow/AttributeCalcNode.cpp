@@ -20,8 +20,11 @@ namespace geoflow::nodes::core {
 
     // add input attributes
     for (auto& iterm : poly_input("attributes").sub_terminals()) {
-      if(iterm->accepts_type(typeid(std::string))) continue;
-      computer->add_symbol(iterm->get_full_name(), "a.");
+      if(iterm->accepts_type(typeid(std::string))) {
+        computer->add_symbol(iterm->get_full_name(), "a.", "");
+      } else {
+        computer->add_symbol(iterm->get_full_name(), "a.", 0);
+      }
     }
     
     for(auto& [name, expr_str] : attribute_expressions) {
@@ -30,11 +33,10 @@ namespace geoflow::nodes::core {
     }
     
     size_t isize = poly_input("attributes").size();
-    std::cout << "Expression results:" << std::endl;
+    // std::cout << "Expression results:" << std::endl;
     for(size_t i=0; i<isize; ++i) {
       // assign input attributes
       for (auto& iterm : poly_input("attributes").sub_terminals()) {
-        if (iterm->accepts_type(typeid(std::string))) continue;
         std::string name = "a." + iterm->get_full_name();
         if (iterm->accepts_type(typeid(float))) {
           computer->set_symbol(name, iterm->get<float>(i));
@@ -42,6 +44,8 @@ namespace geoflow::nodes::core {
           computer->set_symbol(name, float(iterm->get<int>(i)));
         } else if (iterm->accepts_type(typeid(bool))) {
           computer->set_symbol(name, float(iterm->get<bool>(i)));
+        } else if (iterm->accepts_type(typeid(std::string))) {
+          computer->set_symbol(name, iterm->get<std::string>(i));
         }
       }  
       
@@ -50,7 +54,7 @@ namespace geoflow::nodes::core {
         // evaluate expression
         // push result to output
         float result = computer->eval(name);
-        std::cout << result << std::endl;
+        // std::cout << result << std::endl;
         poly_output("attributes").sub_terminal(name).push_back(float(result));
       }
     }

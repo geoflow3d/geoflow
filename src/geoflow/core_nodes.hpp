@@ -145,10 +145,28 @@ namespace geoflow::nodes::core {
     };
   };
 
-  class AttributeMapNode : public Node {
+  class TextReaderNode : public Node {
+    std::string filepath_="";
+    public:
+    using Node::Node;
+    void init(){
+      add_output("value", typeid(std::string));
+      add_param(ParamPath(filepath_, "filepath", "File path"));
+    };
+    void process(){
+      auto fname = manager.substitute_globals(filepath_);      
+      std::ifstream ifs(fname);
+      std::stringstream buffer;
+      buffer << ifs.rdbuf();
+      ifs.close();
+      output("value").set(buffer.str());
+    };
+  };
+
+  class AttributeRenamerNode : public Node {
     // std::string filepath_="";
     bool only_output_mapped_attrs_ = false;
-    vec1s key_options;
+    // vec1s key_options;
     StrMap output_attribute_names;
     public:
     using Node::Node;
@@ -158,23 +176,27 @@ namespace geoflow::nodes::core {
       
       // add_param(ParamPath(filepath_, "filepath", "File path"));
       add_param(ParamBool(only_output_mapped_attrs_, "only_output_mapped_attrs", "Only output those attributes selected under Output attribute names"));
-      add_param(ParamStrMap(output_attribute_names, key_options, "Attribute re-naming", "Override output attribute names"));
+      add_param(ParamStrMapInput(output_attribute_names, "Attribute re-naming", "Override output attribute names"));
     };
     
-    void on_receive(gfMultiFeatureInputTerminal& it) override {
-      key_options.clear();
-      if(&it == &poly_input("attributes")) {
-        for(auto sub_term : it.sub_terminals()) {
-          key_options.push_back(sub_term->get_full_name());
-        }
-      }
-    };
+    // void on_receive(gfMultiFeatureInputTerminal& it) override {
+    //   key_options.clear();
+    //   if(&it == &poly_input("attributes")) {
+    //     for(auto sub_term : it.sub_terminals()) {
+    //       key_options.push_back(sub_term->get_full_name());
+    //     }
+    //   }
+    // };
     
     void process(){
+      StrMap output_attribute_names_;
+      for (auto& [sourceName, targetName] : output_attribute_names) {
+        output_attribute_names_[manager.substitute_globals(sourceName)] = manager.substitute_globals(targetName);
+      }
       for (auto& iterm : poly_input("attributes").sub_terminals()) {
-        std::string name = iterm->get_full_name();
-        auto search = output_attribute_names.find(name);
-        if(search != output_attribute_names.end()) {
+        std::string name = iterm->get_name();
+        auto search = output_attribute_names_.find(name);
+        if(search != output_attribute_names_.end()) {
           if(search->second.size()!=0) //ignore if the new name is an empty string
             name = search->second;
         } else if(only_output_mapped_attrs_) {
@@ -215,6 +237,7 @@ namespace geoflow::nodes::core {
     private:
     bool flowchart_loaded=false;
     bool use_parallel_processing=false;
+    bool require_input_globals_=false;
     std::string filepath_;
     std::unique_ptr<NodeManager> nested_node_manager_;
     // std::vector<std::weak_ptr<gfInputTerminal>> nested_inputs_;
@@ -279,12 +302,12 @@ namespace geoflow::nodes::core {
     void init() {
       nested_node_manager_ = std::make_unique<NodeManager>(manager.get_node_registers()); // this will only transfer the node registers
       add_param(ParamPath(filepath_, "filepath", "Flowchart file"));
-      // add_param(ParamBool(use_parallel_processing, "use_parallel_processing", "Use parallel processing"));
+      add_param(ParamBool(require_input_globals_, "require_input_globals", "Require input global terminal to be ready prior to running."));
 
     };
     bool inputs_valid() {
       for (auto& [name,iT] : input_terminals) {
-        if (iT->get_name() == get_name()+".globals")
+        if (iT->get_name() == get_name()+".globals" && !require_input_globals_)
           continue;
         else if (!iT->has_data())
           return false;
