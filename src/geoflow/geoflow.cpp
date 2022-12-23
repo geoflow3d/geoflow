@@ -452,10 +452,12 @@ std::string Node::substitute_from_term(const std::string& textt, gfMultiFeatureI
         } else {
           // throw warning that subtitute param is not found
           start_pos = close;
+          throw gfException("subtitute param is not found");
         }
       }  else {
         // throw warning that subtitute param is not subtituted
         start_pos = close;
+        throw gfException("subtitute param is not subtituted: " + attr_name);
       }
     }
   }
@@ -842,10 +844,12 @@ std::string NodeManager::substitute_globals(const std::string& textt) const {
       } else {
         // throw warning that subtitute param is not found
         start_pos = close;
+        throw gfException("subtitute param is not found");
       }
     }  else {
       // throw warning that subtitute param is not subtituted
       start_pos = close;
+      throw gfException("subtitute param is not subtituted: " + global_name);
     }
   }
   return text;
