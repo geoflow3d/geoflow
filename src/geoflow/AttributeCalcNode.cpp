@@ -29,7 +29,11 @@ namespace geoflow::nodes::core {
     
     for(auto& [name, expr_str] : attribute_expressions) {
       computer->add_expression(name, expr_str);
-      poly_output("attributes").add_vector(name, typeid(float));
+      if(as_string_) {
+        poly_output("attributes").add_vector(name, typeid(std::string));
+      } else {
+        poly_output("attributes").add_vector(name, typeid(float));
+      }
     }
     
     size_t isize = poly_input("attributes").size();
@@ -55,7 +59,14 @@ namespace geoflow::nodes::core {
         // push result to output
         float result = computer->eval(name);
         // std::cout << result << std::endl;
-        poly_output("attributes").sub_terminal(name).push_back(float(result));
+        if(as_string_) {
+          std::stringstream stream;
+          stream << std::fixed << std::setprecision(1) << result;
+          std::string s = stream.str();
+          poly_output("attributes").sub_terminal(name).push_back(s);
+        } else {
+          poly_output("attributes").sub_terminal(name).push_back(float(result));
+        }
       }
     }
   };

@@ -211,6 +211,7 @@ namespace geoflow::nodes::core {
   class AttributeCalcNode : public Node {
     // std::string filepath_="";
     bool only_output_mapped_attrs_ = false;
+    bool as_string_ = false;
     StrMap attribute_expressions;
     public:
     using Node::Node;
@@ -218,7 +219,7 @@ namespace geoflow::nodes::core {
       add_poly_input("attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
       add_poly_output("attributes", {typeid(bool), typeid(int), typeid(float), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
       
-      // add_param(ParamPath(filepath_, "filepath", "File path"));
+      add_param(ParamBool(as_string_, "as_string", "Output as string instead of float"));
       add_param(ParamStrMapInput(attribute_expressions, "attribute_expressions", "Attribute expressions"));
     };
     

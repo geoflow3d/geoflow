@@ -419,6 +419,7 @@ namespace geoflow {
     gfSingleFeatureOutputTerminal& add(std::string term_name, std::type_index ttype ) ;
     gfSingleFeatureOutputTerminal& add_vector(std::string term_name, std::type_index ttype );
 
+    bool has_sub_terminal(const std::string& name) { return terminals_.find(name) != terminals_.end(); };
     const SFOTerminalMap& sub_terminals() { return terminals_; };
     gfSingleFeatureOutputTerminal& sub_terminal(std::string term_name) {
       return *terminals_.at(term_name).get();
