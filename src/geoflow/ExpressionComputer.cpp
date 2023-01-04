@@ -12,6 +12,8 @@ namespace geoflow {
     parser_t parser;
     symbol_table_t symbol_table;
 
+    std::string str_result_;
+
     std::unordered_map<std::string, float> symbols;
     std::unordered_map<std::string, std::string> string_symbols;
     std::unordered_map<std::string, expression_t> expressions;
@@ -34,6 +36,9 @@ namespace geoflow {
     void add_symbol(const std::string& name, const std::string& prefix, std::string value) override {
       std::string& dval = (string_symbols.insert({prefix+name, value}).first)->second; // get iterator, then value
       symbol_table.add_stringvar(prefix+name, dval); // or use add_constants ?
+    };
+    void add_str_result_symbol() {
+      symbol_table.add_stringvar("str_result", str_result_);
     };
     
     void add_symbols(NodeManager& manager) override {
@@ -65,6 +70,10 @@ namespace geoflow {
 
     float eval(const std::string& name) override {
       return expressions[name].value();
+    };
+    std::string eval_str(const std::string& name) override {
+      expressions[name].value();
+      return str_result_;
     };
   
   };

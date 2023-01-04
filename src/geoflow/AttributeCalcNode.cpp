@@ -26,6 +26,10 @@ namespace geoflow::nodes::core {
         computer->add_symbol(iterm->get_full_name(), "a.", 0);
       }
     }
+
+    if(as_string_) {
+      computer->add_str_result_symbol();
+    }
     
     for(auto& [name, expr_str] : attribute_expressions) {
       computer->add_expression(name, expr_str);
@@ -57,15 +61,11 @@ namespace geoflow::nodes::core {
         // assign expression vars/consts
         // evaluate expression
         // push result to output
-        float result = computer->eval(name);
         // std::cout << result << std::endl;
         if(as_string_) {
-          std::stringstream stream;
-          stream << std::fixed << std::setprecision(1) << result;
-          std::string s = stream.str();
-          poly_output("attributes").sub_terminal(name).push_back(s);
+          poly_output("attributes").sub_terminal(name).push_back(computer->eval_str(name));
         } else {
-          poly_output("attributes").sub_terminal(name).push_back(float(result));
+          poly_output("attributes").sub_terminal(name).push_back(float(computer->eval(name)));
         }
       }
     }
