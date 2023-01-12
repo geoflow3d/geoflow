@@ -104,6 +104,7 @@ public:
   void add(arr3d a);
   void add(const Box &otherBox);
   void add(Box &otherBox);
+  void add(const vec3f &vec);
   void add(vec3f &vec);
   bool intersects(Box &otherBox) const;
   void clear();
