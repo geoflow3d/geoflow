@@ -92,6 +92,40 @@ namespace geoflow::nodes::core {
     };
   };
 
+  class BoxNode : public Node {
+    std::string inCRS_="";
+    float minx_ = 0;
+    float miny_ = 0;
+    float minz_ = 0;
+    float maxx_ = 0;
+    float maxy_ = 0;
+    float maxz_ = 0;
+    public:
+    using Node::Node;
+    void init(){
+      add_output("box", typeid(Box));
+
+      add_param(ParamString(inCRS_, "inCRS", "input coordinate CRS. Notice that Box may no longer be axis-aligned after transformation to GF_PROCESS_CRS!"));
+      add_param(ParamFloat(minx_, "min_x", "min x"));
+      add_param(ParamFloat(miny_, "min_y", "min y"));
+      add_param(ParamFloat(minz_, "min_z", "min z"));
+      add_param(ParamFloat(maxx_, "max_x", "max x"));
+      add_param(ParamFloat(maxy_, "max_y", "max y"));
+      add_param(ParamFloat(maxz_, "max_z", "max z"));
+    };
+    void process() {
+      manager.set_fwd_crs_transform(inCRS_.c_str());
+      arr3f p_min = manager.coord_transform_fwd(minx_, miny_, minz_);
+      arr3f p_max = manager.coord_transform_fwd(maxx_, maxy_, maxz_);
+      manager.clear_fwd_crs_transform();
+
+      Box b;
+      b.add(p_min);
+      b.add(p_max);
+      output("box").set( b );
+    };
+  };
+
   class ProjTesterNode : public Node {
     std::string inCRS_="";
     std::string outCRS_="";

@@ -49,6 +49,7 @@ void load_plugins(PluginManager& plugin_manager, NodeRegisterMap& node_registers
   R_core->register_node<nodes::core::ProjTesterNode>("ProjTester");
   R_core->register_node<nodes::core::AttributeCalcNode>("AttributeCalc");
   R_core->register_node<nodes::core::AttributeRenamerNode>("AttributeRenamer");
+  R_core->register_node<nodes::core::BoxNode>("Box");
   node_registers.emplace(R_core);
 
   #ifdef GF_BUILD_WITH_GUI
