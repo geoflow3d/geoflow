@@ -587,6 +587,7 @@ namespace geoflow::nodes::gui {
         auto b = glm::make_vec3(t[1].data());
         auto c = glm::make_vec3(t[2].data());
         auto n = glm::cross(b-a, c-b);
+        n=glm::normalize(n);
 
         normals.push_back({n.x,n.y,n.z});
         normals.push_back({n.x,n.y,n.z});

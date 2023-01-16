@@ -101,6 +101,11 @@ void Box::add(vec3f &vec)
   for (auto &p : vec)
     add(p);
 }
+void Box::add(const vec3f &vec)
+{
+  for (auto &p : vec)
+    add(p);
+}
 float Box::size_x() const
 {
   return pmax[0] - pmin[0];
