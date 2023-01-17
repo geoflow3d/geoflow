@@ -181,19 +181,32 @@ namespace geoflow::nodes::core {
 
   class TextReaderNode : public Node {
     std::string filepath_="";
+    bool split_ = false;
+    std::string delimiter_="\n";
     public:
     using Node::Node;
     void init(){
       add_output("value", typeid(std::string));
+
       add_param(ParamPath(filepath_, "filepath", "File path"));
+      add_param(ParamBool(split_, "split", "Split input on delimiter"));
+      add_param(ParamString(delimiter_, "delimiter", "Delimiter"));
     };
     void process(){
       auto fname = manager.substitute_globals(filepath_);      
       std::ifstream ifs(fname);
-      std::stringstream buffer;
-      buffer << ifs.rdbuf();
-      ifs.close();
-      output("value").set(buffer.str());
+      if (split_){
+        std::string segment;
+        while(std::getline(ifs, segment, delimiter_.at(0)))
+        {
+          output("value").push_back(segment);
+        }
+      } else {
+        std::stringstream buffer;
+        buffer << ifs.rdbuf();
+        ifs.close();
+        output("value").set(buffer.str());
+      }
     };
   };
 
