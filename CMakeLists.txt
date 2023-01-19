@@ -94,7 +94,7 @@ add_library(geoflow-core SHARED
   src/geoflow/geoflow.cpp
   src/geoflow/common.cpp
   src/geoflow/parameters.cpp
-  src/geoflow/api.cpp
+  # src/geoflow/api.cpp
   src/geoflow/AttributeCalcNode.cpp
   src/geoflow/ExpressionComputer.cpp
 )
