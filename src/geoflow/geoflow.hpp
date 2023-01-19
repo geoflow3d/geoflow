@@ -293,13 +293,13 @@ namespace geoflow {
     }
     template<typename T> void push_back(T data) {
       if(!accepts_type(typeid(T)))
-        throw gfException("illegal type for gfSingleFeatureOutputTerminal");
+        throw gfException("illegal type for gfSingleFeatureOutputTerminal (" + get_full_name() + ")");
       data_.push_back(std::move(data));
       touch();
     };
     template<typename T> T& set(T data){
       if(!accepts_type(typeid(T)))
-        throw gfException("illegal type for gfSingleFeatureOutputTerminal");
+        throw gfException("illegal type for gfSingleFeatureOutputTerminal (" + get_full_name() + ")");
       data_.clear();
       push_back(data);
       return std::any_cast<T&>(data_[0]);

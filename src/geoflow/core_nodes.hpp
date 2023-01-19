@@ -104,6 +104,7 @@ namespace geoflow::nodes::core {
     using Node::Node;
     void init(){
       add_output("box", typeid(Box));
+      add_output("ping", typeid(bool));
 
       add_param(ParamString(inCRS_, "inCRS", "input coordinate CRS. Notice that Box may no longer be axis-aligned after transformation to GF_PROCESS_CRS!"));
       add_param(ParamFloat(minx_, "min_x", "min x"));
@@ -123,6 +124,7 @@ namespace geoflow::nodes::core {
       b.add(p_min);
       b.add(p_max);
       output("box").set( b );
+      output("ping").set( true );
     };
   };
 
@@ -182,31 +184,34 @@ namespace geoflow::nodes::core {
   class TextReaderNode : public Node {
     std::string filepath_="";
     bool split_ = false;
-    std::string delimiter_="\n";
+    // std::string delimiter_="\n";
     public:
     using Node::Node;
     void init(){
       add_output("value", typeid(std::string));
 
       add_param(ParamPath(filepath_, "filepath", "File path"));
-      add_param(ParamBool(split_, "split", "Split input on delimiter"));
-      add_param(ParamString(delimiter_, "delimiter", "Delimiter"));
+      add_param(ParamBool(split_, "split", "Split input on newlines"));
+      // add_param(ParamString(delimiter_, "delimiter", "Delimiter"));
     };
     void process(){
       auto fname = manager.substitute_globals(filepath_);      
       std::ifstream ifs(fname);
+      std::cout << "reading " + fname << std::endl;
       if (split_){
         std::string segment;
-        while(std::getline(ifs, segment, delimiter_.at(0)))
+        // while(std::getline(ifs, segment, delimiter_.at(0)))
+        while(std::getline(ifs, segment))
         {
+          std::cout << segment << std::endl;
           output("value").push_back(segment);
         }
       } else {
         std::stringstream buffer;
         buffer << ifs.rdbuf();
-        ifs.close();
         output("value").set(buffer.str());
       }
+      ifs.close();
     };
   };
 
@@ -286,6 +291,7 @@ namespace geoflow::nodes::core {
     bool flowchart_loaded=false;
     bool use_parallel_processing=false;
     bool require_input_globals_=false;
+    bool require_input_wait_=false;
     std::string filepath_;
     std::unique_ptr<NodeManager> nested_node_manager_;
     // std::vector<std::weak_ptr<gfInputTerminal>> nested_inputs_;
@@ -304,6 +310,7 @@ namespace geoflow::nodes::core {
         output_terminals.clear();
         nested_node_manager_->clear();
 
+        add_input(get_name()+".wait", typeid(bool));
         add_poly_input(get_name()+".globals", {typeid(int), typeid(float), typeid(bool), typeid(std::string), typeid(Date), typeid(Time), typeid(DateTime)});
         nested_node_manager_->set_globals(parent_manager);
         // nested_outputs_.clear();
@@ -351,11 +358,14 @@ namespace geoflow::nodes::core {
       nested_node_manager_ = std::make_unique<NodeManager>(manager.get_node_registers()); // this will only transfer the node registers
       add_param(ParamPath(filepath_, "filepath", "Flowchart file"));
       add_param(ParamBool(require_input_globals_, "require_input_globals", "Require input global terminal to be ready prior to running."));
+      add_param(ParamBool(require_input_wait_, "require_input_wait", "Require wait terminal to be connected to something prior to running."));
 
     };
     bool inputs_valid() {
       for (auto& [name,iT] : input_terminals) {
         if (iT->get_name() == get_name()+".globals" && !require_input_globals_)
+          continue;
+        else if (iT->get_name() == get_name()+".wait" && !require_input_wait_)
           continue;
         else if (!iT->has_data())
           return false;
@@ -469,6 +479,12 @@ namespace geoflow::nodes::core {
       float runtime;
       for(size_t i=0; i<input_size_; ++i) {
         proxy_node->notify_children();
+        // also clear root nodes that do not depend on proxy_node
+        for (auto& [nname, node] : flowchart->get_nodes()) {
+          if(node->is_root()) {
+            node->notify_children();
+          }
+        }
         // prep inputs
         for (auto& [key,val] : manager.global_flowchart_params) {
           flowchart->global_flowchart_params[key] = val;
