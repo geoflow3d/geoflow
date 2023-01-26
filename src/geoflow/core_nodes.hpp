@@ -184,6 +184,7 @@ namespace geoflow::nodes::core {
   class TextReaderNode : public Node {
     std::string filepath_="";
     bool split_ = false;
+    int limit_ = 0;
     // std::string delimiter_="\n";
     public:
     using Node::Node;
@@ -192,6 +193,7 @@ namespace geoflow::nodes::core {
 
       add_param(ParamPath(filepath_, "filepath", "File path"));
       add_param(ParamBool(split_, "split", "Split input on newlines"));
+      add_param(ParamInt(limit_, "limit", "If split input on newlines take only this many lines (set to 0 to disable)"));
       // add_param(ParamString(delimiter_, "delimiter", "Delimiter"));
     };
     void process(){
@@ -201,10 +203,12 @@ namespace geoflow::nodes::core {
       if (split_){
         std::string segment;
         // while(std::getline(ifs, segment, delimiter_.at(0)))
+        size_t cnt;
         while(std::getline(ifs, segment))
         {
           std::cout << segment << std::endl;
           output("value").push_back(segment);
+          if(limit_ && ++cnt>limit_) break;
         }
       } else {
         std::stringstream buffer;

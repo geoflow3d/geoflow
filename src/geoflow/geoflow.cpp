@@ -518,18 +518,20 @@ size_t NodeManager::run(Node &node, bool notify_children) {
           && global_flowchart_params.count("GF_PROCESS_OFFSET_Y")
           && global_flowchart_params.count("GF_PROCESS_OFFSET_Z")
         ) {
+        arr3d offset;
         auto paramX =  global_flowchart_params["GF_PROCESS_OFFSET_X"].get();
         if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(paramX)) {
-          (*data_offset)[0] = valptr->get();
+          offset[0] = valptr->get();
         }
         auto paramY =  global_flowchart_params["GF_PROCESS_OFFSET_Y"].get();
         if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(paramY)) {
-          (*data_offset)[1] = valptr->get();
+          offset[1] = valptr->get();
         }
         auto paramZ =  global_flowchart_params["GF_PROCESS_OFFSET_Z"].get();
         if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(paramZ)) {
-          (*data_offset)[2] = valptr->get();
+          offset[2] = valptr->get();
         }
+        data_offset = offset;
       } else {
         throw gfCRSError("GF_PROCESS_OFFSET_OVERRIDE is true but GF_PROCESS_OFFSET_[X|Y|Z] not set");
       }
