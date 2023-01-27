@@ -296,8 +296,7 @@ int main(int argc, const char * argv[]) {
         auto& g = flowchart.global_flowchart_params[key];
         try{
           if (g->is_type(typeid(std::string))) {
-            std::string s;
-            if (!(cmdl(key) >> s)) throw gfFlowchartError("Unable to set string from provided value (" + value + ")");
+            std::string s=cmdl(key).str();
             auto* gptr = static_cast<ParameterByValue<std::string>*>(g.get());
             gptr->set(s);
           } else if (g->is_type(typeid(float))) {
