@@ -27,7 +27,7 @@ option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
 add_subdirectory(thirdparty)
 
 find_package(nlohmann_json 3.10.5 CONFIG REQUIRED)
-find_package(PROJ REQUIRED CONFIG)
+find_package(PROJ 9.0.0 REQUIRED CONFIG)
 
 if(GF_BUILD_GUI)
 find_package(glfw3 3.3 REQUIRED)
@@ -98,7 +98,7 @@ add_library(geoflow-core SHARED
   src/geoflow/AttributeCalcNode.cpp
   src/geoflow/ExpressionComputer.cpp
 )
-target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PROJ::proj)
+target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PUBLIC PROJ::proj)
 set_target_properties(geoflow-core PROPERTIES 
   CXX_STANDARD 17
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
