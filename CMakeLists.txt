@@ -98,7 +98,7 @@ add_library(geoflow-core SHARED
   src/geoflow/AttributeCalcNode.cpp
   src/geoflow/ExpressionComputer.cpp
 )
-target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PUBLIC PROJ::proj)
+target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PROJ::proj)
 set_target_properties(geoflow-core PROPERTIES 
   CXX_STANDARD 17
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
