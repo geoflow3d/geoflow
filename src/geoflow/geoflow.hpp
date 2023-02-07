@@ -47,10 +47,10 @@
   namespace fs = ghc::filesystem;
 #endif
 
-#include <proj.h>
-
 #include "common.hpp"
 #include "parameters.hpp"
+
+#include "projHelper.hpp"
 
 namespace geoflow {
 
@@ -741,21 +741,16 @@ namespace geoflow {
 
     public:
     std::map<std::string, std::shared_ptr<Parameter>> global_flowchart_params;
+    std::unique_ptr<projHelperInterface> proj;
     
-    std::optional<std::array<double,3>> data_offset;
+    // std::optional<std::array<double,3>> data_offset;
     
-    PJ_CONTEXT *projContext = nullptr;
-    PJ *processCRS = nullptr;
-    PJ *sCRS = nullptr;
-    PJ *tCRS = nullptr;
-    PJ *projFwdTransform = nullptr;
-    PJ *projRevTransform = nullptr;
-
     fs::path flowchart_path{};
     
     NodeManager(NodeRegisterMap&  node_registers)
       : registers_(node_registers) {
-        projContext = proj_context_create();
+        proj = createProjHelper(*this);
+        proj->proj_construct();
       };
     NodeManager(NodeManager&  other_node_manager)
       : registers_(other_node_manager.registers_) {
@@ -763,11 +758,13 @@ namespace geoflow {
         other_node_manager.json_serialise(ss);
         set_globals(other_node_manager);
         json_unserialise(ss);
-        data_offset = *other_node_manager.data_offset;
-        projContext = proj_context_clone(other_node_manager.projContext);
-        processCRS = proj_clone(projContext, other_node_manager.processCRS);
-        projFwdTransform = proj_clone(projContext, other_node_manager.projFwdTransform);
-        projRevTransform = proj_clone(projContext, other_node_manager.projRevTransform);
+        proj = createProjHelper(*this);
+        proj->proj_clone_from(*proj);
+        // data_offset = *other_node_manager.data_offset;
+        // projContext = proj_context_clone(other_node_manager.projContext);
+        // processCRS = proj_clone(projContext, other_node_manager.processCRS);
+        // projFwdTransform = proj_clone(projContext, other_node_manager.projFwdTransform);
+        // projRevTransform = proj_clone(projContext, other_node_manager.projRevTransform);
       };
     
     NodeRegisterMap& get_node_registers() const { return registers_; };
@@ -775,18 +772,44 @@ namespace geoflow {
       registers_ = other_manager.get_node_registers();
     };
 
-    arr3f coord_transform_fwd(const double& x, const double& y, const double& z);
-    arr3d coord_transform_rev(const float& x, const float& y, const float& z);
-    arr3d coord_transform_rev(const arr3f& p);
+    std::optional<std::array<double,3>>& data_offset() {
+      return proj->data_offset;
+    };
 
-    void set_process_crs(const char* crs);
-    void set_fwd_crs_transform(const char* source_crs, bool normalize_for_visualization = false);
-    void set_rev_crs_transform(const char* target_crs, bool normalize_for_visualization = false);
-    std::string get_rev_crs_id_auth_name();
-    std::string get_rev_crs_id_code();
-    std::string get_rev_crs_wkt();
-    void clear_fwd_crs_transform();
-    void clear_rev_crs_transform();
+    arr3f coord_transform_fwd(const double& x, const double& y, const double& z) {
+      return proj->coord_transform_fwd(x, y, z);
+    };
+    arr3d coord_transform_rev(const float& x, const float& y, const float& z) {
+      return proj->coord_transform_rev(x, y, z);
+    };
+    arr3d coord_transform_rev(const arr3f& p) {
+      return proj->coord_transform_rev(p);
+    };
+
+    void set_process_crs(const char* crs) {
+      proj->set_process_crs(crs);
+    };
+    void set_fwd_crs_transform(const char* source_crs, bool normalize_for_visualization = false) {
+      proj->set_fwd_crs_transform(source_crs, normalize_for_visualization);
+    };
+    void set_rev_crs_transform(const char* target_crs, bool normalize_for_visualization = false) {
+      proj->set_rev_crs_transform(target_crs, normalize_for_visualization);
+    };
+    std::string get_rev_crs_id_auth_name() {
+      return proj->get_rev_crs_id_auth_name();
+    };
+    std::string get_rev_crs_id_code() {
+      return proj->get_rev_crs_id_code();
+    };
+    std::string get_rev_crs_wkt() {
+      return proj->get_rev_crs_wkt();
+    };
+    void clear_fwd_crs_transform() {
+      proj->clear_fwd_crs_transform();
+    };
+    void clear_rev_crs_transform() {
+      proj->clear_rev_crs_transform();
+    };
 
     NodeHandle create_node(NodeRegisterHandle node_register, std::string type_name);
     NodeHandle create_node(NodeRegister& node_register, std::string type_name, std::pair<float,float> pos);

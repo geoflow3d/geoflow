@@ -504,7 +504,7 @@ size_t NodeManager::run(Node &node, bool notify_children) {
     auto crsParam =  global_flowchart_params["GF_PROCESS_CRS"].get();
     if( auto* valptr = dynamic_cast<ParameterByValue<std::string>*>(crsParam)) {
       auto& pCRS =valptr->get();
-      if(!pCRS.empty()) set_process_crs(pCRS.c_str());
+      if(!pCRS.empty()) proj->set_process_crs(pCRS.c_str());
     } else {
       throw gfCRSError("GF_PROCESS_CRS is not a string");
     }
@@ -531,7 +531,7 @@ size_t NodeManager::run(Node &node, bool notify_children) {
         if( auto* valptr = dynamic_cast<ParameterByValue<float>*>(paramZ)) {
           offset[2] = valptr->get();
         }
-        data_offset = offset;
+        proj->set_data_offset(offset);
       } else {
         throw gfCRSError("GF_PROCESS_OFFSET_OVERRIDE is true but GF_PROCESS_OFFSET_[X|Y|Z] not set");
       }
@@ -587,15 +587,7 @@ void NodeManager::remove_node(NodeHandle node) {
 void NodeManager::clear() {
   flowchart_path.clear();
   nodes.clear();
-  data_offset.reset();
-  
-  proj_context_destroy(projContext);
-  projContext = proj_context_create();
-  proj_destroy(processCRS);
-  processCRS = nullptr;
-  clear_fwd_crs_transform();
-  clear_rev_crs_transform();
-  
+  proj->proj_clear();
   global_flowchart_params.clear();
 }
 bool NodeManager::name_node(NodeHandle node, std::string new_name) {
@@ -856,109 +848,112 @@ std::string NodeManager::substitute_globals(const std::string& textt) const {
   }
   return text;
 }
-void NodeManager::set_process_crs(const char* crs) {
-  // https://proj.org/development/reference/functions.html#c.proj_create
-  processCRS = proj_create(projContext, crs);
-  processCRS = proj_normalize_for_visualization(projContext, processCRS);
-  if (!processCRS)
-    throw gfCRSError("Unable to create CRS from string: " + std::string(crs));
-}
-void NodeManager::set_fwd_crs_transform(const char* source_crs, bool normalize_for_visualization) {
-  if(processCRS) {
-    sCRS = proj_create(projContext, source_crs);
-    if (!sCRS)
-      throw gfCRSError("Unable to create source CRS from string: " + std::string(source_crs));
+// void NodeManager::set_process_crs(const char* crs) {
+//   // https://proj.org/development/reference/functions.html#c.proj_create
+//   processCRS = proj_create(projContext, crs);
+//   processCRS = proj_normalize_for_visualization(projContext, processCRS);
+//   if (!processCRS)
+//     throw gfCRSError("Unable to create CRS from string: " + std::string(crs));
+// }
+// void NodeManager::set_fwd_crs_transform(const char* source_crs, bool normalize_for_visualization) {
+//   if(processCRS) {
+//     sCRS = proj_create(projContext, source_crs);
+//     if (!sCRS)
+//       throw gfCRSError("Unable to create source CRS from string: " + std::string(source_crs));
 
-    if (normalize_for_visualization) sCRS = proj_normalize_for_visualization(projContext, sCRS);
+//     if (normalize_for_visualization) sCRS = proj_normalize_for_visualization(projContext, sCRS);
 
-    projFwdTransform = proj_create_crs_to_crs_from_pj(projContext, sCRS, processCRS, 0, 0);
+//     projFwdTransform = proj_create_crs_to_crs_from_pj(projContext, sCRS, processCRS, 0, 0);
 
-    if (!projFwdTransform)
-      throw gfCRSError("Unable to create forward transformation.");
-  } else {
-    std::cout << "Unable to create CRS transform, process CRS is undefined\n";
-  }
-}
-void NodeManager::set_rev_crs_transform(const char* target_crs, bool normalize_for_visualization) {
-  if (processCRS) {
-    tCRS = proj_create(projContext, target_crs);
-    if (!tCRS)
-      throw gfCRSError("Unable to create source CRS from string: " + std::string(target_crs));
+//     if (!projFwdTransform)
+//       throw gfCRSError("Unable to create forward transformation.");
+//   } else {
+//     std::cout << "Unable to create CRS transform, process CRS is undefined\n";
+//   }
+// }
+// void NodeManager::set_rev_crs_transform(const char* target_crs, bool normalize_for_visualization) {
+//   if (processCRS) {
+//     tCRS = proj_create(projContext, target_crs);
+//     if (!tCRS)
+//       throw gfCRSError("Unable to create source CRS from string: " + std::string(target_crs));
 
-    if (normalize_for_visualization) tCRS = proj_normalize_for_visualization(projContext, tCRS);
+//     if (normalize_for_visualization) tCRS = proj_normalize_for_visualization(projContext, tCRS);
 
-    projRevTransform = proj_create_crs_to_crs_from_pj(projContext, processCRS, tCRS, 0, 0);
+//     projRevTransform = proj_create_crs_to_crs_from_pj(projContext, processCRS, tCRS, 0, 0);
 
-    if (!projRevTransform)
-      throw gfCRSError("Unable to create reverse transformation.");
-  } else {
-    std::cout << "Unable to create CRS transform, process CRS is undefined\n";
-  }
-}
-void NodeManager::clear_fwd_crs_transform() {
-  proj_destroy(projFwdTransform);
-  proj_destroy(sCRS);
-  projFwdTransform = nullptr;
-}
-void NodeManager::clear_rev_crs_transform() {
-  proj_destroy(projRevTransform);
-  proj_destroy(tCRS);
-  projRevTransform = nullptr;
-}
-std::string NodeManager::get_rev_crs_id_auth_name(){
-  std::string auth_name = proj_get_id_auth_name(tCRS, 0);
-  return auth_name;
-}
-std::string NodeManager::get_rev_crs_id_code(){
-  std::string code = proj_get_id_code(tCRS, 0);
-  return code;
-}
-static const char *proj_wkt_options[] = {"MULTILINE=NO", NULL};
-std::string NodeManager::get_rev_crs_wkt(){
-  return proj_as_wkt(projContext, tCRS, PJ_WKT1_GDAL, proj_wkt_options);
-}
-arr3f NodeManager::coord_transform_fwd(const double& x, const double& y, const double& z) {
-  PJ_COORD coord = proj_coord(x, y, z, 0);
+//     if (!projRevTransform)
+//       throw gfCRSError("Unable to create reverse transformation.");
+//   } else {
+//     std::cout << "Unable to create CRS transform, process CRS is undefined\n";
+//   }
+// }
+// void NodeManager::clear_fwd_crs_transform() {
+//   proj_destroy(projFwdTransform);
+//   proj_destroy(sCRS);
+//   projFwdTransform = nullptr;
+// }
+// void NodeManager::clear_rev_crs_transform() {
+//   proj_destroy(projRevTransform);
+//   proj_destroy(tCRS);
+//   projRevTransform = nullptr;
+// }
+// std::string NodeManager::get_rev_crs_id_auth_name(){
+//   std::string auth_name = proj_get_id_auth_name(tCRS, 0);
+//   return auth_name;
+// }
+// std::string NodeManager::get_rev_crs_id_code(){
+//   std::string code = proj_get_id_code(tCRS, 0);
+//   return code;
+// }
+// static const char *proj_wkt_options[] = {"MULTILINE=NO", NULL};
+// std::string NodeManager::get_rev_crs_wkt(){
+//   return proj_as_wkt(projContext, tCRS, PJ_WKT1_GDAL, proj_wkt_options);
+// }
+// arr3f NodeManager::coord_transform_fwd(const double& x, const double& y, const double& z) {
+//   return proj->coord_transform_fwd(x, y, z, global_flowchart_params);
+// }
+// arr3f NodeManager::coord_transform_fwd(const double& x, const double& y, const double& z) {
+//   PJ_COORD coord = proj_coord(x, y, z, 0);
 
-  if (projFwdTransform) coord = proj_trans(projFwdTransform, PJ_FWD, coord);
+//   if (projFwdTransform) coord = proj_trans(projFwdTransform, PJ_FWD, coord);
 
-  if(!data_offset.has_value()) {
-    data_offset = {coord.xyz.x, coord.xyz.y, coord.xyz.z};
-    global_flowchart_params["GF_PROCESS_OFFSET_X"] = std::make_shared<ParameterByValue<float>>(coord.xyz.x, "GF_PROCESS_OFFSET_X", "offset in X coordinate");
-    global_flowchart_params["GF_PROCESS_OFFSET_Y"] = std::make_shared<ParameterByValue<float>>(coord.xyz.y, "GF_PROCESS_OFFSET_Y", "offset in Y coordinate");
-    global_flowchart_params["GF_PROCESS_OFFSET_Z"] = std::make_shared<ParameterByValue<float>>(coord.xyz.z, "GF_PROCESS_OFFSET_Z", "offset in Z coordinate");
-  }
-  auto result = arr3f{
-    float(coord.xyz.x - (*data_offset)[0]),
-    float(coord.xyz.y - (*data_offset)[1]),
-    float(coord.xyz.z - (*data_offset)[2])
-  };
+//   if(!data_offset.has_value()) {
+//     data_offset = {coord.xyz.x, coord.xyz.y, coord.xyz.z};
+//     global_flowchart_params["GF_PROCESS_OFFSET_X"] = std::make_shared<ParameterByValue<float>>(coord.xyz.x, "GF_PROCESS_OFFSET_X", "offset in X coordinate");
+//     global_flowchart_params["GF_PROCESS_OFFSET_Y"] = std::make_shared<ParameterByValue<float>>(coord.xyz.y, "GF_PROCESS_OFFSET_Y", "offset in Y coordinate");
+//     global_flowchart_params["GF_PROCESS_OFFSET_Z"] = std::make_shared<ParameterByValue<float>>(coord.xyz.z, "GF_PROCESS_OFFSET_Z", "offset in Z coordinate");
+//   }
+//   auto result = arr3f{
+//     float(coord.xyz.x - (*data_offset)[0]),
+//     float(coord.xyz.y - (*data_offset)[1]),
+//     float(coord.xyz.z - (*data_offset)[2])
+//   };
 
-  return result;
-}
+//   return result;
+// }
 // arr3f NodeManager::coord_transform_fwd(const arr3f& p) {
 //   return coord_transform_fwd(p[0], p[1], p[2]);
 // }
-arr3d NodeManager::coord_transform_rev(const float& x, const float& y, const float& z) {
-  PJ_COORD coord;
-  if(!data_offset.has_value()) {
-    coord = proj_coord(x, y, z, 0);
-  } else {
-    coord = proj_coord(
-      x + (*data_offset)[0],
-      y + (*data_offset)[1],
-      z + (*data_offset)[2],
-      0
-    );
-  }
+// arr3d NodeManager::coord_transform_rev(const float& x, const float& y, const float& z) {
+//   PJ_COORD coord;
+//   if(!data_offset.has_value()) {
+//     coord = proj_coord(x, y, z, 0);
+//   } else {
+//     coord = proj_coord(
+//       x + (*data_offset)[0],
+//       y + (*data_offset)[1],
+//       z + (*data_offset)[2],
+//       0
+//     );
+//   }
 
-  if (projRevTransform) coord = proj_trans(projRevTransform, PJ_FWD, coord);
+//   if (projRevTransform) coord = proj_trans(projRevTransform, PJ_FWD, coord);
 
-  return arr3d{coord.xyz.x, coord.xyz.y, coord.xyz.z};
-}
-arr3d NodeManager::coord_transform_rev(const arr3f& p) {
-  return coord_transform_rev(p[0], p[1], p[2]);
-}
+//   return arr3d{coord.xyz.x, coord.xyz.y, coord.xyz.z};
+// }
+// arr3d NodeManager::coord_transform_rev(const arr3f& p) {
+//   return coord_transform_rev(p[0], p[1], p[2]);
+// }
 
 std::string geoflow::get_global_name(const std::string& text) {
   auto open = text.find("{{", 0);

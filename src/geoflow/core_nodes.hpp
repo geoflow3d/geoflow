@@ -115,10 +115,10 @@ namespace geoflow::nodes::core {
       add_param(ParamFloat(maxz_, "max_z", "max z"));
     };
     void process() {
-      manager.set_fwd_crs_transform(inCRS_.c_str());
-      arr3f p_min = manager.coord_transform_fwd(minx_, miny_, minz_);
-      arr3f p_max = manager.coord_transform_fwd(maxx_, maxy_, maxz_);
-      manager.clear_fwd_crs_transform();
+      manager.proj->set_fwd_crs_transform(inCRS_.c_str());
+      arr3f p_min = manager.proj->coord_transform_fwd(minx_, miny_, minz_);
+      arr3f p_max = manager.proj->coord_transform_fwd(maxx_, maxy_, maxz_);
+      manager.proj->clear_fwd_crs_transform();
 
       Box b;
       b.add(p_min);
@@ -143,18 +143,18 @@ namespace geoflow::nodes::core {
       add_param(ParamFloat(z, "z", "input z coordinate"));
     };
     void process(){
-      manager.set_fwd_crs_transform(inCRS_.c_str());
-      manager.set_rev_crs_transform(outCRS_.c_str());
+      manager.proj->set_fwd_crs_transform(inCRS_.c_str());
+      manager.proj->set_rev_crs_transform(outCRS_.c_str());
 
-      auto coord_proc = manager.coord_transform_fwd(x, y, z);
-      auto coord_out = manager.coord_transform_rev(coord_proc[0], coord_proc[1], coord_proc[2]);
+      auto coord_proc = manager.proj->coord_transform_fwd(x, y, z);
+      auto coord_out = manager.proj->coord_transform_rev(coord_proc[0], coord_proc[1], coord_proc[2]);
       std::cout << "input: " << x << ", " << y << ", " << z <<"\n";
       std::cout << "proc: " << coord_proc[0] << ", " << coord_proc[1] << ", " << coord_proc[2] <<"\n";
       std::cout << "output: " << coord_out[0] << ", " << coord_out[1] << ", " << coord_out[2] <<"\n";
       
       // output("value").set( manager.substitute_globals(value_) );
-      manager.clear_fwd_crs_transform();
-      manager.clear_rev_crs_transform();
+      manager.proj->clear_fwd_crs_transform();
+      manager.proj->clear_rev_crs_transform();
     };
   };
 
@@ -402,7 +402,7 @@ namespace geoflow::nodes::core {
 
     std::shared_ptr<NodeManager> copy_nested_flowchart() {
       auto flowchart = std::make_shared<NodeManager>(*nested_node_manager_);
-      flowchart->data_offset = *manager.data_offset;
+      flowchart->proj->set_data_offset(*manager.proj->data_offset);
       // set up proxy node
       auto R = std::make_shared<NodeRegister>("ProxyRegister");
       R->register_node<ProxyNode>("Proxy");

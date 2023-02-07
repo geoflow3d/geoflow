@@ -97,6 +97,7 @@ add_library(geoflow-core SHARED
   # src/geoflow/api.cpp
   src/geoflow/AttributeCalcNode.cpp
   src/geoflow/ExpressionComputer.cpp
+  src/geoflow/projHelper.cpp
 )
 target_link_libraries(geoflow-core PRIVATE nlohmann_json::nlohmann_json PROJ::proj)
 set_target_properties(geoflow-core PROPERTIES 
@@ -231,6 +232,7 @@ set_property(TARGET geoflow-core PROPERTY PUBLIC_HEADER
   src/geoflow/parameters.hpp
   src/geoflow/geoflow.hpp
   src/geoflow/api.hpp
+  src/geoflow/projHelper.hpp
   ${GF_SHH_FILE}
 )
 

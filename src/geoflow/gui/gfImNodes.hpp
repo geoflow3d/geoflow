@@ -135,15 +135,15 @@ class gfImNodes : public RenderObject {
 				}
         ImGui::Separator();
         if (ImGui::MenuItem("Clear flowchart offset")) {
-          (*node_manager_.data_offset)[0]=0;
-          (*node_manager_.data_offset)[1]=0;
-          (*node_manager_.data_offset)[2]=0;
-					node_manager_.data_offset.reset();
+          (*node_manager_.proj->data_offset)[0]=0;
+          (*node_manager_.proj->data_offset)[1]=0;
+          (*node_manager_.proj->data_offset)[2]=0;
+					node_manager_.proj->data_offset.reset();
 				}
-        ImGui::InputDouble("Offset X", &(*node_manager_.data_offset)[0]);
-        ImGui::InputDouble("Offset Y", &(*node_manager_.data_offset)[1]);
-        ImGui::InputDouble("Offset Z", &(*node_manager_.data_offset)[2]);
-        // ImGui::InputDouble3("Offset", &(*node_manager_.data_offset));
+        ImGui::InputDouble("Offset X", &(*node_manager_.proj->data_offset)[0]);
+        ImGui::InputDouble("Offset Y", &(*node_manager_.proj->data_offset)[1]);
+        ImGui::InputDouble("Offset Z", &(*node_manager_.proj->data_offset)[2]);
+        // ImGui::InputDouble3("Offset", &(*node_manager_.proj->data_offset));
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Globals")) {
