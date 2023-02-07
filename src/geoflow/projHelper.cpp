@@ -4,7 +4,7 @@
 
 namespace geoflow {
   static const char *proj_wkt_options[] = {"MULTILINE=NO", NULL};
-  
+
   struct projHelper : public projHelperInterface {
 
     using projHelperInterface::projHelperInterface;
@@ -32,9 +32,9 @@ namespace geoflow {
       const projHelper* other_proj = static_cast<const projHelper*>(&other_proj_helper);
       data_offset = *other_proj->data_offset;
       projContext = proj_context_clone(other_proj->projContext);
-      processCRS = proj_clone(projContext, other_proj->processCRS);
-      projFwdTransform = proj_clone(projContext, other_proj->projFwdTransform);
-      projRevTransform = proj_clone(projContext, other_proj->projRevTransform);
+      if(other_proj->processCRS) processCRS = proj_clone(projContext, other_proj->processCRS);
+      if(other_proj->projFwdTransform) projFwdTransform = proj_clone(projContext, other_proj->projFwdTransform);
+      if(other_proj->projRevTransform) projRevTransform = proj_clone(projContext, other_proj->projRevTransform);
     };
 
     arr3f coord_transform_fwd(const double& x, const double& y, const double& z) override {
