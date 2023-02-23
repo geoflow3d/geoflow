@@ -296,6 +296,7 @@ namespace geoflow::nodes::core {
     bool use_parallel_processing=false;
     bool require_input_globals_=false;
     bool require_input_wait_=false;
+    bool push_any_for_empty_sfterminal_=true;
     std::string filepath_;
     std::unique_ptr<NodeManager> nested_node_manager_;
     // std::vector<std::weak_ptr<gfInputTerminal>> nested_inputs_;
@@ -363,6 +364,7 @@ namespace geoflow::nodes::core {
       add_param(ParamPath(filepath_, "filepath", "Flowchart file"));
       add_param(ParamBool(require_input_globals_, "require_input_globals", "Require input global terminal to be ready prior to running."));
       add_param(ParamBool(require_input_wait_, "require_input_wait", "Require wait terminal to be connected to something prior to running."));
+      add_param(ParamBool(push_any_for_empty_sfterminal_, "push_any_for_empty_sfterminal", "Push any for empty single feature output terminals"));
 
     };
     bool inputs_valid() {
@@ -534,8 +536,10 @@ namespace geoflow::nodes::core {
                     vector_output(node_name+"."+term_name).push_back_any(data);
                   }
                 } else {
-                  std::cout << "pushing empty any for " << node_name+"."+term_name << "at i=" << i << std::endl;
-                  vector_output(node_name+"."+term_name).push_back_any(std::any());
+                  if(push_any_for_empty_sfterminal_) {
+                    std::cout << "pushing empty any for " << node_name+"."+term_name << "at i=" << i << std::endl;
+                    vector_output(node_name+"."+term_name).push_back_any(std::any());
+                  }
                 }
               } else {
                 auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
