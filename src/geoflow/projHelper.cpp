@@ -117,16 +117,23 @@ namespace geoflow {
       }
     };
     std::string get_rev_crs_id_auth_name() override {
-      std::string auth_name = proj_get_id_auth_name(tCRS, 0);
+      std::string auth_name;
+      if (tCRS)
+        auth_name = proj_get_id_auth_name(tCRS, 0);
       return auth_name;
     };
     std::string get_rev_crs_id_code() override {
-      std::string code = proj_get_id_code(tCRS, 0);
+      std::string code;
+      if (tCRS)
+        code = proj_get_id_code(tCRS, 0);
       return code;
     };
     
     std::string get_rev_crs_wkt() override {
-      return proj_as_wkt(projContext, tCRS, PJ_WKT1_GDAL, proj_wkt_options);
+      std::string wkt;
+      if (tCRS)
+        wkt = proj_as_wkt(projContext, tCRS, PJ_WKT1_GDAL, proj_wkt_options);
+      return wkt;
     };
     void clear_fwd_crs_transform() override {
       proj_destroy(projFwdTransform);
