@@ -545,8 +545,13 @@ namespace geoflow::nodes::core {
                 auto output_term = (gfMultiFeatureOutputTerminal*)(output_term_.get());
                 auto& aggregate_poly_out = poly_output(node_name+"."+term_name);
                 for (auto& [name, sub_term]: output_term->sub_terminals()) {
-                  if(i==0) {
+                  // check if subterm already exists
+                  if(!aggregate_poly_out.has_sub_terminal(name)) {
                     aggregate_poly_out.add_vector(name, sub_term->get_type());
+                    // push empty any for previous elemnts
+                    for(size_t j=0; i<j; ++j) {
+                      aggregate_poly_out.sub_terminal(name).push_back_any(std::any());  
+                    }
                   }
                   for (auto& data : sub_term->get_data_vec()) {
                     aggregate_poly_out.sub_terminal(name).push_back_any(data);
