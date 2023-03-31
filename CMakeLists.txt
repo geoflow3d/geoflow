@@ -12,9 +12,9 @@ if(PROJECT_IS_TOP_LEVEL)
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER_INSTALL ${GF_PLUGIN_FOLDER})
   endif()
 else()
-  set(GF_PLUGIN_FOLDER_INSTALL "${GF_PLUGIN_FOLDER}" PARENT_SCOPE)
+  # set(GF_PLUGIN_FOLDER_INSTALL "${GF_PLUGIN_FOLDER}" PARENT_SCOPE)
   if (WIN32)
-    set(GF_PLUGIN_FOLDER_INSTALL "..\\lib\\geoflow-plugins") # this needs to be a relative to the installed geof.exe
+    set(GF_PLUGIN_FOLDER_INSTALL "..\\lib\\geoflow-plugins" PARENT_SCOPE ) # this needs to be a relative to the installed geof.exe
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER_INSTALL ${GF_PLUGIN_FOLDER})
   endif()
@@ -27,7 +27,11 @@ option(GF_BUILD_GUI_FILE_DIALOGS "Build GUI with OS native file dialogs" TRUE)
 add_subdirectory(thirdparty)
 
 find_package(nlohmann_json 3.10.5 CONFIG REQUIRED)
-find_package(PROJ 9.0.0 REQUIRED CONFIG)
+if (WIN32) # vcpkg doesn't work when there is a version number here
+  find_package(PROJ REQUIRED CONFIG)
+else()
+  find_package(PROJ 9.0.0 REQUIRED CONFIG)
+endif()
 
 if(GF_BUILD_GUI)
 find_package(glfw3 3.3 REQUIRED)
@@ -105,7 +109,7 @@ set_target_properties(geoflow-core PROPERTIES
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
 if(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-  target_compile_options(geoflow-core PUBLIC "/Zc:__cplusplus")
+  target_compile_options(geoflow-core PUBLIC "/Zc:__cplusplus" PRIVATE /bigobj)
 endif()
 
 if(${GF_BUILD_GUI})
