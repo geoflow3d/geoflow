@@ -13,7 +13,9 @@ if(PROJECT_IS_TOP_LEVEL)
   endif()
 else()
   if (WIN32)
-    set(GF_PLUGIN_FOLDER_INSTALL "..\\lib\\geoflow-plugins" PARENT_SCOPE ) # this needs to be a relative to the installed geof.exe
+    set(GF_PLUGIN_FOLDER_INSTALL "lib\\geoflow-plugins" PARENT_SCOPE ) # this needs to be a relative to the installed geof.exe
+    set(GF_PLUGIN_FOLDER_INSTALL "lib\\geoflow-plugins" ) # this needs to be a relative to the installed geof.exe
+    set(GF_PLUGIN_FOLDER "..\\lib\\geoflow-plugins" )
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER ${GF_PLUGIN_FOLDER})
     string(REPLACE "\\" "\\\\" GF_PLUGIN_FOLDER_INSTALL ${GF_PLUGIN_FOLDER})
   else()
