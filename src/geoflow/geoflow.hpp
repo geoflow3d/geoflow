@@ -776,6 +776,17 @@ namespace geoflow {
       return proj->data_offset;
     };
 
+    bool has_process_crs() {
+      if(global_flowchart_params.count("GF_PROCESS_CRS")) {
+        auto crsParam =  global_flowchart_params["GF_PROCESS_CRS"].get();
+        if( auto* valptr = dynamic_cast<ParameterByValue<std::string>*>(crsParam)) {
+          auto& pCRS =valptr->get();
+          if(!pCRS.empty()) return true;
+        }
+      }
+      return false;
+    }
+
     arr3f coord_transform_fwd(const double& x, const double& y, const double& z) {
       return proj->coord_transform_fwd(x, y, z);
     };
