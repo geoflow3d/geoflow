@@ -140,9 +140,11 @@ class gfImNodes : public RenderObject {
           (*node_manager_.proj->data_offset)[2]=0;
 					node_manager_.proj->data_offset.reset();
 				}
-        ImGui::InputDouble("Offset X", &(*node_manager_.proj->data_offset)[0]);
-        ImGui::InputDouble("Offset Y", &(*node_manager_.proj->data_offset)[1]);
-        ImGui::InputDouble("Offset Z", &(*node_manager_.proj->data_offset)[2]);
+        if (node_manager_.proj->data_offset.has_value()) {
+          ImGui::InputDouble("Offset X", &(*node_manager_.proj->data_offset)[0]);
+          ImGui::InputDouble("Offset Y", &(*node_manager_.proj->data_offset)[1]);
+          ImGui::InputDouble("Offset Z", &(*node_manager_.proj->data_offset)[2]);
+        }
         // ImGui::InputDouble3("Offset", &(*node_manager_.proj->data_offset));
       ImGui::EndMenu();
     }
