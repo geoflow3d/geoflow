@@ -36,6 +36,8 @@ else()
   find_package(PROJ 9.0.0 REQUIRED CONFIG)
 endif()
 
+set(PROJ_DATA_DIR CACHE PATH ${PROJ_DIR})
+
 if(GF_BUILD_GUI)
 find_package(glfw3 3.3 REQUIRED)
 #message(STATUS "GLFW libs: ${GLFW_LIBRARIES}")
@@ -278,6 +280,12 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/geoflow)
 
 install(FILES LICENSE DESTINATION share/geoflow)
+
+# install proj.db and rasters for Rijksdriehoeks stelsel
+if(WIN32)
+  install(FILES ${PROJ_DATA_DIR}/proj.db DESTINATION share/proj)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION share/proj FILES_MATCHING PATTERN "*.tif")
+endif(WIN32)
 
 add_subdirectory(apps)
 
