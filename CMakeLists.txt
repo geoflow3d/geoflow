@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.21)
 
-project (Geoflow VERSION 0.3.2)
+project (Geoflow VERSION 0.3.3)
 
 include(GNUInstallDirs)
 
@@ -281,7 +281,7 @@ install(FILES
 
 install(FILES LICENSE DESTINATION share/geoflow)
 
-# install proj.db and rasters for Rijksdriehoeks stelsel
+# install proj.db and rasters for Dutch rijksdriehoekstelsel
 if(WIN32)
   install(FILES ${PROJ_DATA_DIR}/proj.db DESTINATION share/proj)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION share/proj FILES_MATCHING PATTERN "*.tif")
