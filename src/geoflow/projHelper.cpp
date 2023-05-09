@@ -25,8 +25,18 @@ namespace geoflow {
       clear_fwd_crs_transform();
       clear_rev_crs_transform();
     };
-    void proj_construct() override {
+    void proj_construct() override {      
       projContext = proj_context_create();
+
+      #ifdef _WIN32
+        if(const char* env_p = std::getenv("GF_INSTALL_ROOT")) {
+          std::string path = env_p;
+          path += "\\share\\proj";
+          auto pathc = path.c_str();
+          proj_context_set_search_paths(projContext, 1, &pathc);
+          std::cout << "Setting PROJ DATA dir to " << path << "\n";
+        }
+      #endif
     };
     void proj_clone_from(const projHelperInterface& other_proj_helper) override {
       const projHelper* other_proj = static_cast<const projHelper*>(&other_proj_helper);
