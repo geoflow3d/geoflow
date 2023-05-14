@@ -54,9 +54,21 @@ namespace geoflow {
 
       if(!data_offset.has_value()) {
         data_offset = {coord.xyz.x, coord.xyz.y, coord.xyz.z};
-        manager.global_flowchart_params["GF_PROCESS_OFFSET_X"] = std::make_shared<ParameterByValue<float>>(coord.xyz.x, "GF_PROCESS_OFFSET_X", "offset in X coordinate");
-        manager.global_flowchart_params["GF_PROCESS_OFFSET_Y"] = std::make_shared<ParameterByValue<float>>(coord.xyz.y, "GF_PROCESS_OFFSET_Y", "offset in Y coordinate");
-        manager.global_flowchart_params["GF_PROCESS_OFFSET_Z"] = std::make_shared<ParameterByValue<float>>(coord.xyz.z, "GF_PROCESS_OFFSET_Z", "offset in Z coordinate");
+        if(manager.global_flowchart_params.count("GF_PROCESS_OFFSET_X")) {
+          manager.global_flowchart_params["GF_PROCESS_OFFSET_X"]->from_json(coord.xyz.x);
+        } else {
+          manager.global_flowchart_params["GF_PROCESS_OFFSET_X"] = std::make_shared<ParameterByValue<float>>(coord.xyz.x, "GF_PROCESS_OFFSET_X", "offset in X coordinate");
+        }
+        if(manager.global_flowchart_params.count("GF_PROCESS_OFFSET_Y")) {
+          manager.global_flowchart_params["GF_PROCESS_OFFSET_Y"]->from_json(coord.xyz.y);
+        } else {
+          manager.global_flowchart_params["GF_PROCESS_OFFSET_Y"] = std::make_shared<ParameterByValue<float>>(coord.xyz.y, "GF_PROCESS_OFFSET_Y", "offset in Y coordinate");
+        }
+        if(manager.global_flowchart_params.count("GF_PROCESS_OFFSET_Z")) {
+          manager.global_flowchart_params["GF_PROCESS_OFFSET_Z"]->from_json(coord.xyz.z);
+        } else {
+          manager.global_flowchart_params["GF_PROCESS_OFFSET_Z"] = std::make_shared<ParameterByValue<float>>(coord.xyz.z, "GF_PROCESS_OFFSET_Z", "offset in Z coordinate");
+        }
       }
       auto result = arr3f{
         float(coord.xyz.x - (*data_offset)[0]),
