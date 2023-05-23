@@ -7,7 +7,17 @@ namespace geoflow {
 
   struct projHelper : public projHelperInterface {
 
-    using projHelperInterface::projHelperInterface;
+    projHelper(NodeManager& manager) : projHelperInterface(manager) {
+      #ifdef _WIN32
+        if(const char* env_p = std::getenv("GF_INSTALL_ROOT")) {
+          std::string path = env_p;
+          path += "\\share\\proj";
+          auto pathc = path.c_str();
+          proj_context_set_search_paths(nullptr, 1, &pathc);
+          std::cout << "Setting PROJ DATA dir to " << path << "(default context)\n";
+        }
+      #endif
+    }
 
     PJ_CONTEXT *projContext = nullptr;
     PJ *processCRS = nullptr;
@@ -42,6 +52,15 @@ namespace geoflow {
       const projHelper* other_proj = static_cast<const projHelper*>(&other_proj_helper);
       data_offset = *other_proj->data_offset;
       projContext = proj_context_clone(other_proj->projContext);
+      #ifdef _WIN32
+        if(const char* env_p = std::getenv("GF_INSTALL_ROOT")) {
+          std::string path = env_p;
+          path += "\\share\\proj";
+          auto pathc = path.c_str();
+          proj_context_set_search_paths(projContext, 1, &pathc);
+          std::cout << "Setting PROJ DATA dir to " << path << "\n";
+        }
+      #endif
       if(other_proj->processCRS) processCRS = proj_clone(projContext, other_proj->processCRS);
       if(other_proj->projFwdTransform) projFwdTransform = proj_clone(projContext, other_proj->projFwdTransform);
       if(other_proj->projRevTransform) projRevTransform = proj_clone(projContext, other_proj->projRevTransform);
