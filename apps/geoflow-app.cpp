@@ -164,12 +164,16 @@ int main(int argc, const char * argv[]) {
   }
 
   PluginManager plugin_manager;
-  bool verbose{false};
+  bool verbose = cmdl[{ "-V", "--verbose" }];
+  if( ! verbose ) {
+    std::clog.setstate(std::ios_base::failbit);
+    std::cout.setstate(std::ios_base::failbit);
+    // std::cerr.setstate(std::ios_base::failbit);
+  }
   {
     NodeRegisterMap node_registers;
     NodeManager flowchart(node_registers);
-    
-    verbose = cmdl[{ "-V", "--verbose" }];
+  
     load_plugins(plugin_manager, node_registers, plugin_folder, verbose);
 
     if(cmdl[{ "-p", "--list-plugins" }]) {
@@ -288,7 +292,7 @@ int main(int argc, const char * argv[]) {
         if (key == "c" || key == "config") continue;
         
         if (flowchart.global_flowchart_params.find(key) == flowchart.global_flowchart_params.end()) {
-          std::cerr << "WARNING: no such global parameter: " << key << " (use -g to view available globals)\n";
+          std::clog << "WARNING: no such global parameter: " << key << " (use -g to view available globals)\n";
           continue;
           // print_help(program_name);
           // return EXIT_FAILURE;
@@ -326,11 +330,6 @@ int main(int argc, const char * argv[]) {
     }
 
     if( ! list_globals ) {
-      if( ! verbose ) {
-        std::clog.setstate(std::ios_base::failbit);
-        std::cout.setstate(std::ios_base::failbit);
-        // std::cerr.setstate(std::ios_base::failbit);
-      }
 
       // launch gui or just run the flowchart in cli mode
       if(cmdl[{"-w", "--workdir"}]) fs::current_path(flowchart_folder);
@@ -355,11 +354,7 @@ int main(int argc, const char * argv[]) {
       #endif
       fs::current_path(launch_path);
 
-      if( ! verbose ) {
-        std::clog.clear();
-        std::cout.clear();
-        // std::cerr.clear();
-      }
+      
     }
     // auto cout_rdbuf = std::cout.rdbuf();
     // auto cerr_rdbuf = std::cerr.rdbuf();
@@ -373,7 +368,11 @@ int main(int argc, const char * argv[]) {
 
   // NOTICE that we first must destroy any related node_registers before we can unload the plugin_manager!
   plugin_manager.unload(verbose);
-
+  if( ! verbose ) {
+    std::clog.clear();
+    std::cout.clear();
+    // std::cerr.clear();
+  }
   // std::cout.rdbuf(cout_rdbuf);
   // std::cerr.rdbuf(cerr_rdbuf);
   
