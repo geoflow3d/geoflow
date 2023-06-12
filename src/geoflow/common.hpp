@@ -25,6 +25,7 @@
 #include <typeindex>
 #include <string>
 #include <variant>
+#include <ctime>
 
 namespace geoflow
 {
@@ -281,6 +282,8 @@ struct Date {
   int year;
   int month;
   int day;
+  std::time_t to_time_t();
+  std::string format_to_ietf();
 };
 struct Time {
   int hour;
@@ -291,6 +294,8 @@ struct Time {
 struct DateTime {
   Date date;
   Time time;
+  std::time_t to_time_t();
+  std::string format_to_ietf();
 };
 
 struct Image {
