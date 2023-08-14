@@ -1,5 +1,6 @@
 #include "geoflow.hpp"
 #include "projHelper.hpp"
+#include <cstddef>
 #include <proj.h>
 
 namespace geoflow {
@@ -177,14 +178,24 @@ namespace geoflow {
       return wkt;
     };
     void clear_fwd_crs_transform() override {
-      proj_destroy(projFwdTransform);
-      proj_destroy(sCRS);
-      projFwdTransform = nullptr;
+      if (sCRS) {
+        proj_destroy(sCRS);
+        sCRS = nullptr;
+      }
+      if (projFwdTransform) {
+        proj_destroy(projFwdTransform);
+        projFwdTransform = nullptr;
+      }
     };
     void clear_rev_crs_transform() override {
-      proj_destroy(projRevTransform);
-      proj_destroy(tCRS);
-      projRevTransform = nullptr;
+      if (tCRS) {
+        proj_destroy(tCRS);
+        tCRS = nullptr;
+      }
+      if (projRevTransform) {
+        proj_destroy(projRevTransform);
+        projRevTransform = nullptr;
+      }
     };
 
     void set_data_offset(arr3d& offset) override {
