@@ -70,7 +70,9 @@ namespace geoflow {
     arr3f coord_transform_fwd(const double& x, const double& y, const double& z) override {
       PJ_COORD coord = proj_coord(x, y, z, 0);
 
-      if (projFwdTransform) coord = proj_trans(projFwdTransform, PJ_FWD, coord);
+      if (projFwdTransform) 
+        if (proj_is_equivalent_to(sCRS, processCRS, PJ_COMP_EQUIVALENT))
+          coord = proj_trans(projFwdTransform, PJ_FWD, coord);
 
       if(!data_offset.has_value()) {
         data_offset = {coord.xyz.x, coord.xyz.y, coord.xyz.z};
@@ -111,7 +113,9 @@ namespace geoflow {
         );
       };
 
-      if (projRevTransform) coord = proj_trans(projRevTransform, PJ_FWD, coord);
+      if (projRevTransform) 
+        if (proj_is_equivalent_to(processCRS, tCRS, PJ_COMP_EQUIVALENT))
+          coord = proj_trans(projRevTransform, PJ_FWD, coord);
 
       return arr3d{coord.xyz.x, coord.xyz.y, coord.xyz.z};
     }
