@@ -114,7 +114,7 @@ namespace geoflow {
       };
 
       if (projRevTransform) 
-        if (proj_is_equivalent_to(processCRS, tCRS, PJ_COMP_EQUIVALENT))
+        if (!proj_is_equivalent_to(processCRS, tCRS, PJ_COMP_EQUIVALENT))
           coord = proj_trans(projRevTransform, PJ_FWD, coord);
 
       return arr3d{coord.xyz.x, coord.xyz.y, coord.xyz.z};
